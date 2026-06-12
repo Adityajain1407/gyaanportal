@@ -17,12 +17,7 @@
     --accent: #c43a0b;
     --accent-bg: #fff0eb;
     --accent-border: rgba(196,58,11,0.2);
-    --folder-bg: #fff8f5;
-    --folder-border: rgba(196,58,11,0.15);
-    --tag-bg: #f0ede8;
-    --tag-text: #5a5a5a;
     --shadow: 0 1px 3px rgba(0,0,0,0.07);
-    --shadow2: 0 4px 16px rgba(0,0,0,0.08);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -37,283 +32,76 @@
       --accent: #ff8c5a;
       --accent-bg: #2a1a12;
       --accent-border: rgba(255,140,90,0.2);
-      --folder-bg: #1e1a17;
-      --folder-border: rgba(255,140,90,0.15);
-      --tag-bg: #2a2825;
-      --tag-text: #a8a49e;
       --shadow: 0 1px 3px rgba(0,0,0,0.3);
-      --shadow2: 0 4px 16px rgba(0,0,0,0.4);
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
 
-  /* Header */
-  .header {
-    background: var(--surface);
-    border-bottom: 0.5px solid var(--border2);
-    padding: 0 24px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: var(--shadow);
-  }
-  .header-inner {
-    max-width: 860px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    gap: 16px;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-  }
-  .logo-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .logo-text {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-  }
-  .search-wrap {
-    flex: 1;
-    max-width: 320px;
-  }
-  .search {
-    width: 100%;
-    padding: 7px 12px 7px 34px;
-    border: 0.5px solid var(--border2);
-    border-radius: 8px;
-    background: var(--surface2);
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .header { background: var(--surface); border-bottom: 0.5px solid var(--border2); padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .logo-text { font-size: 15px; font-weight: 500; color: var(--text); white-space: nowrap; }
+  .search-wrap { flex: 1; max-width: 320px; position: relative; }
+  .search { width: 100%; padding: 7px 12px 7px 34px; border: 0.5px solid var(--border2); border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s; }
   .search:focus { border-color: var(--accent); }
-  .search-wrap-inner {
-    position: relative;
-  }
-  .search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text3);
-    font-size: 14px;
-    pointer-events: none;
-  }
-  .header-count {
-    font-size: 12px;
-    color: var(--text3);
-    white-space: nowrap;
-  }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
+  .header-count { font-size: 12px; color: var(--text3); white-space: nowrap; margin-left: auto; }
 
-  /* Main layout */
-  .main {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-  }
+  .main { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
+  .hero { margin-bottom: 36px; }
+  .hero h1 { font-size: 24px; font-weight: 500; margin-bottom: 5px; }
+  .hero p { font-size: 14px; color: var(--text2); }
+  .hero-accent { color: var(--accent); font-weight: 500; }
 
-  /* Hero */
-  .hero {
-    margin-bottom: 40px;
-  }
-  .hero h1 {
-    font-size: 26px;
-    font-weight: 500;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .hero p {
-    font-size: 14px;
-    color: var(--text2);
-  }
-  .hero-accent {
-    color: var(--accent);
-    font-weight: 500;
-  }
+  /* Subject (Level 1) */
+  .subject-section { margin-bottom: 40px; }
+  .subject-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border2); }
+  .subject-icon { width: 34px; height: 34px; background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .subject-title { font-size: 17px; font-weight: 500; }
+  .subject-count { margin-left: auto; font-size: 12px; color: var(--text3); background: var(--surface2); padding: 2px 10px; border-radius: 20px; }
 
-  /* Subject section */
-  .subject-section {
-    margin-bottom: 48px;
-  }
-  .subject-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 0.5px solid var(--border2);
-  }
-  .subject-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--accent-bg);
-    border: 0.5px solid var(--accent-border);
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    flex-shrink: 0;
-  }
-  .subject-title {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--text);
-  }
-  .subject-count {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--text3);
-    background: var(--tag-bg);
-    padding: 3px 10px;
-    border-radius: 20px;
-  }
-
-  /* Folder */
-  .folder {
-    background: var(--surface);
-    border: 0.5px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: border-color 0.15s;
-  }
-  .folder:hover { border-color: var(--border2); }
-  .folder-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 18px;
-    cursor: pointer;
-    user-select: none;
-    background: var(--folder-bg);
-    border-bottom: 0.5px solid transparent;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .folder.open .folder-header {
-    border-bottom-color: var(--folder-border);
-  }
+  /* Folder (Level 2 & 3) */
+  .folder { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; box-shadow: var(--shadow); }
+  .folder-l3 { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 8px; margin: 4px 12px 4px 36px; }
+  .folder-header { display: flex; align-items: center; gap: 9px; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.12s; }
   .folder-header:hover { background: var(--accent-bg); }
-  .folder-chevron {
-    font-size: 14px;
-    color: var(--text3);
-    transition: transform 0.2s;
-    flex-shrink: 0;
-  }
-  .folder.open .folder-chevron { transform: rotate(90deg); }
-  .folder-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    flex: 1;
-  }
-  .folder-badge {
-    font-size: 11px;
-    color: var(--text3);
-    background: var(--tag-bg);
-    padding: 2px 9px;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
-  .folder-body {
-    display: none;
-    padding: 8px 0;
-  }
-  .folder.open .folder-body { display: block; }
+  .folder-l3 .folder-header { padding: 9px 14px; }
+  .folder-chevron { font-size: 11px; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
+  .folder.open > .folder-header .folder-chevron { transform: rotate(90deg); }
+  .folder-name { font-size: 13.5px; font-weight: 500; color: var(--text); flex: 1; }
+  .folder-l3 .folder-name { font-size: 13px; }
+  .folder-badge { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+  .folder-body { display: none; padding: 4px 0; border-top: 0.5px solid var(--border); }
+  .folder.open > .folder-body { display: block; }
 
-  /* Quiz item */
-  .quiz-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 18px 10px 42px;
-    text-decoration: none;
-    gap: 10px;
-    transition: background 0.12s;
-    border-radius: 0;
-  }
+  /* Quiz items */
+  .quiz-item { display: flex; align-items: center; padding: 9px 16px 9px 38px; text-decoration: none; gap: 9px; transition: background 0.1s; }
   .quiz-item:hover { background: var(--surface2); }
-  .quiz-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.5;
-    flex-shrink: 0;
-  }
-  .quiz-name {
-    font-size: 13.5px;
-    color: var(--text);
-    flex: 1;
-    line-height: 1.4;
-  }
-  .quiz-arrow {
-    font-size: 13px;
-    color: var(--text3);
-    opacity: 0;
-    transition: opacity 0.12s, transform 0.12s;
-  }
-  .quiz-item:hover .quiz-arrow { opacity: 1; transform: translateX(2px); }
+  .folder-l3 .quiz-item { padding-left: 32px; }
+  .quiz-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: 0.4; flex-shrink: 0; transition: opacity 0.1s; }
   .quiz-item:hover .quiz-dot { opacity: 1; }
+  .quiz-name { font-size: 13px; color: var(--text); flex: 1; line-height: 1.4; }
+  .quiz-arrow { font-size: 12px; color: var(--text3); opacity: 0; transition: opacity 0.1s, transform 0.1s; }
+  .quiz-item:hover .quiz-arrow { opacity: 1; transform: translateX(2px); }
 
-  /* Empty state */
-  .folder-empty {
-    padding: 16px 18px 16px 42px;
-    font-size: 13px;
-    color: var(--text3);
-    font-style: italic;
-  }
+  .folder-empty { padding: 12px 16px 12px 38px; font-size: 12px; color: var(--text3); font-style: italic; }
 
-  /* Loading / error */
-  .state-msg {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--text3);
-    font-size: 14px;
-  }
-  .state-msg .icon { font-size: 32px; margin-bottom: 12px; }
+  .state-msg { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; }
+  .state-msg .icon { font-size: 28px; margin-bottom: 10px; }
 
-  /* Search highlight */
   .quiz-item.hidden { display: none; }
-  .folder.all-hidden { opacity: 0.4; pointer-events: none; }
 
-  /* Responsive */
   @media (max-width: 600px) {
     .main { padding: 20px 16px 60px; }
     .header { padding: 0 16px; }
     .logo-text { display: none; }
     .search-wrap { max-width: none; }
-    .hero h1 { font-size: 21px; }
   }
 </style>
 </head>
 <body>
-
 <header class="header">
   <div class="header-inner">
     <a class="logo" href="#">
@@ -321,10 +109,8 @@
       <span class="logo-text">Aditya's Quiz Portal</span>
     </a>
     <div class="search-wrap">
-      <div class="search-wrap-inner">
-        <span class="search-icon">🔍</span>
-        <input class="search" type="text" placeholder="Search quizzes..." id="searchInput" autocomplete="off">
-      </div>
+      <span class="search-icon">🔍</span>
+      <input class="search" type="text" placeholder="Search quizzes..." id="searchInput" autocomplete="off">
     </div>
     <span class="header-count" id="headerCount"></span>
   </div>
@@ -333,14 +119,10 @@
 <main class="main">
   <div class="hero">
     <h1>Quiz Library</h1>
-    <p>Browse quizzes by subject. Click any topic to start. <span class="hero-accent">All progress syncs across your devices.</span></p>
+    <p>Browse by subject. Click any quiz to start. <span class="hero-accent">Progress syncs across all your devices.</span></p>
   </div>
-
   <div id="content">
-    <div class="state-msg">
-      <div class="icon">⏳</div>
-      Loading quizzes...
-    </div>
+    <div class="state-msg"><div class="icon">⏳</div>Loading quizzes...</div>
   </div>
 </main>
 
@@ -349,97 +131,152 @@ const GITHUB_USER = 'adityajain1407';
 const GITHUB_REPO = 'quizzes';
 const GITHUB_BRANCH = 'main';
 const BASE_URL = `https://${GITHUB_USER}.github.io/${GITHUB_REPO}`;
-const API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/${GITHUB_BRANCH}?recursive=1`;
+const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/${GITHUB_BRANCH}?recursive=1`;
 
-// Subject structure — add more subjects/subfolders here as needed
-const STRUCTURE = [
-  {
-    id: 'history',
-    label: 'History',
-    icon: '📜',
-    folders: [
-      { id: 'ancient-history',  label: 'Ancient History',  path: 'History/Ancient History' },
-      { id: 'medieval-history', label: 'Medieval History', path: 'History/Medieval History' },
-      { id: 'modern-history',   label: 'Modern History',   path: 'History/Modern History'  },
-    ]
+// Icons for known subject names — add more as needed
+const SUBJECT_ICONS = {
+  'history': '📜', 'geography': '🌍', 'polity': '⚖️',
+  'economy': '📈', 'science': '🔬', 'environment': '🌿',
+  'art': '🎨', 'culture': '🏛️', 'default': '📁'
+};
+
+function getIcon(name) {
+  const key = name.toLowerCase().trim();
+  for (const [k, v] of Object.entries(SUBJECT_ICONS)) {
+    if (key.includes(k)) return v;
   }
-  // To add Geography later, append an object here following the same pattern
-];
+  return SUBJECT_ICONS.default;
+}
 
 function cleanName(filename) {
-  return filename
-    .replace(/\.html$/i, '')
-    .replace(/^\d+[\.\-\s]+/, '')
-    .trim();
+  return filename.replace(/\.html$/i, '').replace(/^\d+[\.\-\s]+/, '').trim();
 }
 
-async function loadQuizzes() {
+function toggleFolder(el) {
+  el.closest('.folder').classList.toggle('open');
+}
+
+async function loadFiles() {
   try {
-    const res = await fetch(API_BASE);
-    if (!res.ok) throw new Error('GitHub API error');
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error();
     const data = await res.json();
-    const files = (data.tree || [])
-      .filter(f => f.type === 'blob' && f.path.endsWith('.html') && f.path !== 'index.html');
-    return files;
-  } catch(e) {
-    return null;
+    return (data.tree || []).filter(f => f.type === 'blob' && f.path.endsWith('.html') && f.path !== 'index.html');
+  } catch(e) { return null; }
+}
+
+function buildTree(files) {
+  // Build a nested object: tree[L1][L2][L3] = [files] or tree[L1][L2] = [files]
+  const tree = {};
+  for (const f of files) {
+    const parts = f.path.split('/');
+    if (parts.length === 1) {
+      // Root level file
+      if (!tree['__root__']) tree['__root__'] = { '__files__': [] };
+      tree['__root__']['__files__'].push(f);
+    } else if (parts.length === 2) {
+      // L1/file.html
+      const [l1, fname] = parts;
+      if (!tree[l1]) tree[l1] = {};
+      if (!tree[l1]['__files__']) tree[l1]['__files__'] = [];
+      tree[l1]['__files__'].push(f);
+    } else if (parts.length === 3) {
+      // L1/L2/file.html
+      const [l1, l2, fname] = parts;
+      if (!tree[l1]) tree[l1] = {};
+      if (!tree[l1][l2]) tree[l1][l2] = {};
+      if (!tree[l1][l2]['__files__']) tree[l1][l2]['__files__'] = [];
+      tree[l1][l2]['__files__'].push(f);
+    } else if (parts.length === 4) {
+      // L1/L2/L3/file.html
+      const [l1, l2, l3, fname] = parts;
+      if (!tree[l1]) tree[l1] = {};
+      if (!tree[l1][l2]) tree[l1][l2] = {};
+      if (!tree[l1][l2][l3]) tree[l1][l2][l3] = { '__files__': [] };
+      if (!tree[l1][l2][l3]['__files__']) tree[l1][l2][l3]['__files__'] = [];
+      tree[l1][l2][l3]['__files__'].push(f);
+    }
+    // deeper than 4 levels ignored
   }
+  return tree;
 }
 
-function getQuizzesForFolder(files, folderPath) {
-  return files.filter(f => {
-    const dir = f.path.substring(0, f.path.lastIndexOf('/'));
-    return dir.toLowerCase() === folderPath.toLowerCase();
-  });
+function quizItemHTML(f) {
+  const name = cleanName(f.path.split('/').pop());
+  const url = `${BASE_URL}/${f.path.split('/').map(p => encodeURIComponent(p)).join('/')}`;
+  return `<a class="quiz-item" href="${url}" target="_blank" data-name="${name.toLowerCase()}">
+    <span class="quiz-dot"></span>
+    <span class="quiz-name">${name}</span>
+    <span class="quiz-arrow">→</span>
+  </a>`;
 }
 
-function getRootQuizzes(files) {
-  return files.filter(f => !f.path.includes('/'));
+function countQuizzes(node) {
+  let count = 0;
+  if (node['__files__']) count += node['__files__'].length;
+  for (const key of Object.keys(node)) {
+    if (key !== '__files__') count += countQuizzes(node[key]);
+  }
+  return count;
 }
 
-function buildFolderHTML(folder, quizzes) {
-  const items = quizzes.length
-    ? quizzes.map(q => {
-        const name = cleanName(q.path.split('/').pop());
-        const url = `${BASE_URL}/${encodeURIComponent(q.path).replace(/%2F/g, '/')}`;
-        return `<a class="quiz-item" href="${url}" target="_blank" data-name="${name.toLowerCase()}">
-          <span class="quiz-dot"></span>
-          <span class="quiz-name">${name}</span>
-          <span class="quiz-arrow">→</span>
-        </a>`;
-      }).join('')
-    : `<div class="folder-empty">No quizzes yet — upload .html files to the "${folder.label}" folder in GitHub.</div>`;
-
-  return `<div class="folder" id="folder-${folder.id}">
-    <div class="folder-header" onclick="toggleFolder('folder-${folder.id}')">
+function buildL3HTML(l3name, node) {
+  const files = node['__files__'] || [];
+  const items = files.length
+    ? files.map(quizItemHTML).join('')
+    : `<div class="folder-empty">No quizzes yet.</div>`;
+  const fid = 'f-' + Math.random().toString(36).slice(2);
+  return `<div class="folder folder-l3" id="${fid}">
+    <div class="folder-header" onclick="toggleFolder(this)">
       <span class="folder-chevron">▶</span>
-      <span class="folder-name">${folder.label}</span>
-      <span class="folder-badge">${quizzes.length} quiz${quizzes.length !== 1 ? 'zes' : ''}</span>
+      <span class="folder-name">📂 ${l3name}</span>
+      <span class="folder-badge">${files.length}</span>
     </div>
     <div class="folder-body">${items}</div>
   </div>`;
 }
 
-function buildSubjectHTML(subject, files) {
-  let totalCount = 0;
-  const foldersHTML = subject.folders.map(folder => {
-    const quizzes = getQuizzesForFolder(files, folder.path);
-    totalCount += quizzes.length;
-    return buildFolderHTML(folder, quizzes);
-  }).join('');
+function buildL2HTML(l2name, node) {
+  const directFiles = node['__files__'] || [];
+  const l3keys = Object.keys(node).filter(k => k !== '__files__');
+  const totalCount = countQuizzes(node);
+  const fid = 'f-' + Math.random().toString(36).slice(2);
 
-  return `<section class="subject-section" id="subject-${subject.id}">
-    <div class="subject-header">
-      <div class="subject-icon">${subject.icon}</div>
-      <span class="subject-title">${subject.label}</span>
-      <span class="subject-count">${totalCount} total</span>
+  let bodyHTML = '';
+  // Direct files first
+  if (directFiles.length) bodyHTML += directFiles.map(quizItemHTML).join('');
+  // L3 subfolders
+  if (l3keys.length) bodyHTML += l3keys.sort().map(l3 => buildL3HTML(l3, node[l3])).join('');
+  if (!bodyHTML) bodyHTML = `<div class="folder-empty">No quizzes yet — upload .html files here in GitHub.</div>`;
+
+  return `<div class="folder" id="${fid}">
+    <div class="folder-header" onclick="toggleFolder(this)">
+      <span class="folder-chevron">▶</span>
+      <span class="folder-name">📁 ${l2name}</span>
+      <span class="folder-badge">${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}</span>
     </div>
-    ${foldersHTML}
-  </section>`;
+    <div class="folder-body">${bodyHTML}</div>
+  </div>`;
 }
 
-function toggleFolder(id) {
-  document.getElementById(id).classList.toggle('open');
+function buildSubjectHTML(l1name, node) {
+  const icon = getIcon(l1name);
+  const totalCount = countQuizzes(node);
+  const directFiles = node['__files__'] || [];
+  const l2keys = Object.keys(node).filter(k => k !== '__files__');
+
+  let html = `<section class="subject-section">
+    <div class="subject-header">
+      <div class="subject-icon">${icon}</div>
+      <span class="subject-title">${l1name}</span>
+      <span class="subject-count">${totalCount} total</span>
+    </div>`;
+
+  if (directFiles.length) html += directFiles.map(quizItemHTML).join('');
+  if (l2keys.length) html += l2keys.sort().map(l2 => buildL2HTML(l2, node[l2])).join('');
+
+  html += `</section>`;
+  return html;
 }
 
 function initSearch(totalCount) {
@@ -447,71 +284,55 @@ function initSearch(totalCount) {
   const input = document.getElementById('searchInput');
   input.addEventListener('input', () => {
     const q = input.value.toLowerCase().trim();
-    let visibleTotal = 0;
+    let visible = 0;
     document.querySelectorAll('.quiz-item').forEach(item => {
-      const name = item.dataset.name || '';
-      const match = !q || name.includes(q);
+      const match = !q || item.dataset.name.includes(q);
       item.classList.toggle('hidden', !match);
-      if (match) visibleTotal++;
+      if (match) visible++;
     });
-    // Auto-open folders with matches, collapse empty ones
-    document.querySelectorAll('.folder').forEach(folder => {
-      const visible = folder.querySelectorAll('.quiz-item:not(.hidden)').length;
-      if (q) {
-        folder.classList.toggle('open', visible > 0);
-        folder.classList.toggle('all-hidden', visible === 0);
-      } else {
-        folder.classList.remove('all-hidden');
-      }
-    });
+    if (q) {
+      document.querySelectorAll('.folder').forEach(folder => {
+        const hasMatch = folder.querySelectorAll('.quiz-item:not(.hidden)').length > 0;
+        if (hasMatch) folder.classList.add('open');
+      });
+    }
     document.getElementById('headerCount').textContent =
-      q ? `${visibleTotal} match${visibleTotal !== 1 ? 'es' : ''}` : `${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}`;
+      q ? `${visible} match${visible !== 1 ? 'es' : ''}` : `${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}`;
   });
 }
 
 async function init() {
   const content = document.getElementById('content');
-  const files = await loadQuizzes();
+  const files = await loadFiles();
   const safeFiles = files || [];
 
-  let totalCount = 0;
-  safeFiles.forEach(f => { if (f.path !== 'index.html' && f.path.endsWith('.html')) totalCount++; });
-
-  let html = STRUCTURE.map(subject => buildSubjectHTML(subject, safeFiles)).join('');
-
-  const rootQuizzes = getRootQuizzes(safeFiles);
-  if (rootQuizzes.length > 0) {
-    const items = rootQuizzes.map(q => {
-      const name = cleanName(q.path);
-      const url = `${BASE_URL}/${q.path}`;
-      return `<a class="quiz-item" href="${url}" target="_blank" data-name="${name.toLowerCase()}">
-        <span class="quiz-dot"></span>
-        <span class="quiz-name">${name}</span>
-        <span class="quiz-arrow">→</span>
-      </a>`;
-    }).join('');
-    html += `<section class="subject-section">
-      <div class="subject-header">
-        <div class="subject-icon">📁</div>
-        <span class="subject-title">Uncategorised</span>
-        <span class="subject-count">${rootQuizzes.length} total</span>
-      </div>
-      <div class="folder open" id="folder-root">
-        <div class="folder-header" onclick="toggleFolder('folder-root')">
-          <span class="folder-chevron">▶</span>
-          <span class="folder-name">All files</span>
-          <span class="folder-badge">${rootQuizzes.length} quiz${rootQuizzes.length !== 1 ? 'zes' : ''}</span>
-        </div>
-        <div class="folder-body">${items}</div>
-      </div>
-    </section>`;
+  if (safeFiles.length === 0 && !files) {
+    content.innerHTML = `<div class="state-msg"><div class="icon">⚠️</div>Could not load quizzes. Open this page via<br><strong>https://${GITHUB_USER}.github.io/${GITHUB_REPO}/</strong></div>`;
+    return;
   }
 
-  if (!files) {
-    html += `<div class="state-msg" style="margin-top:16px;">
-      <div class="icon">⚠️</div>
-      Could not reach GitHub API — quiz list may be incomplete.
-    </div>`;
+  const tree = buildTree(safeFiles);
+  const l1keys = Object.keys(tree).filter(k => k !== '__root__').sort();
+  const rootNode = tree['__root__'] || {};
+  const rootFiles = rootNode['__files__'] || [];
+
+  let totalCount = safeFiles.length;
+  let html = '';
+
+  if (l1keys.length === 0 && rootFiles.length === 0) {
+    html = `<div class="state-msg"><div class="icon">📭</div>No quizzes yet.<br>Upload quiz HTML files into folders in your GitHub repository.</div>`;
+  } else {
+    html += l1keys.map(l1 => buildSubjectHTML(l1, tree[l1])).join('');
+    if (rootFiles.length) {
+      html += `<section class="subject-section">
+        <div class="subject-header">
+          <div class="subject-icon">📁</div>
+          <span class="subject-title">Uncategorised</span>
+          <span class="subject-count">${rootFiles.length} total</span>
+        </div>
+        ${rootFiles.map(quizItemHTML).join('')}
+      </section>`;
+    }
   }
 
   content.innerHTML = html;
