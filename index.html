@@ -1586,6 +1586,8 @@
     document.getElementById("liveClock").textContent = `${h}:${m}:${s} ${ap} • ${date} • ${day}`;
   }
   setInterval(updateClock,1000); updateClock();
+  // Refresh weather automatically every 15 minutes
+  setInterval(() => fetchWeatherInteractive(), 15 * 60 * 1000);
 
   // ----- THEMES SYSTEM -----
   function setTheme(theme) {
