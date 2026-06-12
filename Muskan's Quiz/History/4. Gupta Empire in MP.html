@@ -29,6 +29,7 @@
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
         }
+        
         body.dark-theme { background: #0a0f1a; }
         body.dark-theme .quiz-container {
             background: #1a1f2c;
@@ -73,6 +74,7 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
             transform: scale(0.96);
         }
+        
         .font-slider-panel {
             background: #eef2f7;
             padding: 8px 20px;
@@ -88,6 +90,7 @@
         body.dark-theme .font-slider-panel label { color: #ffddb0; }
         .font-slider-panel input { width: 200px; cursor: pointer; }
         .font-slider-panel span { min-width: 55px; font-weight: bold; }
+        
         .stats-bar {
             background: #1e2c3a;
             color: white;
@@ -109,6 +112,7 @@
         .stat { font-weight: 600; font-size: 1rem; }
         .stat span:first-child { color: #bbd4f0; margin-right: 6px; }
         .stat span:last-child { color: #ffdd99; font-size: 1.2rem; font-weight: bold; }
+        
         .timer {
             background: #00000055;
             padding: 0.4rem 1rem;
@@ -122,6 +126,7 @@
             transition: 0.1s;
         }
         .timer:hover { transform: scale(1.02); background: #000000aa; }
+        
         .action-buttons { display: flex; gap: 12px; align-items: center; }
         .action-btn {
             background: #2e4a6e;
@@ -138,6 +143,7 @@
             gap: 6px;
         }
         .action-btn:hover { background: #ff8c42; transform: scale(0.97); }
+        
         .question-panel { padding: 2rem 2rem 1.8rem; }
         .question-text {
             font-size: 1.6rem;
@@ -174,6 +180,7 @@
             text-decoration: line-through;
             color: #a51b0f;
         }
+        
         .explanation-box {
             background: #fef7e0;
             border-left: 6px solid #ffb347;
@@ -204,6 +211,7 @@
         }
         .exp-text { color: #2c3e4e; font-weight: 600; font-size: 1rem; }
         body.dark-theme .exp-text { color: #e0e6f5; }
+        
         .action-row {
             display: flex;
             gap: 15px;
@@ -245,6 +253,7 @@
             text-align: center;
         }
         .next-btn:hover { background: #1c5a1c; transform: scale(0.98); }
+        
         .info-message {
             background: #eef2fa;
             padding: 10px;
@@ -283,6 +292,7 @@
         .nav-btn.incorrect { background: #d9534f; color: white; border-color: #a12a26; }
         .nav-btn.skipped { background: #3a86ff; color: white; border-color: #1e5bc0; }
         .nav-btn.unanswered { background: #cbdbe2; color: #1f2a3e; }
+        
         /* ===== VIVID WELCOME PAGE (matching quiz aesthetic) ===== */
         .welcome-overlay {
             background: linear-gradient(145deg, #e9eef3 0%, #d4dfe9 100%);
@@ -359,6 +369,7 @@
             background: #2a2f41;
             color: #ffd9a5;
         }
+        
         .mode-buttons {
             display: flex;
             gap: 20px;
@@ -414,6 +425,7 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
+        
         .finish-stats {
             background: linear-gradient(135deg, #f9f3e0, #ffe6c9);
             border-radius: 2rem;
@@ -449,6 +461,7 @@
         }
         .finish-stats .stat-card span:first-child { font-size: 1rem; font-weight: 600; display: block; }
         .finish-stats .stat-card span:last-child { font-size: 2rem; font-weight: 800; }
+        
         .review-counter {
             background: #e6eef9;
             display: inline-block;
@@ -470,6 +483,7 @@
         }
         .modal-content { background: white; border-radius: 1.8rem; padding: 2rem; max-width: 420px; text-align: center; }
         button { background: #2c6e9e; border: none; padding: 10px 20px; margin: 6px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
+        
         /* .saved-question-view: kept for portal reuse. Renders a saved question exactly as it appears
            mid-quiz (correct option highlighted green, full colour-coded explanation). The portal's
            "Saved" section reuses these classes/colours to display saved questions consistently. */
@@ -498,6 +512,7 @@
         .saved-question-view .exp-text { color: #2c3e4e; font-weight: 600; }
         body.dark-theme .saved-question-view .exp-text { color: #e0e6f5; }
         .saved-question-view .explanation-line { margin-bottom: 0.8rem; }
+        
         /* Instructions modal */
         .instructions-modal {
             position: fixed;
@@ -541,6 +556,7 @@
         body.dark-theme .instructions-list li:before { color: #ffae42; }
         .instructions-list strong { color: #c43a0b; }
         body.dark-theme .instructions-list strong { color: #ffae42; }
+        
         /* Leaderboard */
         .leaderboard-section {
             margin-top: 2rem;
@@ -577,6 +593,7 @@
         body.dark-theme .reset-logs-btn:hover { background: #be123c; }
         .leaderboard-empty { text-align: center; padding: 2rem; font-style: italic; color: #64748b; }
         body.dark-theme .leaderboard-empty { color: #94a3b8; }
+        
         @media (max-width: 650px) {
             .stats-bar { flex-direction: column; align-items: stretch; }
             .stats-group { justify-content: center; }
@@ -600,10 +617,13 @@
 <div id="root"></div>
 
 <script>
+    // --------------------------------------------------------------
+    // FULL QUIZ DATA
+    // --------------------------------------------------------------
     const FULL_QUIZ = [
         { text: "Which of the following pairs correctly identifies the founder of the Gupta Empire and the dynasty's royal emblem?", opts: ["A. Samudragupta and the Lion", "B. Chandragupta I and the Bull", "C. Shrigupta and the Garuda", "D. Ghatotkacha and the Elephant"], ans: "C", exp: "(a) Incorrect -- Samudragupta was a later imperial ruler known as the 'Indian Napoleon', not the founder. The lion was used on certain specific coins (like those of Ramagupta) but was not the primary dynastic emblem.\n(b) Incorrect -- Chandragupta I was the first independent sovereign ruler (Maharajadhiraja) and real founder of the imperial power, but not the original dynastic founder. The bull was not their emblem.\n(c) Correct -- Shrigupta is the founder of the Gupta Empire, which emerged in the 4th century CE. The Garuda (the divine eagle) served as the official royal emblem of the Gupta dynasty.\n(d) Incorrect -- Ghatotkacha was the son and immediate successor of Shrigupta, not the founder. The elephant was not the royal emblem of the Guptas." },
         { text: "The Gupta rulers proudly adopted the title 'Parama Bhagavata'. What does this title signify about their religious affiliation?", opts: ["A. They were primary patrons of the Buddhist Sangha.", "B. They were supreme devotees of Vishnu.", "C. They were strict followers of the Jain Tirthankaras.", "D. They were exclusive worshippers of Shiva (Mahesh)."], ans: "B", exp: "(a) Incorrect -- While the Guptas showed religious tolerance (e.g., donating to Buddhist monks at Sanchi), Buddhism was not their primary, official dynastic religion.\n(b) Correct -- 'Parama Bhagavata' translates to 'Supreme devotee of Vishnu'. The official religion of the Gupta Empire was Vaishnavism, and this title proudly reflected their devotion within the Trimurti tradition (Brahma, Mahesh, Vishnu).\n(c) Incorrect -- The Guptas were tolerant of Jainism (as seen in Jain caves at Udayagiri) but did not use this title to signify Jain devotion.\n(d) Incorrect -- Some Gupta ministers (like Virasena) were Shaivites, but the kings themselves primarily worshipped Vishnu, not Shiva." },
-        { text: "Which of the following represents the correct chronological succession of the major Gupta emperors?", opts: ["A. Ramagupta → Chandragupta I → Skandagupta → Bhanagupta", "B. Samudragupta → Ramagupta → Govindagupta → Chandragupta I", "C. Chandragupta II → Kumaragupta I → Samudragupta → Skandagupta", "D. Chandragupta I → Samudragupta → Ramagupta → Chandragupta II"], ans: "D", exp: "(a) Incorrect -- Chandragupta I preceded Ramagupta by several generations, making this order highly inaccurate.\n(b) Incorrect -- Chandragupta I was the predecessor of Samudragupta, not a successor to Govindagupta.\n(c) Incorrect -- Samudragupta was an early emperor who ruled before Chandragupta II and Kumaragupta I.\n(d) Correct -- The proper imperial succession begins with the \"real founder\" Chandragupta I, followed by his son Samudragupta, then the disputed king Ramagupta, and subsequently Chandragupta II." },
+        { text: "Which of the following represents the correct chronological succession of the major Gupta emperors?", opts: ["A. Ramagupta -> Chandragupta I -> Skandagupta -> Bhanagupta", "B. Samudragupta -> Ramagupta -> Govindagupta -> Chandragupta I", "C. Chandragupta II -> Kumaragupta I -> Samudragupta -> Skandagupta", "D. Chandragupta I -> Samudragupta -> Ramagupta -> Chandragupta II"], ans: "D", exp: "(a) Incorrect -- Chandragupta I preceded Ramagupta by several generations, making this order highly inaccurate.\n(b) Incorrect -- Chandragupta I was the predecessor of Samudragupta, not a successor to Govindagupta.\n(c) Incorrect -- Samudragupta was an early emperor who ruled before Chandragupta II and Kumaragupta I.\n(d) Correct -- The proper imperial succession begins with the \"real founder\" Chandragupta I, followed by his son Samudragupta, then the disputed king Ramagupta, and subsequently Chandragupta II." },
         { text: "Which ruler initiated the Gupta Era (Gupta Samvat) in 319–320 CE, and how did he significantly increase the legitimacy of his empire?", opts: ["A. Chandragupta I, by marrying the Lichchhavi Princess Kumaradevi", "B. Samudragupta, by erecting a victory monument at Eran", "C. Chandragupta II, by defeating the Shaka Kshatrapa Rudrasimha III", "D. Skandagupta, by repairing the Sudharshan Lake in Saurashtra"], ans: "A", exp: "(a) Correct -- Chandragupta I started the Gupta Era in 319–320 CE, reckoning it from his coronation. His strategic marriage to the Lichchhavi Princess Kumaradevi significantly boosted the empire's power and legitimacy.\n(b) Incorrect -- Samudragupta did erect a victory monument at Eran after a military campaign, but he did not start the Gupta Era, nor was this the primary source of his initial dynastic legitimacy.\n(c) Incorrect -- Chandragupta II did defeat Rudrasimha III, but this occurred much later than 319 CE and is associated with his expansion, not the founding of the era.\n(d) Incorrect -- Skandagupta's repair of the Sudharshan Lake occurred during the later phase of the empire, dealing with internal infrastructure and defence, not the establishment of the Gupta Era." },
         { text: "Who holds the distinction of being the first Gupta king to issue gold coins?", opts: ["A. Samudragupta", "B. Chandragupta I", "C. Ramagupta", "D. Skandagupta"], ans: "B", exp: "(a) Incorrect -- Samudragupta issued various types of coins, and his coins have been found in places like Bonala and Sakor, but he was not the first in the dynasty to issue gold currency.\n(b) Correct -- Chandragupta I was the first Gupta king to issue gold coins. Notably, these foundational coins featured the image of his wife, Queen Kumaradevi, alongside his own.\n(c) Incorrect -- Ramagupta is primarily known for 4th–5th century copper coins of the Lion (Simha) and Garuda types found in Vidisha and Eran.\n(d) Incorrect -- Gold coins of Skandagupta have indeed been found at Sakaur (Damoh district), but he was a much later ruler, not the first to issue them." },
         { text: "Historian V.A. Smith coined the nickname 'The Indian Napoleon' for which Gupta emperor due to his extensive military conquests?", opts: ["A. Chandragupta Maurya", "B. Chandragupta II", "C. Samudragupta", "D. Bhanagupta"], ans: "C", exp: "(a) Incorrect -- Chandragupta Maurya belongs to the Mauryan Empire, not the Gupta dynasty, and is not referred to as the Indian Napoleon by V.A. Smith.\n(b) Incorrect -- Chandragupta II was a great conqueror known by titles like Vikramaditya and Shakari, but he is not the one nicknamed the Indian Napoleon.\n(c) Correct -- Samudragupta earned the nickname 'The Indian Napoleon' from historian V.A. Smith because of his aggressive military campaigns (Digvijaya) and massive territorial expansion.\n(d) Incorrect -- Bhanagupta is known for his defensive military efforts against the Huna invaders under Toramana, not for sweeping Napoleonic conquests." },
@@ -661,13 +681,17 @@
 
     const topicName = "Gupta Empire in MP";
 
+    // --------------------------------------------------------------
+    // DO NOT EDIT ANYTHING BELOW THIS LINE
+    // --------------------------------------------------------------
+
+    const TOTAL_QS = FULL_QUIZ.length;
+
     // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
     const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
     const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
     const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
     const SAVED_KEY = `quiz_saved_questions_${safeTopicName}`;
-
-    const TOTAL_QS = FULL_QUIZ.length;
 
     // --- Firebase Setup ---
     const firebaseConfig = {
@@ -897,30 +921,39 @@
         if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
     }
 
-    // --- Save question for later review ---
-    async function loadSavedQuestions() {
-        try {
-            const snap = await db.ref(SAVED_KEY).get();
+    // --- Save question for later review (real-time) ---
+    let savedQuestionsListenerAttached = false;
+    function attachSavedQuestionsListener() {
+        if (savedQuestionsListenerAttached) return;
+        savedQuestionsListenerAttached = true;
+        db.ref(SAVED_KEY).on('value', (snap) => {
             savedQuestions = new Set(snap.exists() ? Object.keys(snap.val()).map(Number) : []);
-        } catch(e) { savedQuestions = new Set(); }
+            updateSaveButtonUI();
+        }, (err) => { console.error("Saved questions listener error:", err); });
+    }
+    function updateSaveButtonUI() {
+        const btn = document.getElementById('saveQuestionBtn');
+        if (!btn || !quizActive) return;
+        let origIdx;
+        if (skipReviewMode) origIdx = order[currentPos];
+        else if (reviewItems.length && document.getElementById('reviewBackStats')) origIdx = reviewItems[reviewCurrentIdx];
+        else origIdx = order[currentPos];
+        const isSaved = savedQuestions.has(origIdx + 1);
+        btn.classList.toggle('saved', isSaved);
+        btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
     }
     async function toggleSaveQuestion(origIdx) {
         const canonicalId = origIdx + 1;
         const q = FULL_QUIZ[origIdx];
-        const btn = document.getElementById('saveQuestionBtn');
         try {
             if (savedQuestions.has(canonicalId)) {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).remove();
-                savedQuestions.delete(canonicalId);
             } else {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).set({ text: q.text, opts: q.opts, ans: q.ans, exp: q.exp });
-                savedQuestions.add(canonicalId);
             }
-            if (btn) {
-                const isSaved = savedQuestions.has(canonicalId);
-                btn.classList.toggle('saved', isSaved);
-                btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
-            }
+            // savedQuestions / button UI update is handled automatically by the
+            // real-time listener (attachSavedQuestionsListener) when this write
+            // is reflected back from Firebase.
         } catch(e) { console.error(e); alert("Could not update saved questions. Check your connection."); }
     }
 
@@ -1077,6 +1110,7 @@
         reviewItems = incorrectSkipped; reviewCurrentIdx = 0; showReviewItem(0);
     }
     function showReviewItem(idx) {
+        reviewCurrentIdx = idx;
         const orig = reviewItems[idx];
         const q = FULL_QUIZ[orig];
         const userChoice = userSelections[orig];
@@ -1180,7 +1214,7 @@
         currentSkipReviewIndex = savedState.currentSkipReviewIndex || 0;
         if (savedState.isDarkMode !== undefined) applyUIPreferences(savedState.isDarkMode, savedState.fontSize || 16);
         quizActive = true; quizInProgress = true;
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         renderMainUI(); initDarkModeToggle(); initFontSlider();
         startTime = Date.now() - (elapsedSeconds * 1000);
         if (!timerPaused) {
@@ -1214,7 +1248,7 @@
         elapsedSeconds = 0; timerPaused = false;
         quizInProgress = true; leaderboardLoggedForThisSession = false;
         clearSavedState();
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         startTimer(); renderMainUI(); initDarkModeToggle(); initFontSlider();
     }
 
@@ -1252,7 +1286,7 @@
     function showInstructions() {
         const modal = document.createElement('div');
         modal.className = 'instructions-modal';
-        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>🔖 Save for review:</strong> Click the Save button after answering a question to bookmark it for later review.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
+        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>🔖 Save:</strong> After answering any question, you can save it to your Firebase portal directly so you can review tricky questions at a later time.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
         document.body.appendChild(modal);
         document.getElementById('closeInstructionsBtn').onclick = () => modal.remove();
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });

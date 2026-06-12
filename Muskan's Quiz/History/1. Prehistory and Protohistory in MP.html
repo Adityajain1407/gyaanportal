@@ -600,6 +600,12 @@
 <div id="root"></div>
 
 <script>
+    const topicName = "Prehistory and Protohistory in MP";
+    const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
+    const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
+    const SAVED_KEY = `quiz_saved_questions_${safeTopicName}`;
+
     const FULL_QUIZ = [
         { text: "Which of the following individuals is credited with deciphering the Brahmi and Kharoshti scripts in 1837, thereby unlocking a vast array of Indian inscriptions?", opts: ["A. Robert Bruce Foote", "B. James Prinsep", "C. A.P. Khatri", "D. Arun Sonakia"], ans: "B", exp: "(a) Incorrect -- Robert Bruce Foote is known as the Father of Indian Prehistory, not for deciphering scripts.\n(b) Correct -- James Prinsep deciphered the Brahmi and Kharoshti scripts in 1837, which unlocked a vast array of Indian inscriptions.\n(c) Incorrect -- A.P. Khatri was an investigator who discovered the contested Mahadevian Culture in the Narmada Valley in 1958.\n(d) Incorrect -- Arun Sonakia is the discoverer of the Hathnora human skull (Narmada Man), the oldest human fossil in India." },
         { text: "Which dating method is specifically applied to determine the age of rock formations, particularly volcanic and metamorphic rocks?", opts: ["A. C-14 Radiocarbon Method", "B. Dendrochronology", "C. Argon-23 / Potassium-Argon Method", "D. Absolute Dating via Volcanic Ash"], ans: "C", exp: "(a) Incorrect -- The C-14 Radiocarbon Method is used for organic matter and fossils, measuring the decay of the Carbon-14 isotope in once-living material.\n(b) Incorrect -- Dendrochronology is a dating method that relies on tree rings, where each ring represents one year of growth.\n(c) Correct -- The Argon-23 / Potassium-Argon Method is used for dating rock formations and is applied to volcanic and metamorphic rocks.\n(d) Incorrect -- While volcanic ash is dated using methods like Potassium-Argon, the technique itself specifically targeting rock composition is the Argon method." },
@@ -643,11 +649,11 @@
         { text: "Navdatoli provides crucial evidence of Chalcolithic agricultural mastery. Which tools were explicitly used to harvest the diverse multi-crop yields found there?", opts: ["A. Heavy quartzite cleavers", "B. Bronze celts from Awra", "C. Iron sickles", "D. Micro-blades (Laghu Paashan Astra)"], ans: "D", exp: "(a) Incorrect -- Heavy quartzite cleavers are Lower Paleolithic tools, unsuitable and temporally incorrect for Chalcolithic harvesting.\n(b) Incorrect -- The Bronze celt was found in Awra; while technologically advanced, the specific harvesting implements at Navdatoli were stone-based.\n(c) Incorrect -- Iron sickles belong to the subsequent Iron Age (Loh Yug); iron metallurgy had not yet been introduced.\n(d) Correct -- The charred grains found at Navdatoli (wheat, linseed, lentils, peas) were harvested using Micro-blades (Laghu Paashan Astra)." },
         { text: "The expansion of the Chalcolithic complex into the upper Malwa Plateau is confirmed by specific archaeological finds. Which of the following pairs of sites represents this expansion?", opts: ["A. Sihawal and Patpara", "B. Azad Nagar and Musakhedi", "C. Awra and Manoti", "D. Jambu Dwip and Dorothy Deep"], ans: "B", exp: "(a) Incorrect -- Sihawal and Patpara are Paleolithic formations located in the Son Valley, not Chalcolithic sites on the Malwa Plateau.\n(b) Correct -- Azad Nagar and Musakhedi (in the Indore Region) are the sites that confirm the spread of the Chalcolithic complex into the upper Malwa Plateau, yielding Malwa Ware Pottery and other artifacts.\n(c) Incorrect -- Awra and Manoti are Chalcolithic sites, but they are situated in the Mandsaur region (Chambal River), rather than representing the specific upper Malwa Plateau expansion centers of Azad Nagar/Musakhedi.\n(d) Incorrect -- Jambu Dwip and Dorothy Deep are Mesolithic rock shelters located in Pachmarhi, unrelated to Chalcolithic Malwa expansion." },
         { text: "Which tribal community in Northern M.P. is historically renowned as the best iron smiths, possessing a direct cultural link to the Iron Age?", opts: ["A. Kol Tribe", "B. Gond Tribe", "C. Bhil Tribe", "D. Agaria Tribe"], ans: "D", exp: "(a) Incorrect -- The Kol Tribe is historically associated with worshipping the Paleolithic Mother Goddess shrine in the Son Valley, not specifically famed as iron smiths.\n(b) Incorrect -- Gondwana is the ancient name for Mandla, but the notes specifically highlight another tribe for iron mastery.\n(c) Incorrect -- The Bhil Tribe is not mentioned in the notes as the renowned iron smiths of the Iron Age.\n(d) Correct -- The Agaria Tribe from Northern M.P. (Gwalior, Bhind, Morena regions) is renowned as the best iron smiths, linking directly to the Iron Age." },
-        { text: "Megalithic monuments — large stone burials and markers — characterize the Megalithic Age in Madhya Pradesh. In which specific geographic regions are these primarily found?", opts: ["A. Ujjain and Dhar", "B. Gwalior and Bhind", "C. Rewa and Seoni", "D. Indore and Khargone"], ans: "C", exp: "(a) Incorrect -- Ujjain and Dhar are prominent for Chalcolithic sites like Kayatha and Paleolithic bead factories (Khaparkheda), not primarily Megalithic markers.\n(b) Incorrect -- Gwalior and Bhind (Northern M.P.) are the primary geographic regions associated with the Iron Age and the Agaria tribe's ironwork.\n(c) Correct -- Rewa and Seoni are the specific geographic regions in M.P. where evidence of the Megalithic Age, in the form of massive stone burials and markers, is found." },
+        { text: "Megalithic monuments — large stone burials and markers — characterize the Megalithic Age in Madhya Pradesh. In which specific geographic regions are these primarily found?", opts: ["A. Ujjain and Dhar", "B. Gwalior and Bhind", "C. Rewa and Seoni", "D. Indore and Khargone"], ans: "C", exp: "(a) Incorrect -- Ujjain and Dhar are prominent for Chalcolithic sites like Kayatha and Paleolithic bead factories (Khaparkheda), not primarily Megalithic markers.\n(b) Incorrect -- Gwalior and Bhind (Northern M.P.) are the primary geographic regions associated with the Iron Age and the Agaria tribe's ironwork.\n(c) Correct -- Rewa and Seoni are the specific geographic regions in M.P. where evidence of the Megalithic Age, in the form of massive stone burials and markers, is found.\n(d) Incorrect -- Indore and Khargone are linked with Chalcolithic expansions and sites like Navdatoli." },
         { text: "Which of the following pairs correctly matches the modern city with its ancient name?", opts: ["A. Mandsaur — Daspur", "B. Jabalpur — Kak Naad", "C. Vidisha — Tundikar", "D. Damoh — Mahishmati"], ans: "A", exp: "(a) Correct -- The ancient name for Mandsaur is Daspur.\n(b) Incorrect -- The ancient name for Jabalpur is Tripuri, whereas Kak Naad is the ancient name for Sanchi.\n(c) Incorrect -- The ancient name for Vidisha is Bhelsa or Besnagar, while Tundikar is the ancient name for Damoh.\n(d) Incorrect -- The ancient name for Damoh is Tundikar, whereas Mahishmati is the ancient name for Maheshwar." },
         { text: "Consider the following ancient names: Gopachal, Avantika, and Bhabra. Which modern cities do they correspond to, respectively?", opts: ["A. Gwalior, Mandsaur, and Dhar", "B. Bhopal, Ujjain, and Mandu", "C. Shivpuri, Sanchi, and Indore", "D. Gwalior, Ujjain, and Azad Nagar"], ans: "D", exp: "(a) Incorrect -- While Gopachal is Gwalior, Avantika is Ujjain (not Mandsaur/Daspur), and Bhabra is Azad Nagar (not Dhar/Dharnagri).\n(b) Incorrect -- Bhopal's ancient name is Bhojpal, not Gopachal. Mandu's ancient name is Shadiyabad or Mandavgadh.\n(c) Incorrect -- Shivpuri's ancient name is Analpur. Sanchi is Kak Naad. Indore is Indrpur.\n(d) Correct -- Gopachal corresponds to Gwalior, Avantika (or Ujjaini/Avanti) corresponds to Ujjain, and Bhabra corresponds to Azad Nagar." },
         { text: "Which important rock shelter is located in the Morena district at the Pahargarh Cave?", opts: ["A. Likhichhaj Rock (Likheechchaj)", "B. Ranimachi", "C. Nishangarh Kajri", "D. Likhi Daant"], ans: "A", exp: "(a) Correct -- The Likhichhaj Rock (Likheechchaj) shelter is located at Karsa, Morena (Pahargarh Cave).\n(b) Incorrect -- Ranimachi is located in Chitrangi, Singrauli.\n(c) Incorrect -- Nishangarh Kajri is located in Pachmarhi.\n(d) Incorrect -- Likhi Daant is located in Chanderi, Ashoknagar." },
-        { text: "Which of the following cities is correctly matched with its ancient name \"Shadiyabad\"?", opts: ["A. Chhindwara", "B. Burhanpur", "C. Mandu", "D. Datia"], ans: "C", exp: "(a) Incorrect -- The ancient name for Chhindwara is Neelkanthi.\n(b) Incorrect -- The ancient name for Burhanpur is Khandesh.\n(c) Correct -- The ancient name for Mandu is Shadiyabad (or Mandavgadh).\n(d) Incorrect -- The ancient name for Datia is Dilipnagar." },
+        { text: "Which of the following cities is correctly matched with its ancient name \"Shadiyabad\"?", opts: ["A. Chhindwara", "B. Burhanpur", "C. Mandu", "D. Datia"], ans: "C", exp: "(a) Incorrect -- The ancient name for Chhindwara is Neelkanthi.\n(b) Incorrect -- The ancient name for Burhanpur is Khandesh.\n(c) Correct -- The ancient name for Mandu is \"Shadiyabad\" (or Mandavgadh).\n(d) Incorrect -- The ancient name for Datia is Dilipnagar." },
         { text: "Which prehistoric site is renowned not only for its Middle Paleolithic and Mesolithic rock art but is also a designated UNESCO World Heritage Site located in the Raisen District?", opts: ["A. Adamgarh", "B. Bhimbetka", "C. Hathnora", "D. Eran"], ans: "B", exp: "(a) Incorrect -- Adamgarh (in Narmadapuram) is famous for the first evidence of animal domestication, discovered by R.B. Joshi.\n(b) Correct -- Bhimbetka, located in the Raisen District, is a critical Middle Paleolithic and Mesolithic site famous for its rock art and holds the status of a UNESCO World Heritage Site.\n(c) Incorrect -- Hathnora (Sehore District) is the site where the oldest human fossil in India (Narmada Man) was found.\n(d) Incorrect -- Eran (Sagar District) is the only fortified Chalcolithic settlement in M.P." },
         { text: "The earliest archaeological work in Madhya Pradesh, documenting tools, fossils, and stratified gravels, was conducted primarily in which river valley?", opts: ["A. Narmada River", "B. Son River", "C. Chambal River", "D. Betwa River"], ans: "A", exp: "(a) Correct -- The Narmada River Valley represents the core zone for the very first archaeological work in M.P., where tools, fossils, and stratified gravels were initially documented.\n(b) Incorrect -- The Son Valley was highly vital for relative dating and palaeoenvironmental reconstruction (via re-surveys), but the first work occurred in the Narmada Valley.\n(c) Incorrect -- The Chambal Valley has Lower to Upper Paleolithic remains but was not the site of the state's very first archaeological work.\n(d) Incorrect -- The Betwa Valley contains boulder gravel tools but is not designated as the site of the first archaeological work in M.P." },
         { text: "Which notable object was found at the Neolithic site of Adamgarh, showing advanced craftsmanship utilizing aquatic resources?", opts: ["A. A polished stone Celt", "B. A bronze fishing hook", "C. An object made from an oyster shell (seep se bani vastu)", "D. Evidence of cloth weaving"], ans: "C", exp: "(a) Incorrect -- While polished axes and celts define the Neolithic Age, the specific standout object noted at Adamgarh from this era was not a celt.\n(b) Incorrect -- Bronze fish-hooks belong to the later Chalcolithic period (e.g., Maheshwar and Navdatoli finds).\n(c) Correct -- At the Neolithic site of Adamgarh, an object made from an oyster shell (seep se bani vastu) was discovered.\n(d) Incorrect -- While cloth weaving (Kapda Bunai) began in the Neolithic Age, the specific unique find at Adamgarh was the oyster object." },
@@ -657,7 +663,7 @@
         { text: "During the Mesolithic age, tools known as Microliths were developed. What specialized forms did these tools take?", opts: ["A. Heavy choppers, unshaped handaxes, and rough cleavers.", "B. Highly polished celts, iron rings, and antimony rods.", "C. Massive rock burins used strictly for architectural construction.", "D. Lunates, Triangles, Trapezes, micro-burins, and thumb-nail scrapers."], ans: "D", exp: "(a) Incorrect -- Heavy choppers, unshaped handaxes, and rough cleavers were lithic technology of the Lower Paleolithic Age.\n(b) Incorrect -- Polished celts belong to the Neolithic, and iron rings/antimony rods appear in later metal ages.\n(c) Incorrect -- Burins originated in the Upper Paleolithic for scraping art, but they were not massive rock tools for architecture.\n(d) Correct -- Mesolithic Microliths took highly specialized geometric forms such as Lunates (Chandrakaar), Triangles (Tribhuj), and Trapezes (Samalamb), as well as micro-burins and thumb-nail scrapers." },
         { text: "In the context of M.P.'s prehistoric rock shelters, which rock shelter is located in the Bijawar region of Chhatarpur?", opts: ["A. Likhichhaj Rock", "B. Data Rock (Daat Raak)", "C. Harappan Painting Site", "D. Likhi Daant"], ans: "B", exp: "(a) Incorrect -- Likhichhaj Rock is located in Karsa, Morena.\n(b) Correct -- Data Rock (Daat Raak) is the rock shelter located in Bijawar, Chhatarpur.\n(c) Incorrect -- The Harappan Painting Site is situated in Bori, Narmadapuram.\n(d) Incorrect -- Likhi Daant is a rock shelter located in Chanderi, Ashoknagar." },
         { text: "What distinguishes the Bronze Age Indus Valley Civilisation's metallurgy from the preceding Chalcolithic Age metallurgy?", opts: ["A. The Bronze Age used an alloy of Tin + Copper, whereas the Chalcolithic Age utilized Copper + Stone.", "B. The Bronze Age exclusively used Quartzite stone, abandoning metal completely.", "C. The Chalcolithic Age utilized an alloy of Tin + Copper, making it technologically superior to the Bronze Age.", "D. Both ages relied entirely on unalloyed iron tools."], ans: "A", exp: "(a) Correct -- The conceptual foundation distinguishes the Chalcolithic Age (using Copper + Stone) from the Indus Valley Civilisation/Bronze Age, which used an alloy of Tin + Copper (Tin + Taamba).\n(b) Incorrect -- The Bronze Age is fundamentally a metal age; it did not abandon metal for Quartzite (which was a Lower Paleolithic material).\n(c) Incorrect -- The Chalcolithic Age utilized copper and stone, not the Tin+Copper alloy that defines the Bronze Age.\n(d) Incorrect -- Iron tools characterize the much later Iron Age (Loh Yug), not the Chalcolithic or Bronze ages." },
-        { text: "Which Chalcolithic culture is specifically known by the ancient name \"Tambavati\" and interacted with Madhya Pradesh's early societies?", opts: ["A. Jorwe Culture", "B. OCP Culture", "C. Copper Hoard Culture", "D. Ganeshwar and Ahar Culture (Banas Culture)"], ans: "D", exp: "(a) Incorrect -- The Jorwe Culture is based in Maharashtra (Inamgaon, Daimabad) and is not known as Tambavati.\n(b) Incorrect -- The OCP Culture is centered in Uttar Pradesh (Indo-Gangetic Plain).\n(c) Incorrect -- The Copper Hoard Culture is heavily centered in M.P. (Gungeria) but is not identified as Tambavati.\n(d) Correct -- The Ganeshwar and Ahar Culture of Rajasthan (also linked as the Banas Culture) interacted with M.P. societies, and Ahar's ancient name is explicitly noted as Tambavati." },
+        { text: "Which Chalcolithic culture is specifically known by the ancient name \"Tambavati\" and interacted with Madhya Pradesh's early societies?", opts: ["A. Jorwe Culture", "B. OCP Culture", "C. Copper Hoard Culture", "D. Ganeshwar and Ahar Culture (Banas Culture)"], ans: "D", exp: "(a) Incorrect -- The Jorwe Culture is based in Maharashtra (Inamgaon, Daimabad) and is not known as Tambavati.\n(b) Incorrect -- The OCP Culture is centered in Uttar Pradesh (Indo-Gangetic Plain).\n(c) Incorrect -- The Copper Hoard Culture is heavily centered in M.P. (Gungeria) but is not identified as Tambavati.\n(d) Correct -- The Ganeshwar and Ahar Culture of Rajasthan (also linked as the Banas Culture) interacted with M.P. societies, and Ahar's ancient name is explicitly noted as \"Tambavati\"." },
         { text: "Regarding the geographical distribution of Neolithic settlements in Madhya Pradesh, where are these settlements specifically confined?", opts: ["A. They are exclusively found deep within the Malwa Plateau.", "B. They are confined to Sagar, Bundelkhand, and the Son River Valley.", "C. They are located only in the Nimar Region.", "D. They are found heavily stratified beneath the Chambal riverbed."], ans: "B", exp: "(a) Incorrect -- Neolithic settlements are explicitly ABSENT in the Malwa region.\n(b) Correct -- The agricultural dawn of the Neolithic Age in M.P. is geographically confined to Sagar, Bundelkhand, and the Son River Valley.\n(c) Incorrect -- Neolithic settlements are explicitly ABSENT in the Nimar Region.\n(d) Incorrect -- All documented Neolithic sites in M.P. are strictly surface-level findings (satahi saakshya), with no deep excavation/stratified evidence beneath riverbeds." },
         { text: "Navdatoli and Maheshwar yielded an array of specific Chalcolithic artifacts. Which of the following was NOT among the items discovered there?", opts: ["A. Steatite / Carnelian beads", "B. Fish-hooks", "C. Perforated Axes (Chhidrayukt Kulhadi)", "D. Pins / Antimony Rods"], ans: "A", exp: "(a) Correct -- Steatite / Carnelian beads (precious and semi-precious bead ornaments) are key artifacts of the Kayatha culture, not specifically listed under the Navdatoli and Maheshwar findings.\n(b) Incorrect -- Fish-hooks were discovered at Maheshwar and Navdatoli.\n(c) Incorrect -- Perforated Axes (Chhidrayukt Kulhadi) were discovered at Maheshwar and Navdatoli.\n(d) Incorrect -- Pins / Antimony Rods were discovered at Maheshwar and Navdatoli." },
         { text: "Which key researcher is associated with the discovery of the earliest Chalcolithic Culture in M.P., characterized by sturdy chocolate-slipped pottery and copper axes made via moulds?", opts: ["A. H.V. Trivedi", "B. Prof. K.D. Bajpai", "C. H.D. Sankalia", "D. V.S. Wakankar"], ans: "D", exp: "(a) Incorrect -- H.V. Trivedi excavated the site of Awra in Mandsaur, where a unique bronze celt was found.\n(b) Incorrect -- Prof. K.D. Bajpai (along with T.S. Burt) excavated the fortified settlement of Eran.\n(c) Incorrect -- H.D. Sankalia excavated the massive rural agricultural settlement of Navdatoli.\n(d) Correct -- V.S. Wakankar discovered Kayatha in 1964, which is the earliest Chalcolithic culture in M.P., known for its chocolate-slipped pottery and mold-made copper axes." },
@@ -675,19 +681,7 @@
         { text: "A tragic archaeological discovery of infant skeletal remains with a crushed head was made at a Mesolithic site. Which district is this site located in?", opts: ["A. Gwalior (Guseshwar)", "B. Narmadapuram (Adamgarh)", "C. Raisen (Bhimbetka)", "D. Ujjain (Kayatha)"], ans: "A", exp: "(a) Correct -- The tragic infant skeletal remains with a crushed head were found at Guseshwar, which is a Mesolithic site located in the Gwalior district.\n(b) Incorrect -- Adamgarh in Narmadapuram is famous for the first evidence of animal domestication (dog burial), not the crushed infant skeleton.\n(c) Incorrect -- Bhimbetka in Raisen features evidence of fire and adult burial orientations but not the specific crushed infant find.\n(d) Incorrect -- Kayatha in Ujjain is a Chalcolithic site known for mold copper axes and chocolate pottery, not this Mesolithic burial." }
     ];
 
-    const topicName = "Prehistory and Protohistory in MP";
-
-    // --------------------------------------------------------------
-    // DO NOT EDIT ANYTHING BELOW THIS LINE
-    // --------------------------------------------------------------
-
     const TOTAL_QS = FULL_QUIZ.length;
-
-    // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
-    const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
-    const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
-    const SAVED_KEY = `quiz_saved_questions_${safeTopicName}`;
 
     // --- Firebase Setup ---
     const firebaseConfig = {
@@ -917,30 +911,39 @@
         if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
     }
 
-    // --- Save question for later review ---
-    async function loadSavedQuestions() {
-        try {
-            const snap = await db.ref(SAVED_KEY).get();
+    // --- Save question for later review (real-time) ---
+    let savedQuestionsListenerAttached = false;
+    function attachSavedQuestionsListener() {
+        if (savedQuestionsListenerAttached) return;
+        savedQuestionsListenerAttached = true;
+        db.ref(SAVED_KEY).on('value', (snap) => {
             savedQuestions = new Set(snap.exists() ? Object.keys(snap.val()).map(Number) : []);
-        } catch(e) { savedQuestions = new Set(); }
+            updateSaveButtonUI();
+        }, (err) => { console.error("Saved questions listener error:", err); });
+    }
+    function updateSaveButtonUI() {
+        const btn = document.getElementById('saveQuestionBtn');
+        if (!btn || !quizActive) return;
+        let origIdx;
+        if (skipReviewMode) origIdx = order[currentPos];
+        else if (reviewItems.length && document.getElementById('reviewBackStats')) origIdx = reviewItems[reviewCurrentIdx];
+        else origIdx = order[currentPos];
+        const isSaved = savedQuestions.has(origIdx + 1);
+        btn.classList.toggle('saved', isSaved);
+        btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
     }
     async function toggleSaveQuestion(origIdx) {
         const canonicalId = origIdx + 1;
         const q = FULL_QUIZ[origIdx];
-        const btn = document.getElementById('saveQuestionBtn');
         try {
             if (savedQuestions.has(canonicalId)) {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).remove();
-                savedQuestions.delete(canonicalId);
             } else {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).set({ text: q.text, opts: q.opts, ans: q.ans, exp: q.exp });
-                savedQuestions.add(canonicalId);
             }
-            if (btn) {
-                const isSaved = savedQuestions.has(canonicalId);
-                btn.classList.toggle('saved', isSaved);
-                btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
-            }
+            // savedQuestions / button UI update is handled automatically by the
+            // real-time listener (attachSavedQuestionsListener) when this write
+            // is reflected back from Firebase.
         } catch(e) { console.error(e); alert("Could not update saved questions. Check your connection."); }
     }
 
@@ -1097,6 +1100,7 @@
         reviewItems = incorrectSkipped; reviewCurrentIdx = 0; showReviewItem(0);
     }
     function showReviewItem(idx) {
+        reviewCurrentIdx = idx;
         const orig = reviewItems[idx];
         const q = FULL_QUIZ[orig];
         const userChoice = userSelections[orig];
@@ -1200,7 +1204,7 @@
         currentSkipReviewIndex = savedState.currentSkipReviewIndex || 0;
         if (savedState.isDarkMode !== undefined) applyUIPreferences(savedState.isDarkMode, savedState.fontSize || 16);
         quizActive = true; quizInProgress = true;
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         renderMainUI(); initDarkModeToggle(); initFontSlider();
         startTime = Date.now() - (elapsedSeconds * 1000);
         if (!timerPaused) {
@@ -1234,7 +1238,7 @@
         elapsedSeconds = 0; timerPaused = false;
         quizInProgress = true; leaderboardLoggedForThisSession = false;
         clearSavedState();
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         startTimer(); renderMainUI(); initDarkModeToggle(); initFontSlider();
     }
 

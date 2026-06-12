@@ -470,9 +470,6 @@
         }
         .modal-content { background: white; border-radius: 1.8rem; padding: 2rem; max-width: 420px; text-align: center; }
         button { background: #2c6e9e; border: none; padding: 10px 20px; margin: 6px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
-        /* .saved-question-view: kept for portal reuse. Renders a saved question exactly as it appears
-           mid-quiz (correct option highlighted green, full colour-coded explanation). The portal's
-           "Saved" section reuses these classes/colours to display saved questions consistently. */
         .saved-question-view {
             background: white;
             color: black;
@@ -600,9 +597,6 @@
 <div id="root"></div>
 
 <script>
-    // --------------------------------------------------------------
-    // FULL QUIZ DATA
-    // --------------------------------------------------------------
     const FULL_QUIZ = [
         { text: "Which of the following statements regarding the early literary evidence of ancient Madhya Pradesh is correct?", opts: ["A. The Rigveda is the earliest text to mention the geographical expansion of the Aryans into the Bastar district.", "B. The Shatapatha Brahmana contains an indirect mention of the Vindhya Mountains.", "C. The Kaushitaki Brahmanopanishad contains an indirect mention of the Vindhya Mountains, placing them within ancient geographic consciousness.", "D. Historian Weber identified the term 'Revottara' in the Rigveda as referring to the Betwa River."], ans: "C", exp: "(a) Incorrect -- The Rigveda is the oldest extant text and references Aryan expansion, but the specific region of Bastar is associated with the Dandakaranya forest from the Ramayana era (Treta Yuga), not the Rigveda.\n(b) Incorrect -- The Shatapatha Brahmana is famous for mentioning the term 'Revottara' (referring to the Narmada River), not the Vindhya Mountains.\n(c) Correct -- The Brahmanopanishad (Kaushitaki Brahmanopanishad) is the text that contains the indirect mention of the Vindhya Mountains, a fact often tested in geography and history contexts.\n(d) Incorrect -- Historian Weber identified 'Revottara' as the ancient name for the Narmada (Rewa) River, and this reference is found in the Shatapatha Brahmana, not the Rigveda." },
         { text: "Consider the following statements regarding the naming of the Narmada River. Which statement is accurate?", opts: ["A. Prince Purukutsa renamed the river from 'Reva' to 'Narmada' after marrying the daughter of the Naga King.", "B. King Mandhatri named the river Narmada after building the city of Omkareshwar on its banks.", "C. The river was officially named Narmada in the Shatapatha Brahmana.", "D. Muchukunda renamed the river to celebrate his victory over the Pariyatra and Riksha mountains."], ans: "A", exp: "(a) Correct -- The Nagas married the personified river (Narmada), the Naga King's daughter, to Prince Purukutsa. It was Purukutsa who officially renamed the river from its ancient name 'Reva' to 'Narmada'.\n(b) Incorrect -- King Mandhatri (Mandhata) did build a city on its banks (modern Omkareshwar), but he was the father of Purukutsa. He did not rename the river.\n(c) Incorrect -- In the Shatapatha Brahmana, the earliest literary mention of the river appears under the name 'Revottara', not Narmada.\n(d) Incorrect -- Muchukunda, another son of Mandhatri, conquered the Pariyatra (Vindhyachal) and Riksha (Maikal) ranges and built a fort on the Narmada, but he did not rename the river." },
@@ -663,7 +657,7 @@
         { text: "The path of Lord Rama's exile (Vanwas) heavily traverses present-day Madhya Pradesh. Where did the famous 'Bharat-Milap' (the meeting of Rama and his brother Bharat) take place?", opts: ["A. Mahakoshal", "B. Vidisha", "C. Kushavati", "D. Chitrakoot"], ans: "D", exp: "(a) Incorrect -- Mahakoshal was the broader region that became the center of Aryan culture, but the specific meeting did not happen there.\n(b) Incorrect -- Vidisha was an ancient city later governed by Shatrughna, not the site of the Bharat-Milap.\n(c) Incorrect -- Kushavati was a city established post-exile by Rama's son Kush near the Vindhyas.\n(d) Correct -- Chitrakoot, located in modern-day Satna district, MP, was the starting point of Rama's exile journey and is definitively the site of the famous Bharat-Milap." },
         { text: "During his exile in the Dandakaranya forest, Lord Rama visited several key figures. With which modern region is Shabari's ashram historically associated?", opts: ["A. Modern Chhattisgarh", "B. Modern Bundelkhand", "C. Modern Gwalior", "D. Modern Malwa"], ans: "A", exp: "(a) Correct -- Shabari's ashram was located within the vast Dandakaranya forest region, which corresponds primarily to the Bastar district of modern-day Chhattisgarh.\n(b) Incorrect -- Bundelkhand corresponds to ancient Chedi and the Vitihotra territories, not Dandakaranya.\n(c) Incorrect -- Gwalior corresponds to the ancient region of Vatsa.\n(d) Incorrect -- Malwa corresponds to the ancient region of Avanti." },
         { text: "Following the Ramayana era, Rama's descendants established their own strongholds. Where did his son Kush establish the city of Kushavati?", opts: ["A. On the banks of the Chambal (Charmanvati) River.", "B. Near the Vindhya mountain ranges in modern Madhya Pradesh.", "C. Within the Dandakaranya forest in Bastar.", "D. Near the Bhasma-Tekri mound in Ujjain."], ans: "B", exp: "(a) Incorrect -- The Chambal coast was ruled later by figures like King Rantidev.\n(b) Correct -- Kush (Rama's son) established the city of Kushavati near the Vindhya mountain ranges in modern MP during the post-exile (Uttara-Ramayana) period.\n(c) Incorrect -- Dandakaranya was the site of the exile, not where Kush built his city.\n(d) Incorrect -- Bhasma-Tekri in Ujjain is associated with Babruvahana's Yajna from the Mahabharata era." },
-        { text: "During the Uttara-Ramayana period, the governance of central Indian regions was divided among the royal family. Who governed the historically significant region of Vidisha?", opts: ["A. Rama's son Luv", "B. Sage Valmiki", "C. Rama's younger brother Shatrughna", "D. King Avanti"], ans: "C", exp: "(a) Incorrect -- Luv was born at Valmiki's ashram but is not specifically noted for governing Vidisha.\n(b) Incorrect -- Valmiki was a sage whose ashram was on the Tamsa river; he did not govern cities.\n(c) Correct -- Shatrughna, the younger brother of Rama, governed the region of Vidisha. (Later, Kalidasa's Raghuvamsha notes that Shatrughna's son, Shatrughati, ruled there).\n(d) Incorrect -- King Avanti (of the Haihaya sub-clan) did eventually capture Vidisha from the Yadavas, but this was much later in the timeline, not during the Uttara-Ramayana period." },
+        { text: "During the Uttara-Ramayana period, the governance of central Indian regions was divided among the royal family. Who governed the historically significant region of Vidisha?", opts: ["A. Rama's son Luv", "B. Sage Valmiki", "C. Rama's younger brother Shatrughna", "D. King Avanti"], ans: "C", exp: "(a) Incorrect -- Luv was born at Valmiki's ashram but is not specifically noted for governing Vidisha.\n(b) Incorrect -- Valmiki was a sage whose ashram was on the Tamsa river; he did not govern cities.\n(c) Correct -- Shatrughna, the younger brother of Rama, governed the region of Vidisha. (Later, Kalidasa's Raghuvamsha notes that Shatrughna's son Shatrughati ruled there).\n(d) Incorrect -- King Avanti (of the Haihaya sub-clan) did eventually capture Vidisha from the Yadavas, but this was much later in the timeline, not during the Uttara-Ramayana period." },
         { text: "Guru Sandipani's Ashram in Avanti is a pivotal location in the Dwapara Yuga timeline. According to texts, what exactly occurred there?", opts: ["A. Parshurama trained his disciples in archery to defeat the Haihayas.", "B. Lord Krishna and his brother Balarama received their education, mastering all arts and sciences during their youth.", "C. The Pandavas hid their weapons there during their incognito exile.", "D. Gautama Buddha delivered his first sermon to King Chanda Pradyota."], ans: "B", exp: "(a) Incorrect -- Parshurama's father was Jamadagni (an archery expert), but the Sandipani Ashram is specifically famous for Krishna's education, not Parshurama's military academy.\n(b) Correct -- The Skanda Purana clearly notes that at Guru Sandipani Ashram in Avanti (Ujjain), Krishna and Balarama mastered all arts and sciences during their childhood/youth.\n(c) Incorrect -- The Pandavas hid their weapons in a Shami tree near the Matsya kingdom, not at Sandipani's ashram.\n(d) Incorrect -- Buddha delivered his first sermon at Sarnath. He was a contemporary of Chanda Pradyota, but the ashram is from the earlier Dwapara Yuga." },
         { text: "The alliance of Central Indian kings in the Mahabharata War was heavily influenced by lineage. Who were Vinda and Anuvinda, and whom did they fight for?", opts: ["A. They were the sons of King Shishupala who fought for the Pandavas.", "B. They were descendants of the Naga King who remained neutral during the war.", "C. They were the twin sons of Guru Sandipani who fought for the Pandavas.", "D. They were the sons of a Yaduvanshi Princess who ruled Avanti (Malwa) and fought as allies of the Kauravas."], ans: "D", exp: "(a) Incorrect -- Shishupala's son was Dhrishtaketu, who did fight for the Pandavas, but Vinda and Anuvinda were from Avanti, not Chedi.\n(b) Incorrect -- The Naga King is associated with an earlier era (giving Narmada to Purukutsa). They did not stay neutral; they fought.\n(c) Incorrect -- They were not sons of Guru Sandipani.\n(d) Correct -- Vinda and Anuvinda were rulers of Avanti (Malwa), the sons of a Yaduvanshi Princess. They allied with the Kauravas during the war, and Anuvinda was ultimately killed by Arjuna." },
         { text: "The Bhrigu clan's influence in Madhya Pradesh, following their migration from Gujarat, spanned several modern districts. According to classroom annotations, which route best describes their area of influence?", opts: ["A. Indore (Janapav) → Malwa (Bigar) → Dhar region → Dhoupgarh.", "B. Gwalior (Vatsa) → Shivpuri (Nalpur) → Vidisha (Dasharna).", "C. Bastar (Dandakaranya) → Satna (Chitrakoot) → Rewa (Baghelkhand).", "D. Ujjain (Avanti) → Maheshwar (Mahishmati) → Omkareshwar (Mandhata)."], ans: "A", exp: "(a) Correct -- Classroom annotations explicitly state that the Bhrigu clan's influence extended across Indore (Janapav), Malwa (Bigar), the Dhar region, and Dhoupgarh in MP.\n(b) Incorrect -- These are ancient city equivalents, not the recorded Bhrigu influence path.\n(c) Incorrect -- These locations trace the general eastward path of Rama's exile, not the Bhrigu clan's footprint.\n(d) Incorrect -- These are the major capitals of Avanti and the Solar/Lunar cities on the Narmada, not the specific Bhrigu geographic spread noted in the text." },
@@ -671,12 +665,6 @@
     ];
 
     const topicName = "Vedic Age and Ancient Literature";
-
-    // --------------------------------------------------------------
-    // DO NOT EDIT ANYTHING BELOW THIS LINE
-    // --------------------------------------------------------------
-
-    const TOTAL_QS = FULL_QUIZ.length;
 
     // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
     const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
@@ -696,6 +684,8 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
+
+    const TOTAL_QS = FULL_QUIZ.length;
 
     let mode = null;
     let order = [];
@@ -912,29 +902,35 @@
         if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
     }
 
-    // --- Save question for later review ---
-    async function loadSavedQuestions() {
-        try {
-            const snap = await db.ref(SAVED_KEY).get();
+    // --- Save question for later review (real-time) ---
+    let savedQuestionsListenerAttached = false;
+    function attachSavedQuestionsListener() {
+        if (savedQuestionsListenerAttached) return;
+        savedQuestionsListenerAttached = true;
+        db.ref(SAVED_KEY).on('value', (snap) => {
             savedQuestions = new Set(snap.exists() ? Object.keys(snap.val()).map(Number) : []);
-        } catch(e) { savedQuestions = new Set(); }
+            updateSaveButtonUI();
+        }, (err) => { console.error("Saved questions listener error:", err); });
+    }
+    function updateSaveButtonUI() {
+        const btn = document.getElementById('saveQuestionBtn');
+        if (!btn || !quizActive) return;
+        let origIdx;
+        if (skipReviewMode) origIdx = order[currentPos];
+        else if (reviewItems.length && document.getElementById('reviewBackStats')) origIdx = reviewItems[reviewCurrentIdx];
+        else origIdx = order[currentPos];
+        const isSaved = savedQuestions.has(origIdx + 1);
+        btn.classList.toggle('saved', isSaved);
+        btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
     }
     async function toggleSaveQuestion(origIdx) {
         const canonicalId = origIdx + 1;
         const q = FULL_QUIZ[origIdx];
-        const btn = document.getElementById('saveQuestionBtn');
         try {
             if (savedQuestions.has(canonicalId)) {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).remove();
-                savedQuestions.delete(canonicalId);
             } else {
                 await db.ref(`${SAVED_KEY}/${canonicalId}`).set({ text: q.text, opts: q.opts, ans: q.ans, exp: q.exp });
-                savedQuestions.add(canonicalId);
-            }
-            if (btn) {
-                const isSaved = savedQuestions.has(canonicalId);
-                btn.classList.toggle('saved', isSaved);
-                btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
             }
         } catch(e) { console.error(e); alert("Could not update saved questions. Check your connection."); }
     }
@@ -1092,6 +1088,7 @@
         reviewItems = incorrectSkipped; reviewCurrentIdx = 0; showReviewItem(0);
     }
     function showReviewItem(idx) {
+        reviewCurrentIdx = idx;
         const orig = reviewItems[idx];
         const q = FULL_QUIZ[orig];
         const userChoice = userSelections[orig];
@@ -1195,7 +1192,7 @@
         currentSkipReviewIndex = savedState.currentSkipReviewIndex || 0;
         if (savedState.isDarkMode !== undefined) applyUIPreferences(savedState.isDarkMode, savedState.fontSize || 16);
         quizActive = true; quizInProgress = true;
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         renderMainUI(); initDarkModeToggle(); initFontSlider();
         startTime = Date.now() - (elapsedSeconds * 1000);
         if (!timerPaused) {
@@ -1229,7 +1226,7 @@
         elapsedSeconds = 0; timerPaused = false;
         quizInProgress = true; leaderboardLoggedForThisSession = false;
         clearSavedState();
-        await loadSavedQuestions();
+        attachSavedQuestionsListener();
         startTimer(); renderMainUI(); initDarkModeToggle(); initFontSlider();
     }
 
@@ -1267,7 +1264,7 @@
     function showInstructions() {
         const modal = document.createElement('div');
         modal.className = 'instructions-modal';
-        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>🔖 Save:</strong> After answering any question, click the Save button to save it for later review. Perfect for tricky questions.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
+        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
         document.body.appendChild(modal);
         document.getElementById('closeInstructionsBtn').onclick = () => modal.remove();
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
