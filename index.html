@@ -472,23 +472,14 @@ function initSearch(totalCount) {
 async function init() {
   const content = document.getElementById('content');
   const files = await loadQuizzes();
-
-  if (!files) {
-    content.innerHTML = `<div class="state-msg">
-      <div class="icon">⚠️</div>
-      Could not load quizzes. Make sure you are opening this page via<br>
-      <strong>https://adityajain1407.github.io/quizzes/</strong>
-    </div>`;
-    return;
-  }
+  const safeFiles = files || [];
 
   let totalCount = 0;
-  files.forEach(f => { if (f.path !== 'index.html') totalCount++; });
+  safeFiles.forEach(f => { if (f.path !== 'index.html' && f.path.endsWith('.html')) totalCount++; });
 
-  let html = STRUCTURE.map(subject => buildSubjectHTML(subject, files)).join('');
+  let html = STRUCTURE.map(subject => buildSubjectHTML(subject, safeFiles)).join('');
 
-  // Loose files at root (not in any folder)
-  const rootQuizzes = getRootQuizzes(files);
+  const rootQuizzes = getRootQuizzes(safeFiles);
   if (rootQuizzes.length > 0) {
     const items = rootQuizzes.map(q => {
       const name = cleanName(q.path);
@@ -516,10 +507,10 @@ async function init() {
     </section>`;
   }
 
-  if (totalCount === 0) {
-    html = `<div class="state-msg">
-      <div class="icon">📭</div>
-      No quizzes found yet.<br>Upload your quiz HTML files to the correct folders in GitHub.
+  if (!files) {
+    html += `<div class="state-msg" style="margin-top:16px;">
+      <div class="icon">⚠️</div>
+      Could not reach GitHub API — quiz list may be incomplete.
     </div>`;
   }
 
