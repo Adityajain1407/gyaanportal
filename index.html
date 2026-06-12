@@ -6,37 +6,23 @@
 <title>Aditya's Quiz Portal</title>
 <style>
   :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --surface2: #f0ede8;
-    --border: rgba(0,0,0,0.09);
-    --border2: rgba(0,0,0,0.15);
-    --text: #1a1a1a;
-    --text2: #5a5a5a;
-    --text3: #8a8a8a;
-    --accent: #c43a0b;
-    --accent-bg: #fff0eb;
-    --accent-border: rgba(196,58,11,0.2);
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0ede8;
+    --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.15);
+    --text: #1a1a1a; --text2: #5a5a5a; --text3: #8a8a8a;
+    --accent: #c43a0b; --accent-bg: #fff0eb; --accent-border: rgba(196,58,11,0.2);
     --shadow: 0 1px 3px rgba(0,0,0,0.07);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #111110;
-      --surface: #1c1b19;
-      --surface2: #242320;
-      --border: rgba(255,255,255,0.08);
-      --border2: rgba(255,255,255,0.14);
-      --text: #f0ede8;
-      --text2: #a8a49e;
-      --text3: #6a6660;
-      --accent: #ff8c5a;
-      --accent-bg: #2a1a12;
-      --accent-border: rgba(255,140,90,0.2);
+      --bg: #111110; --surface: #1c1b19; --surface2: #242320;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+      --text: #f0ede8; --text2: #a8a49e; --text3: #6a6660;
+      --accent: #ff8c5a; --accent-bg: #2a1a12; --accent-border: rgba(255,140,90,0.2);
       --shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
 
   .header { background: var(--surface); border-bottom: 0.5px solid var(--border2); padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
   .header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 16px; }
@@ -55,42 +41,37 @@
   .hero p { font-size: 14px; color: var(--text2); }
   .hero-accent { color: var(--accent); font-weight: 500; }
 
-  /* Subject (Level 1) */
+  /* Subject (top level) */
   .subject-section { margin-bottom: 40px; }
   .subject-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border2); }
   .subject-icon { width: 34px; height: 34px; background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .subject-title { font-size: 17px; font-weight: 500; }
   .subject-count { margin-left: auto; font-size: 12px; color: var(--text3); background: var(--surface2); padding: 2px 10px; border-radius: 20px; }
 
-  /* Folder (Level 2 & 3) */
-  .folder { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; box-shadow: var(--shadow); }
-  .folder-l3 { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 8px; margin: 4px 12px 4px 36px; }
-  .folder-header { display: flex; align-items: center; gap: 9px; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.12s; }
+  /* Folders — depth-based indentation */
+  .folder { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; margin-bottom: 6px; overflow: hidden; box-shadow: var(--shadow); }
+  .folder-header { display: flex; align-items: center; gap: 9px; padding: 11px 16px; cursor: pointer; user-select: none; transition: background 0.12s; }
   .folder-header:hover { background: var(--accent-bg); }
-  .folder-l3 .folder-header { padding: 9px 14px; }
   .folder-chevron { font-size: 11px; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
   .folder.open > .folder-header .folder-chevron { transform: rotate(90deg); }
   .folder-name { font-size: 13.5px; font-weight: 500; color: var(--text); flex: 1; }
-  .folder-l3 .folder-name { font-size: 13px; }
   .folder-badge { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
-  .folder-body { display: none; padding: 4px 0; border-top: 0.5px solid var(--border); }
+  .folder-body { display: none; padding: 4px 0 4px 0; border-top: 0.5px solid var(--border); }
   .folder.open > .folder-body { display: block; }
+  .folder-children { padding: 4px 8px 4px 16px; }
 
   /* Quiz items */
-  .quiz-item { display: flex; align-items: center; padding: 9px 16px 9px 38px; text-decoration: none; gap: 9px; transition: background 0.1s; }
+  .quiz-item { display: flex; align-items: center; padding: 8px 16px 8px 32px; text-decoration: none; gap: 9px; transition: background 0.1s; }
   .quiz-item:hover { background: var(--surface2); }
-  .folder-l3 .quiz-item { padding-left: 32px; }
   .quiz-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: 0.4; flex-shrink: 0; transition: opacity 0.1s; }
   .quiz-item:hover .quiz-dot { opacity: 1; }
   .quiz-name { font-size: 13px; color: var(--text); flex: 1; line-height: 1.4; }
   .quiz-arrow { font-size: 12px; color: var(--text3); opacity: 0; transition: opacity 0.1s, transform 0.1s; }
   .quiz-item:hover .quiz-arrow { opacity: 1; transform: translateX(2px); }
-
-  .folder-empty { padding: 12px 16px 12px 38px; font-size: 12px; color: var(--text3); font-style: italic; }
+  .folder-empty { padding: 10px 16px 10px 32px; font-size: 12px; color: var(--text3); font-style: italic; }
 
   .state-msg { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; }
   .state-msg .icon { font-size: 28px; margin-bottom: 10px; }
-
   .quiz-item.hidden { display: none; }
 
   @media (max-width: 600px) {
@@ -105,11 +86,11 @@
 <header class="header">
   <div class="header-inner">
     <a class="logo" href="#">
-      <div class="logo-icon">🏺</div>
+      <div class="logo-icon">&#127994;</div>
       <span class="logo-text">Aditya's Quiz Portal</span>
     </a>
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">&#128269;</span>
       <input class="search" type="text" placeholder="Search quizzes..." id="searchInput" autocomplete="off">
     </div>
     <span class="header-count" id="headerCount"></span>
@@ -122,26 +103,25 @@
     <p>Browse by subject. Click any quiz to start. <span class="hero-accent">Progress syncs across all your devices.</span></p>
   </div>
   <div id="content">
-    <div class="state-msg"><div class="icon">⏳</div>Loading quizzes...</div>
+    <div class="state-msg"><div class="icon">&#9203;</div>Loading quizzes...</div>
   </div>
 </main>
 
 <script>
-const GITHUB_USER = 'adityajain1407';
-const GITHUB_REPO = 'quizzes';
-const GITHUB_BRANCH = 'main';
-const BASE_URL = `https://${GITHUB_USER}.github.io/${GITHUB_REPO}`;
-const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/${GITHUB_BRANCH}?recursive=1`;
+const GITHUB_USER = "adityajain1407";
+const GITHUB_REPO = "quizzes";
+const GITHUB_BRANCH = "main";
+const BASE_URL = "https://" + GITHUB_USER + ".github.io/" + GITHUB_REPO;
+const API_URL = "https://api.github.com/repos/" + GITHUB_USER + "/" + GITHUB_REPO + "/git/trees/" + GITHUB_BRANCH + "?recursive=1";
 
-// Icons for known subject names — add more as needed
 const SUBJECT_ICONS = {
-  'history': '📜', 'geography': '🌍', 'polity': '⚖️',
-  'economy': '📈', 'science': '🔬', 'environment': '🌿',
-  'art': '🎨', 'culture': '🏛️', 'default': '📁'
+  history: "\uD83D\uDCDC", geography: "\uD83C\uDF0D", polity: "\u2696\uFE0F",
+  economy: "\uD83D\uDCC8", science: "\uD83D\uDD2C", environment: "\uD83C\uDF3F",
+  art: "\uD83C\uDFA8", culture: "\uD83C\uDFDB\uFE0F", default: "\uD83D\uDCC1"
 };
 
 function getIcon(name) {
-  const key = name.toLowerCase().trim();
+  const key = name.toLowerCase();
   for (const [k, v] of Object.entries(SUBJECT_ICONS)) {
     if (key.includes(k)) return v;
   }
@@ -149,11 +129,11 @@ function getIcon(name) {
 }
 
 function cleanName(filename) {
-  return filename.replace(/\.html$/i, '').replace(/^\d+[\.\-\s]+/, '').trim();
+  return filename.replace(/\.html$/i, "").replace(/^\d+[.\-\s]+/, "").trim();
 }
 
 function toggleFolder(el) {
-  el.closest('.folder').classList.toggle('open');
+  el.closest(".folder").classList.toggle("open");
 }
 
 async function loadFiles() {
@@ -161,183 +141,163 @@ async function loadFiles() {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error();
     const data = await res.json();
-    return (data.tree || []).filter(f => f.type === 'blob' && (f.path.endsWith('.html') || f.path.endsWith('.md')) && f.path !== 'index.html' && !f.path.endsWith('README.md'));
+    return (data.tree || []).filter(f =>
+      f.type === "blob" &&
+      (f.path.endsWith(".html") || f.path.endsWith(".md")) &&
+      f.path !== "index.html" &&
+      !f.path.endsWith("README.md")
+    );
   } catch(e) { return null; }
 }
 
+// Build a recursive tree from file paths
+// Each node: { __files__: [], __folders__: { name: node } }
 function buildTree(files) {
-  const tree = {};
+  const root = { __files__: [], __folders__: {} };
   for (const f of files) {
-    const parts = f.path.split('/');
-    const isQuiz = f.path.endsWith('.html');
-    if (parts.length === 1) {
-      if (!isQuiz) continue; // skip root placeholder.md
-      if (!tree['__root__']) tree['__root__'] = { '__files__': [] };
-      tree['__root__']['__files__'].push(f);
-    } else if (parts.length === 2) {
-      const [l1] = parts;
-      if (!tree[l1]) tree[l1] = {};
-      if (isQuiz) {
-        if (!tree[l1]['__files__']) tree[l1]['__files__'] = [];
-        tree[l1]['__files__'].push(f);
+    const isQuiz = f.path.endsWith(".html");
+    const parts = f.path.split("/");
+    let node = root;
+    // Navigate/create folders for all parts except the filename
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      if (!node.__folders__[part]) {
+        node.__folders__[part] = { __files__: [], __folders__: {} };
       }
-      // placeholder.md just registers the L1 folder — no file added
-    } else if (parts.length === 3) {
-      const [l1, l2] = parts;
-      if (!tree[l1]) tree[l1] = {};
-      if (!tree[l1][l2]) tree[l1][l2] = {};
-      if (isQuiz) {
-        if (!tree[l1][l2]['__files__']) tree[l1][l2]['__files__'] = [];
-        tree[l1][l2]['__files__'].push(f);
-      }
-      // placeholder.md just registers the L2 folder
-    } else if (parts.length === 4) {
-      const [l1, l2, l3] = parts;
-      if (!tree[l1]) tree[l1] = {};
-      if (!tree[l1][l2]) tree[l1][l2] = {};
-      if (!tree[l1][l2][l3]) tree[l1][l2][l3] = { '__files__': [] };
-      if (isQuiz) {
-        if (!tree[l1][l2][l3]['__files__']) tree[l1][l2][l3]['__files__'] = [];
-        tree[l1][l2][l3]['__files__'].push(f);
-      }
-      // placeholder.md just registers the L3 folder
+      node = node.__folders__[part];
     }
+    // Add the file to the final node (only if it is a quiz html)
+    if (isQuiz) {
+      node.__files__.push(f);
+    }
+    // placeholder.md: already created the folder nodes above, nothing else to do
   }
-  return tree;
-}
-
-function quizItemHTML(f) {
-  const name = cleanName(f.path.split('/').pop());
-  const url = `${BASE_URL}/${f.path.split('/').map(p => encodeURIComponent(p)).join('/')}`;
-  return `<a class="quiz-item" href="${url}" target="_blank" data-name="${name.toLowerCase()}">
-    <span class="quiz-dot"></span>
-    <span class="quiz-name">${name}</span>
-    <span class="quiz-arrow">→</span>
-  </a>`;
+  return root;
 }
 
 function countQuizzes(node) {
-  let count = 0;
-  if (node['__files__']) count += node['__files__'].length;
-  for (const key of Object.keys(node)) {
-    if (key !== '__files__') count += countQuizzes(node[key]);
+  let count = node.__files__.length;
+  for (const child of Object.values(node.__folders__)) {
+    count += countQuizzes(child);
   }
   return count;
 }
 
-function buildL3HTML(l3name, node) {
-  const files = node['__files__'] || [];
-  const items = files.length
-    ? files.map(quizItemHTML).join('')
-    : `<div class="folder-empty">No quizzes yet.</div>`;
-  const fid = 'f-' + Math.random().toString(36).slice(2);
-  return `<div class="folder folder-l3" id="${fid}">
-    <div class="folder-header" onclick="toggleFolder(this)">
-      <span class="folder-chevron">▶</span>
-      <span class="folder-name">📂 ${l3name}</span>
-      <span class="folder-badge">${files.length}</span>
-    </div>
-    <div class="folder-body">${items}</div>
-  </div>`;
+function quizItemHTML(f) {
+  const name = cleanName(f.path.split("/").pop());
+  const url = BASE_URL + "/" + f.path.split("/").map(p => encodeURIComponent(p)).join("/");
+  return "<a class=\"quiz-item\" href=\"" + url + "\" target=\"_blank\" data-name=\"" + name.toLowerCase() + "\">" +
+    "<span class=\"quiz-dot\"></span>" +
+    "<span class=\"quiz-name\">" + name + "</span>" +
+    "<span class=\"quiz-arrow\">\u2192</span>" +
+    "</a>";
 }
 
-function buildL2HTML(l2name, node) {
-  const directFiles = node['__files__'] || [];
-  const l3keys = Object.keys(node).filter(k => k !== '__files__');
-  const totalCount = countQuizzes(node);
-  const fid = 'f-' + Math.random().toString(36).slice(2);
+// Recursively build folder HTML for any depth
+function buildFolderHTML(name, node) {
+  const total = countQuizzes(node);
+  const fid = "f-" + Math.random().toString(36).slice(2);
+  const subfolderKeys = Object.keys(node.__folders__).sort();
 
-  let bodyHTML = '';
-  // Direct files first
-  if (directFiles.length) bodyHTML += directFiles.map(quizItemHTML).join('');
-  // L3 subfolders
-  if (l3keys.length) bodyHTML += l3keys.sort().map(l3 => buildL3HTML(l3, node[l3])).join('');
-  if (!bodyHTML) bodyHTML = `<div class="folder-empty">No quizzes yet — upload .html files here in GitHub.</div>`;
+  let bodyHTML = "";
+  // Direct quiz files first
+  if (node.__files__.length) {
+    bodyHTML += node.__files__.map(quizItemHTML).join("");
+  }
+  // Subfolders recursively
+  if (subfolderKeys.length) {
+    bodyHTML += "<div class=\"folder-children\">" +
+      subfolderKeys.map(k => buildFolderHTML(k, node.__folders__[k])).join("") +
+      "</div>";
+  }
+  if (!bodyHTML) {
+    bodyHTML = "<div class=\"folder-empty\">No quizzes yet.</div>";
+  }
 
-  return `<div class="folder" id="${fid}">
-    <div class="folder-header" onclick="toggleFolder(this)">
-      <span class="folder-chevron">▶</span>
-      <span class="folder-name">📁 ${l2name}</span>
-      <span class="folder-badge">${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}</span>
-    </div>
-    <div class="folder-body">${bodyHTML}</div>
-  </div>`;
+  return "<div class=\"folder\" id=\"" + fid + "\">" +
+    "<div class=\"folder-header\" onclick=\"toggleFolder(this)\">" +
+    "<span class=\"folder-chevron\">\u25BA</span>" +
+    "<span class=\"folder-name\">\uD83D\uDCC1 " + name + "</span>" +
+    "<span class=\"folder-badge\">" + total + " quiz" + (total !== 1 ? "zes" : "") + "</span>" +
+    "</div>" +
+    "<div class=\"folder-body\">" + bodyHTML + "</div>" +
+    "</div>";
 }
 
-function buildSubjectHTML(l1name, node) {
-  const icon = getIcon(l1name);
-  const totalCount = countQuizzes(node);
-  const directFiles = node['__files__'] || [];
-  const l2keys = Object.keys(node).filter(k => k !== '__files__');
+// Build top-level subject section
+function buildSubjectHTML(name, node) {
+  const icon = getIcon(name);
+  const total = countQuizzes(node);
+  const subfolderKeys = Object.keys(node.__folders__).sort();
 
-  let html = `<section class="subject-section">
-    <div class="subject-header">
-      <div class="subject-icon">${icon}</div>
-      <span class="subject-title">${l1name}</span>
-      <span class="subject-count">${totalCount} total</span>
-    </div>`;
+  let html = "<section class=\"subject-section\">" +
+    "<div class=\"subject-header\">" +
+    "<div class=\"subject-icon\">" + icon + "</div>" +
+    "<span class=\"subject-title\">" + name + "</span>" +
+    "<span class=\"subject-count\">" + total + " total</span>" +
+    "</div>";
 
-  if (directFiles.length) html += directFiles.map(quizItemHTML).join('');
-  if (l2keys.length) html += l2keys.sort().map(l2 => buildL2HTML(l2, node[l2])).join('');
+  // Direct files under subject root
+  if (node.__files__.length) html += node.__files__.map(quizItemHTML).join("");
+  // Subfolders
+  if (subfolderKeys.length) html += subfolderKeys.map(k => buildFolderHTML(k, node.__folders__[k])).join("");
 
-  html += `</section>`;
+  html += "</section>";
   return html;
 }
 
 function initSearch(totalCount) {
-  document.getElementById('headerCount').textContent = `${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}`;
-  const input = document.getElementById('searchInput');
-  input.addEventListener('input', () => {
+  document.getElementById("headerCount").textContent = totalCount + " quiz" + (totalCount !== 1 ? "zes" : "");
+  const input = document.getElementById("searchInput");
+  input.addEventListener("input", () => {
     const q = input.value.toLowerCase().trim();
     let visible = 0;
-    document.querySelectorAll('.quiz-item').forEach(item => {
+    document.querySelectorAll(".quiz-item").forEach(item => {
       const match = !q || item.dataset.name.includes(q);
-      item.classList.toggle('hidden', !match);
+      item.classList.toggle("hidden", !match);
       if (match) visible++;
     });
     if (q) {
-      document.querySelectorAll('.folder').forEach(folder => {
-        const hasMatch = folder.querySelectorAll('.quiz-item:not(.hidden)').length > 0;
-        if (hasMatch) folder.classList.add('open');
+      document.querySelectorAll(".folder").forEach(folder => {
+        const hasMatch = folder.querySelectorAll(".quiz-item:not(.hidden)").length > 0;
+        if (hasMatch) folder.classList.add("open");
       });
     }
-    document.getElementById('headerCount').textContent =
-      q ? `${visible} match${visible !== 1 ? 'es' : ''}` : `${totalCount} quiz${totalCount !== 1 ? 'zes' : ''}`;
+    document.getElementById("headerCount").textContent =
+      q ? visible + " match" + (visible !== 1 ? "es" : "") : totalCount + " quiz" + (totalCount !== 1 ? "zes" : "");
   });
 }
 
 async function init() {
-  const content = document.getElementById('content');
+  const content = document.getElementById("content");
   const files = await loadFiles();
   const safeFiles = files || [];
 
-  if (safeFiles.length === 0 && !files) {
-    content.innerHTML = `<div class="state-msg"><div class="icon">⚠️</div>Could not load quizzes. Open this page via<br><strong>https://${GITHUB_USER}.github.io/${GITHUB_REPO}/</strong></div>`;
-    return;
+  const tree = buildTree(safeFiles);
+  const topLevelKeys = Object.keys(tree.__folders__).sort();
+  const rootFiles = tree.__files__;
+  const totalCount = safeFiles.filter(f => f.path.endsWith(".html")).length;
+
+  let html = "";
+
+  if (topLevelKeys.length === 0 && rootFiles.length === 0) {
+    html = "<div class=\"state-msg\"><div class=\"icon\">\uD83D\uDCED</div>No quizzes yet.<br>Upload quiz HTML files into folders in your GitHub repository.</div>";
+  } else {
+    html += topLevelKeys.map(k => buildSubjectHTML(k, tree.__folders__[k])).join("");
+    if (rootFiles.length) {
+      html += "<section class=\"subject-section\">" +
+        "<div class=\"subject-header\">" +
+        "<div class=\"subject-icon\">\uD83D\uDCC1</div>" +
+        "<span class=\"subject-title\">Uncategorised</span>" +
+        "<span class=\"subject-count\">" + rootFiles.length + " total</span>" +
+        "</div>" +
+        rootFiles.map(quizItemHTML).join("") +
+        "</section>";
+    }
   }
 
-  const tree = buildTree(safeFiles);
-  const l1keys = Object.keys(tree).filter(k => k !== '__root__').sort();
-  const rootNode = tree['__root__'] || {};
-  const rootFiles = rootNode['__files__'] || [];
-
-  let totalCount = safeFiles.filter(f => f.path.endsWith('.html')).length;
-  let html = '';
-
-  if (l1keys.length === 0 && rootFiles.length === 0) {
-    html = `<div class="state-msg"><div class="icon">📭</div>No quizzes yet.<br>Upload quiz HTML files into folders in your GitHub repository.</div>`;
-  } else {
-    html += l1keys.map(l1 => buildSubjectHTML(l1, tree[l1])).join('');
-    if (rootFiles.length) {
-      html += `<section class="subject-section">
-        <div class="subject-header">
-          <div class="subject-icon">📁</div>
-          <span class="subject-title">Uncategorised</span>
-          <span class="subject-count">${rootFiles.length} total</span>
-        </div>
-        ${rootFiles.map(quizItemHTML).join('')}
-      </section>`;
-    }
+  if (!files) {
+    html += "<div class=\"state-msg\" style=\"margin-top:16px;\"><div class=\"icon\">\u26A0\uFE0F</div>Could not reach GitHub API. Open this page via<br><strong>https://" + GITHUB_USER + ".github.io/" + GITHUB_REPO + "/</strong></div>";
   }
 
   content.innerHTML = html;
