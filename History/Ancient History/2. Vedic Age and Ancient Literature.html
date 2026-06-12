@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Vedic Age and Ancient Literature Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+        }
+        html { font-size: 16px; }
+        body {
+            background: linear-gradient(145deg, #e9eef3 0%, #d4dfe9 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        body.dark-theme { background: #0a0f1a; }
+        body.dark-theme .quiz-container {
+            background: #1a1f2c;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6);
+        }
+        body.dark-theme .stats-bar {
+            background: #0b0f17;
+            border-bottom-color: #ffae42;
+        }
+        body.dark-theme .stats-group { background: #04070c; }
+        body.dark-theme .stat span:first-child { color: #9ab3d5; }
+        body.dark-theme .timer {
+            background: #000000aa;
+            color: #ffdd99;
+            cursor: pointer;
+        }
+        body.dark-theme .action-btn { background: #2a405b; }
+        body.dark-theme .question-text { color: #eef4ff; border-left-color: #ffae42; }
+        body.dark-theme .option { background: #262d3d; border-color: #3f4a60; color: #e2e9ff; }
+        body.dark-theme .option:hover { background: #2f384c; border-color: #ffa559; }
+        body.dark-theme .option.correct-highlight { background: #1e5631; border-color: #5fad6e; color: #e2ffea; }
+        body.dark-theme .option.wrong-highlight { background: #792e26; border-color: #cc6b5e; color: #ffe0dc; }
+        body.dark-theme .explanation-box { background: #2b2f3e; border-left-color: #ffae42; color: #f0f3fc; }
+        body.dark-theme .exp-correct { background: #1e5631; color: #c6ffd0; }
+        body.dark-theme .exp-incorrect { background: #792e26; color: #ffcfc5; }
+        body.dark-theme .exp-text { color: #e0e6f5; }
+        body.dark-theme .info-message { background: #232838; color: #bbd0ff; }
+        body.dark-theme .nav-pane { background: #1a1f2c; border-color: #2c3548; }
+        body.dark-theme .nav-btn { background: #2a3245; color: #cddcff; border-color: #3d4962; }
+        body.dark-theme .nav-btn.correct { background: #2c9e4c; color: white; border-color: #1a6b2f; }
+        body.dark-theme .nav-btn.incorrect { background: #d9534f; color: white; border-color: #a12a26; }
+        body.dark-theme .nav-btn.skipped { background: #3a86ff; color: white; border-color: #1e5bc0; }
+        body.dark-theme .nav-btn.unanswered { background: #4a5568; color: #dce6f5; border-color: #5d6e8a; }
+        body.dark-theme .finish-stats { background: linear-gradient(135deg, #2c2f3a, #1f2230); color: #f0e6d0; }
+        body.dark-theme .finish-stats .stat-card { background: #2a2f41; color: #ffd9a5; }
+        body.dark-theme .review-counter { background: #2e364a; color: #ffdbaa; }
+        body.dark-theme .modal-content { background: #1e2434; color: white; }
+        body.dark-theme button { background: #3a5a7a; }
+        body.dark-theme .dark-mode-btn {
+            background: #ffae42;
+            color: #1e2c3a;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(0.96);
+        }
+        .font-slider-panel {
+            background: #eef2f7;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        body.dark-theme .font-slider-panel { background: #1f2538; border-bottom-color: #3a4560; color: #f0e6d0; }
+        .font-slider-panel label { font-weight: 600; color: #2c3e4e; }
+        body.dark-theme .font-slider-panel label { color: #ffddb0; }
+        .font-slider-panel input { width: 200px; cursor: pointer; }
+        .font-slider-panel span { min-width: 55px; font-weight: bold; }
+        .stats-bar {
+            background: #1e2c3a;
+            color: white;
+            padding: 0.9rem 1.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 3px solid #ffb347;
+        }
+        .stats-group {
+            display: flex;
+            gap: 1.5rem;
+            background: #0f1a24;
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+        }
+        .stat { font-weight: 600; font-size: 1rem; }
+        .stat span:first-child { color: #bbd4f0; margin-right: 6px; }
+        .stat span:last-child { color: #ffdd99; font-size: 1.2rem; font-weight: bold; }
+        .timer {
+            background: #00000055;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #f5f9ff;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .timer:hover { transform: scale(1.02); background: #000000aa; }
+        .action-buttons { display: flex; gap: 12px; align-items: center; }
+        .action-btn {
+            background: #2e4a6e;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-btn:hover { background: #ff8c42; transform: scale(0.97); }
+        .question-panel { padding: 2rem 2rem 1.8rem; }
+        .question-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #0a2f44;
+            margin-bottom: 1.8rem;
+            line-height: 1.3;
+            border-left: 5px solid #ffb347;
+            padding-left: 1rem;
+        }
+        .options-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        .option {
+            background: #f8fafd;
+            border: 1.5px solid #cbdde9;
+            border-radius: 1.2rem;
+            padding: 0.9rem 1.2rem;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: 0.15s;
+            font-weight: 500;
+            color: #1e4663;
+        }
+        .option:hover { background: #eef3fc; border-color: #ffa559; transform: translateX(6px); }
+        .option.correct-highlight {
+            background: #d3f0d9;
+            border-color: #2b7e3a;
+            color: #145c23;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0,100,0,0.1);
+        }
+        .option.wrong-highlight {
+            background: #ffe0e0;
+            border-color: #c7362b;
+            text-decoration: line-through;
+            color: #a51b0f;
+        }
+        .explanation-box {
+            background: #fef7e0;
+            border-left: 6px solid #ffb347;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            margin: 1.8rem 0 1rem;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+        .explanation-line { margin-bottom: 0.8rem; line-height: 1.5; }
+        .exp-correct {
+            color: #1f6e2f;
+            font-weight: bold;
+            background: #e0f3e3;
+            padding: 0.2rem 0.6rem;
+            border-radius: 24px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        .exp-incorrect {
+            color: #bc3f2e;
+            font-weight: bold;
+            background: #ffe1dc;
+            padding: 0.2rem 0.6rem;
+            border-radius: 24px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        .exp-text { color: #2c3e4e; font-weight: 600; font-size: 1rem; }
+        body.dark-theme .exp-text { color: #e0e6f5; }
+        .action-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .capture-btn {
+            background: #3a6ea5;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .capture-btn:hover { background: #ff8c42; transform: scale(0.97); }
+        .next-btn {
+            background: #2c6e2c;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+        .next-btn:hover { background: #1c5a1c; transform: scale(0.98); }
+        .info-message {
+            background: #eef2fa;
+            padding: 10px;
+            border-radius: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .nav-pane {
+            background: #f2f6f9;
+            border-top: 2px solid #cbdbe0;
+            border-bottom: 2px solid #cbdbe0;
+            padding: 1rem;
+            display: none;
+            margin-top: 0px;
+        }
+        .nav-pane.show { display: block; }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(52px, 58px));
+            gap: 8px;
+            justify-content: center;
+        }
+        .nav-btn {
+            background: #e2e8f0;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.9rem;
+            border: 1px solid #bfcfdf;
+        }
+        .nav-btn.correct { background: #2c9e4c; color: white; border-color: #1a6b2f; }
+        .nav-btn.incorrect { background: #d9534f; color: white; border-color: #a12a26; }
+        .nav-btn.skipped { background: #3a86ff; color: white; border-color: #1e5bc0; }
+        .nav-btn.unanswered { background: #cbdbe2; color: #1f2a3e; }
+        /* ===== VIVID WELCOME PAGE (matching quiz aesthetic) ===== */
+        .welcome-overlay {
+            background: linear-gradient(145deg, #e9eef3 0%, #d4dfe9 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.4s ease;
+        }
+        body.dark-theme .welcome-overlay {
+            background: #0a0f1a;
+        }
+        .welcome-card {
+            background: linear-gradient(145deg, #fffef7, #fff5e6);
+            border-radius: 2rem;
+            padding: 2.5rem 2rem;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 180, 70, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: cardFloat 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        body.dark-theme .welcome-card {
+            background: linear-gradient(145deg, #1f2a3a, #16212e);
+            border-color: rgba(255, 180, 70, 0.2);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes cardFloat {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Decorative top bar */
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #ffb347, #ff8c42, #ffb347);
+        }
+        .welcome-card h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #c43a0b;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.05);
+            letter-spacing: -0.5px;
+        }
+        body.dark-theme .welcome-card h1 {
+            color: #ffae42;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .quiz-stats-badge {
+            background: #f5e6d3;
+            border-radius: 50px;
+            padding: 8px 24px;
+            font-weight: 600;
+            color: #a5530e;
+            display: inline-block;
+            margin: 1rem 0 0.5rem;
+            font-size: 0.9rem;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.05);
+        }
+        body.dark-theme .quiz-stats-badge {
+            background: #2a2f41;
+            color: #ffd9a5;
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            background: #2e4a6e;
+            padding: 12px 32px;
+            border-radius: 60px;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 0 #1a2f46;
+            position: relative;
+            top: 0;
+        }
+        .mode-btn.rand {
+            background: #aa6f20;
+            box-shadow: 0 6px 0 #7c4f15;
+        }
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #1a2f46;
+            filter: brightness(1.02);
+        }
+        .mode-btn.rand:hover {
+            box-shadow: 0 8px 0 #7c4f15;
+        }
+        .mode-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #1a2f46;
+        }
+        .instructions-small {
+            background: #6c757d;
+            padding: 7px 24px;
+            border-radius: 60px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-block;
+            margin-top: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .instructions-small:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .finish-stats {
+            background: linear-gradient(135deg, #f9f3e0, #ffe6c9);
+            border-radius: 2rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            margin: 10px;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .finish-stats h2 {
+            font-size: 2.4rem;
+            background: linear-gradient(120deg, #ff6a00, #ee0979);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .finish-stats .score-big {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #c43a0b;
+            text-shadow: 2px 2px 0 #ffcd94;
+            margin: 1rem 0;
+        }
+        .finish-stats .stats-grid { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 1.5rem 0; }
+        .finish-stats .stat-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            min-width: 120px;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+        }
+        .finish-stats .stat-card span:first-child { font-size: 1rem; font-weight: 600; display: block; }
+        .finish-stats .stat-card span:last-child { font-size: 2rem; font-weight: 800; }
+        .review-counter {
+            background: #e6eef9;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        .modal-content { background: white; border-radius: 1.8rem; padding: 2rem; max-width: 420px; text-align: center; }
+        button { background: #2c6e9e; border: none; padding: 10px 20px; margin: 6px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
+        .jpeg-capture {
+            background: white;
+            color: black;
+            padding: 30px;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        body.dark-theme .jpeg-capture { background: #1a1f2c; color: #eef4ff; }
+        .jpeg-capture .question-block { margin-bottom: 30px; border-bottom: 2px solid #ffb347; padding-bottom: 20px; }
+        .jpeg-capture .question-text { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; border-left: 5px solid #ffb347; padding-left: 1rem; }
+        .jpeg-capture .options-list { display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+        .jpeg-capture .option { background: #f8fafd; border: 1.5px solid #cbdde9; border-radius: 1rem; padding: 0.7rem 1rem; font-size: 1rem; font-weight: 500; }
+        .jpeg-capture .option.correct-highlight { background: #d3f0d9; border-color: #2b7e3a; color: #145c23; font-weight: bold; }
+        .jpeg-capture .option.wrong-highlight { background: #ffe0e0; border-color: #c7362b; text-decoration: line-through; color: #a51b0f; }
+        .jpeg-capture .explanation-box { background: #fef7e0; border-left: 6px solid #ffb347; border-radius: 1rem; padding: 1rem; margin: 1rem 0; font-size: 0.95rem; }
+        body.dark-theme .jpeg-capture .option { background: #262d3d; border-color: #3f4a60; color: #e2e9ff; }
+        body.dark-theme .jpeg-capture .option.correct-highlight { background: #1e5631; border-color: #5fad6e; color: #e2ffea; }
+        body.dark-theme .jpeg-capture .option.wrong-highlight { background: #792e26; border-color: #cc6b5e; color: #ffe0dc; }
+        body.dark-theme .jpeg-capture .explanation-box { background: #2b2f3e; border-left-color: #ffae42; color: #f0f3fc; }
+        .jpeg-capture .exp-correct { color: #1f6e2f; font-weight: bold; background: #e0f3e3; padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; }
+        .jpeg-capture .exp-incorrect { color: #bc3f2e; font-weight: bold; background: #ffe1dc; padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; }
+        .jpeg-capture .exp-text { color: #2c3e4e; font-weight: 600; }
+        body.dark-theme .jpeg-capture .exp-text { color: #e0e6f5; }
+        .jpeg-capture .explanation-line { margin-bottom: 0.8rem; }
+        /* Instructions modal */
+        .instructions-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            animation: fadeIn 0.3s ease;
+        }
+        .instructions-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fef9e6 100%);
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow-y: auto;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+        }
+        body.dark-theme .instructions-card { background: #1e2434; color: #eef4ff; }
+        .instructions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ffb347;
+        }
+        .instructions-header h3 { font-size: 1.6rem; margin: 0; }
+        .close-instructions { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #c7362b; padding: 0; margin: 0; line-height: 1; }
+        .close-instructions:hover { transform: scale(1.1); }
+        body.dark-theme .close-instructions { color: #ffae42; }
+        .instructions-list { list-style: none; padding: 0; margin: 0; }
+        .instructions-list li { margin-bottom: 1rem; padding-left: 1.8rem; position: relative; line-height: 1.4; }
+        .instructions-list li:before { content: "✨"; position: absolute; left: 0; color: #ffb347; }
+        body.dark-theme .instructions-list li:before { color: #ffae42; }
+        .instructions-list strong { color: #c43a0b; }
+        body.dark-theme .instructions-list strong { color: #ffae42; }
+        /* Leaderboard */
+        .leaderboard-section {
+            margin-top: 2rem;
+            text-align: left;
+            border-top: 2px solid #ffb347;
+            padding-top: 1rem;
+        }
+        .leaderboard-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-weight: 600;
+        }
+        .leaderboard-table-container { max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(0,0,0,0.2); }
+        body.dark-theme .leaderboard-table-container { border-color: rgba(255,255,255,0.25); }
+        .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-family: inherit; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px 16px; text-align: center; border: 1px solid #cbd5e1; }
+        body.dark-theme .leaderboard-table th, body.dark-theme .leaderboard-table td { border-color: #334155; }
+        .leaderboard-table th { background: #ff9040; color: #1e2c3a; font-weight: 700; position: sticky; top: 0; z-index: 10; }
+        body.dark-theme .leaderboard-table th { background: #cc6e2e; color: #ffffff; }
+        .leaderboard-table tbody tr { background-color: #fef9e6; }
+        .leaderboard-table tbody tr:nth-child(even) { background-color: #fef0d8; }
+        body.dark-theme .leaderboard-table tbody tr { background-color: #1a1f2c; }
+        body.dark-theme .leaderboard-table tbody tr:nth-child(even) { background-color: #2a2f41; }
+        .leaderboard-table tbody tr:hover { background-color: #e2e8f0; transition: 0.1s; }
+        body.dark-theme .leaderboard-table tbody tr:hover { background-color: #3a4055; }
+        .reset-logs-btn { background: #dc2626; border: none; color: white; padding: 8px 18px; border-radius: 60px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .reset-logs-btn:hover { background: #b91c1c; transform: translateY(-1px); }
+        body.dark-theme .reset-logs-btn { background: #e11d48; }
+        body.dark-theme .reset-logs-btn:hover { background: #be123c; }
+        .leaderboard-empty { text-align: center; padding: 2rem; font-style: italic; color: #64748b; }
+        body.dark-theme .leaderboard-empty { color: #94a3b8; }
+        @media (max-width: 650px) {
+            .stats-bar { flex-direction: column; align-items: stretch; }
+            .stats-group { justify-content: center; }
+            .action-buttons { justify-content: center; flex-wrap: wrap; }
+            .font-slider-panel { justify-content: center; }
+            .option { font-size: 1rem; }
+            .explanation-box { font-size: 0.95rem; }
+            .action-row { flex-direction: column; align-items: stretch; }
+            .capture-btn, .next-btn { justify-content: center; width: 100%; }
+            .leaderboard-table th, .leaderboard-table td { padding: 8px 10px; font-size: 0.75rem; }
+            .instructions-card { padding: 1rem; }
+            .instructions-header h3 { font-size: 1.3rem; }
+            .mode-buttons { flex-direction: column; align-items: stretch; gap: 12px; }
+            .mode-btn { width: 100%; }
+            .welcome-card { padding: 1.5rem; }
+            .welcome-card h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+    const FULL_QUIZ = [
+        { text: "Which of the following statements regarding the early literary evidence of ancient Madhya Pradesh is correct?", opts: ["A. The Rigveda is the earliest text to mention the geographical expansion of the Aryans into the Bastar district.", "B. The Shatapatha Brahmana contains an indirect mention of the Vindhya Mountains.", "C. The Kaushitaki Brahmanopanishad contains an indirect mention of the Vindhya Mountains, placing them within ancient geographic consciousness.", "D. Historian Weber identified the term 'Revottara' in the Rigveda as referring to the Betwa River."], ans: "C", exp: "(a) Incorrect -- The Rigveda is the oldest extant text and references Aryan expansion, but the specific region of Bastar is associated with the Dandakaranya forest from the Ramayana era (Treta Yuga), not the Rigveda.\n(b) Incorrect -- The Shatapatha Brahmana is famous for mentioning the term 'Revottara' (referring to the Narmada River), not the Vindhya Mountains.\n(c) Correct -- The Brahmanopanishad (Kaushitaki Brahmanopanishad) is the text that contains the indirect mention of the Vindhya Mountains, a fact often tested in geography and history contexts.\n(d) Incorrect -- Historian Weber identified 'Revottara' as the ancient name for the Narmada (Rewa) River, and this reference is found in the Shatapatha Brahmana, not the Rigveda." },
+        { text: "Consider the following statements regarding the naming of the Narmada River. Which statement is accurate?", opts: ["A. Prince Purukutsa renamed the river from 'Reva' to 'Narmada' after marrying the daughter of the Naga King.", "B. King Mandhatri named the river Narmada after building the city of Omkareshwar on its banks.", "C. The river was officially named Narmada in the Shatapatha Brahmana.", "D. Muchukunda renamed the river to celebrate his victory over the Pariyatra and Riksha mountains."], ans: "A", exp: "(a) Correct -- The Nagas married the personified river (Narmada), the Naga King's daughter, to Prince Purukutsa. It was Purukutsa who officially renamed the river from its ancient name 'Reva' to 'Narmada'.\n(b) Incorrect -- King Mandhatri (Mandhata) did build a city on its banks (modern Omkareshwar), but he was the father of Purukutsa. He did not rename the river.\n(c) Incorrect -- In the Shatapatha Brahmana, the earliest literary mention of the river appears under the name 'Revottara', not Narmada.\n(d) Incorrect -- Muchukunda, another son of Mandhatri, conquered the Pariyatra (Vindhyachal) and Riksha (Maikal) ranges and built a fort on the Narmada, but he did not rename the river." },
+        { text: "Traditional history of ancient Madhya Pradesh is classified into five sequential eras. Which of the following eras is NOT correctly matched with its defining significance?", opts: ["A. Yayati Era – The foundational era from which all subsequent dynastic lineages trace their origin.", "B. Mandhatri Era – Marked by the establishment of major cities along the Narmada River.", "C. Ramchandra Era – Characterized by the spread of Aryan culture in Mahakoshal through Rama's exile.", "D. Parashuram Era – The Dwapara Yuga era leading into the Mahabharata War."], ans: "D", exp: "(a) Incorrect -- This is a correct match. The Yayati Era (Yayati Kal) is considered the foundational era of origin for the ancient dynasties. Therefore, it is not the correct answer to a \"NOT correctly matched\" question.\n(b) Incorrect -- This is a correct match. The Mandhatri Era (Mandhatri Kal) was known as the era of city builders on the Narmada.\n(c) Incorrect -- This is a correct match. The Ramchandra Era (Treta Yuga) saw Aryan cultural expansion in Mahakoshal.\n(d) Correct -- This match is incorrect. The Parashuram Era is associated with the great Bhrigu-Haihaya conflict and Parshurama's vengeance campaigns. The Dwapara Yuga era leading into the Mahabharata War is defined as the Krishna Era." },
+        { text: "Which of the following statements provides the correct comparative overview of the Solar and Lunar Dynasties in ancient Madhya Pradesh?", opts: ["A. The Solar Dynasty originated from Ila, while the Lunar Dynasty originated from Vaivasvata Manu.", "B. Both the Solar Dynasty and the Lunar Dynasty were contemporary to each other rather than strictly sequential.", "C. The Dandakaranya region in Southern MP was the primary territory of the Lunar Dynasty.", "D. The Lunar Dynasty ruled exclusively during the Treta Yuga and ended before the Dwapara Yuga began."], ans: "B", exp: "(a) Incorrect -- The origins are reversed here. The Solar Dynasty (Surya Vansh) originated from Vaivasvata Manu (leading to Ikshvaku), while the Lunar Dynasty (Chandra Vansh / Ail Vansh) originated from Ila and Budha/Soma.\n(b) Correct -- An important historical fact is that the Solar and Lunar dynasties existed simultaneously (they were contemporary) rather than succeeding one another sequentially.\n(c) Incorrect -- Dandakaranya was a core region of the Solar Dynasty, ruled by King Dandak (son of Ikshvaku). The Lunar Dynasty was centered between Bundelkhand and Baghelkhand.\n(d) Incorrect -- The Lunar Dynasty continued well into the Dwapara Yuga, which is associated with the Sri Krishna era and the Mahabharata War. The Solar Dynasty is strongly associated with the Treta Yuga (Ramachandra Era)." },
+        { text: "Regarding the kings of the Lunar Dynasty (Chandra Vansh), which of the following statements is true?", opts: ["A. Ayu was the founder of the Ail Vansh and established its initial borders.", "B. Amavasu inherited the main empire of the Lunar Dynasty from his father.", "C. Nahusha was the first ruler in history to establish a theatre (Rangshala) on Earth.", "D. Pururava's reign ended peacefully after he handed the throne to his son Yayati."], ans: "C", exp: "(a) Incorrect -- Pururava, not Ayu, was the founder of the Ail Vansh (Lunar Dynasty). Ayu was Pururava's son.\n(b) Incorrect -- Amavasu was a son of Pururava, but he did not inherit the main empire. His brother Ayu was the primary successor who inherited the core territory.\n(c) Correct -- Nahusha, the son of Ayu, holds the historical distinction of being the first ruler to establish a theatre (Rangshala) on Earth.\n(d) Incorrect -- Pururava's reign did not end peacefully. In his final days, he persecuted Brahmins, leading to a rebellion by the Rishis who ultimately killed him. Furthermore, Yayati was his great-grandson, not his son." },
+        { text: "Emperor Yayati divided his vast Lunar Dynasty empire between his sons. Which of the following correctly describes this territorial division?", opts: ["A. Turvasu controlled the rivers Charmanvati, Vetravati, and Shuktimati.", "B. The politically significant Haihaya clan descended directly from Turvasu's lineage.", "C. Yadu's territory corresponded to the regions near modern Rewa in Baghelkhand.", "D. Yadu's lineage split into two major branches: the Kroshti (Yadavas) and the Sahasrajit (Haihayas)."], ans: "D", exp: "(a) Incorrect -- These rivers were under the control of Yadu, not Turvasu.\n(b) Incorrect -- The Haihaya clan traces its ancestry to Sahasrajit, who was a descendant of Yadu, not Turvasu.\n(c) Incorrect -- The territory near Rewa (modern Baghelkhand) was controlled by Turvasu, whereas Yadu controlled the river basins of the Chambal, Betwa, and Ken.\n(d) Correct -- Yadu's branch of the Lunar Dynasty bifurcated into the descendants of Kroshti (who became the Yadavas) and Sahasrajit (who became the Haihayas)." },
+        { text: "The naming of India as 'Bharat' is deeply rooted in ancient dynastic history. Which of the following lineages correctly identifies the ancestry of Emperor Bharat?", opts: ["A. He was the son of King Dushyant of the Lunar Dynasty and Shakuntala, the daughter of Sage Vishwamitra.", "B. He was the son of King Mandhatri of the Solar Dynasty and Bindumati, an Ail princess.", "C. He was the son of Pururava, the founder of the Ail Vansh, and the river goddess Narmada.", "D. He was the son of King Gadhi of Kanyakubja and Satyavati."], ans: "A", exp: "(a) Correct -- Emperor Bharat, after whom the country is named, was a Chakravarti Samrat born to King Dushyant (a Lunar Dynasty ruler) and Shakuntala (daughter of the great sage Vishwamitra).\n(b) Incorrect -- Mandhatri and Bindumati were the parents of Purukutsa, Muchukunda, Ambarisha, and Kaveri, not Emperor Bharat.\n(c) Incorrect -- Pururava was the founder of the Lunar Dynasty, but Bharat appeared much later in the lineage. Narmada married Purukutsa, not Pururava.\n(d) Incorrect -- King Gadhi was the father of Satyavati, who married the Bhrigu sage Richika. This lineage relates to Parshurama, not Emperor Bharat." },
+        { text: "Which of the following is an accurate historical detail regarding the Solar Dynasty's presence in ancient Madhya Pradesh?", opts: ["A. Vaivasvata Manu granted the state of Mahishmati to the Lunar King Mahishmant.", "B. King Dandak ruled the dense forests of Southern MP, giving rise to the name Dandakaranya, which is located in modern Bastar.", "C. Ikshvaku, a descendant of Pururava, was granted the region of Avanti to establish a new capital.", "D. The Solar Dynasty successfully maintained control over the Pariyatra mountains without ever facing defeat by the Haihayas."], ans: "B", exp: "(a) Incorrect -- Vaivasvata Manu granted the state of Madhya Pradesh to his son Ikshvaku, the progenitor of the Solar Dynasty. Mahishmant was a later Lunar king.\n(b) Correct -- Dandak, the son of Ikshvaku, ruled the southern forests. The region was named Dandakaranya (Dandaka Forest) after him, which corresponds to the Bastar district in modern Chhattisgarh.\n(c) Incorrect -- Ikshvaku was the son of Vaivasvata Manu (Solar Dynasty), not a descendant of Pururava (who founded the Lunar Dynasty). Furthermore, Avanti was a much later geographic entity.\n(d) Incorrect -- Muchukunda, a Solar dynasty king, conquered the Pariyatra mountains but his victory was short-lived as he was subsequently defeated by the Haihaya branch of the Lunar Dynasty." },
+        { text: "Consider the achievements of King Mandhatri (Mandhata). Which statement below is NOT accurate regarding his life and reign?", opts: ["A. He was a Chakravarti Samrat who extended his empire to the Narmada River.", "B. He founded a city named Mahishmati on the banks of the Narmada River.", "C. He was the son of Yuvanashva and belonged to the Solar Dynasty.", "D. He married Bindumati, an Ail Rajkumari of the Lunar Dynasty, showcasing inter-dynastic relations."], ans: "B", exp: "(a) Incorrect -- This is an accurate statement. He was a Chakravarti Samrat who expanded the Solar Dynasty's reach to the Narmada.\n(b) Correct -- This statement is inaccurate. Mandhatri built a city on the Narmada, but he named it Mandhata (which corresponds to modern Omkareshwar in Khandwa district). Mahishmati (modern Maheshwar) was originally built by his son Muchukunda and later renamed by King Mahishmant.\n(c) Incorrect -- This is an accurate statement. He was indeed the son of Yuvanashva of the Surya Vansh.\n(d) Incorrect -- This is an accurate statement. His marriage to Bindumati is a key fact demonstrating ties between the Solar and Lunar dynasties." },
+        { text: "The sons of Mandhatri carried out significant conquests along the Narmada River. Which of the following correctly pairs a son with his achievement?", opts: ["A. Purukutsa – Built a massive fort on the Narmada and defeated the Karkotaka Nagas.", "B. Muchukunda – Married the Naga King's daughter and officially renamed the river from Reva to Narmada.", "C. Muchukunda – Conquered the Pariyatra and Riksha mountains and built a fort on the Narmada before being defeated by the Haihayas.", "D. Ambarisha – Captured the region of Avanti from the Vitihotra dynasty."], ans: "C", exp: "(a) Incorrect -- It was Muchukunda who built a fort on the Narmada. Defeating the Karkotaka Nagas was later achieved by King Kritavirya Arjuna (Sahasrarjuna) of the Haihaya dynasty.\n(b) Incorrect -- Purukutsa, not Muchukunda, married the Naga princess Narmada and renamed the river.\n(c) Correct -- Muchukunda conquered the Pariyatra (Vindhyachal) and Riksha (Maikal) mountain ranges and built a fort. However, his hold was short-lived as the Haihaya dynasty defeated him.\n(d) Incorrect -- Ambarisha was a son of Mandhatri, but the capture of Avanti from the Vitihotra dynasty was executed much later by Minister Punika, who placed his son Chanda Pradyota on the throne." },
+        { text: "The ancient cities of Mandhata and Mahishmati share a deep connection with the Narmada River. Which of the following statements correctly identifies their modern equivalents and historical origins?", opts: ["A. Mahishmati corresponds to modern Maheshwar in the Khargone district, originally built by Muchukunda and later renamed by King Mahishmant.", "B. Mandhata corresponds to modern Khargone and was founded by the Lunar king Yayati.", "C. Mahishmati corresponds to modern Omkareshwar and represents the epicenter of the Bhrigu-Haihaya conflict.", "D. Both cities were established by King Parikshit to mark the transition from Dwapara Yuga to Kaliyuga."], ans: "A", exp: "(a) Correct -- Mahishmati is modern Maheshwar (Khargone district). It was originally built by the Solar king Muchukunda, but after his defeat, it was renamed Mahishmati by King Mahishmant of the Lunar (Haihaya) dynasty.\n(b) Incorrect -- Mandhata corresponds to modern Omkareshwar in the Khandwa district, and it was founded by King Mandhatri of the Solar Dynasty, not Yayati.\n(c) Incorrect -- Mahishmati corresponds to Maheshwar, not Omkareshwar. Mandhata is Omkareshwar.\n(d) Incorrect -- These cities were founded during earlier epochs by Solar/Lunar kings (Mandhatri, Muchukunda). King Parikshit's coronation marked the beginning of the Kaliyuga much later." },
+        { text: "The Sri Ramachandra Era (Treta Yuga) strongly links the Epic of Ramayana to modern-day Madhya Pradesh and Chhattisgarh. Which of the following locations is NOT correctly associated with its event during Rama's exile?", opts: ["A. Chitrakoot (Satna district) – The starting point of the exile and the site of the Bharat-Milap.", "B. Dandakaranya (Bastar district) – The dense forest region where Rama spent the majority of his 14-year exile.", "C. Shabari's Ashram – Located within the Dandakaranya region of modern Chhattisgarh.", "D. Kushavati – Established by Rama's son Kush in the Avanti region to control trade routes."], ans: "D", exp: "(a) Incorrect -- This association is correct. Chitrakoot is located in the Satna district and is famous as the site of the Bharat-Milap.\n(b) Incorrect -- This association is correct. Dandakaranya corresponds to modern Bastar and was the primary location of the exile.\n(c) Incorrect -- This association is correct. Shabari's ashram was visited by Rama during his exile in the Dandakaranya/Chhattisgarh region.\n(d) Correct -- This association is incorrect. Kush did establish the city of Kushavati, but he built it near the Vindhya mountain ranges, not in the Avanti (Ujjain) region for trade control." },
+        { text: "In the post-exile (Uttara-Ramayana) period, various regions in Central India were governed by Rama's descendants and relatives. Which of the following pairs of ruler and territory is correctly matched?", opts: ["A. Luv – Governed the city of Mahishmati.", "B. Rama – Retired to the Guru Sandipani Ashram in Avanti.", "C. Kush – Ruled the region of Vidisha.", "D. Shatrughna – Governed the region of Vidisha."], ans: "D", exp: "(a) Incorrect -- Luv and Kush were born at Maharishi Valmiki's ashram on the Tamsa (Tons) river, but there is no record of Luv governing Mahishmati (which was a Haihaya/Solar stronghold).\n(b) Incorrect -- Guru Sandipani Ashram in Avanti was the educational center for Lord Krishna during the Dwapara Yuga, not for Lord Rama in the Treta Yuga.\n(c) Incorrect -- Kush established and governed the city of Kushavati near the Vindhya ranges.\n(d) Correct -- Shatrughna, Rama's younger brother, was assigned to govern the important ancient city of Vidisha." },
+        { text: "The Dwapara Yuga, known as the Krishna Era, centers heavily around the region of Avanti. According to ancient texts, what is the primary significance of Avanti during this period?", opts: ["A. It was the site where the Pandavas spent their secret exile before the Mahabharata War.", "B. According to the Skanda Purana, the Guru Sandipani Ashram in Avanti was the place where Krishna and Balarama received their education.", "C. It was the capital city from which King Nila launched his attack against the Karkotaka Nagas.", "D. It was the battlefield where Parshurama vowed to rid the earth of Kshatriyas 21 times."], ans: "B", exp: "(a) Incorrect -- The Pandavas spent their exile in various places (such as the Matsya kingdom), but Avanti is not primarily noted as their exile location in this context.\n(b) Correct -- Avanti (modern Ujjain) is renowned as Krishna's place of education. The Skanda Purana details that Krishna and his brother Balarama mastered all arts and sciences at the Guru Sandipani Ashram located here.\n(c) Incorrect -- King Nila was a ruler of Mahishmati, not Avanti, and defeating the Karkotaka Nagas was the achievement of Sahasrarjuna.\n(d) Incorrect -- Parshurama's vengeance was centered around Mahishmati (the Haihaya capital) after the murder of his father Jamadagni, not primarily Avanti." },
+        { text: "During the Mahabharata War, several regional kings from present-day Madhya Pradesh chose sides between the Pandavas and the Kauravas. Which of the following statements is true regarding these alliances?", opts: ["A. Vinda and Anuvinda from Avanti, along with King Nila of Mahishmati, fought as allies of the Kauravas.", "B. King Dhrishtaketu of the Chedi Kingdom led the Kaurava army against Arjuna.", "C. The Karusha kingdom, located in modern Baghelkhand, allied with the Kauravas.", "D. Anuvinda of Avanti was famously killed by Lord Krishna before the war began."], ans: "A", exp: "(a) Correct -- Vinda and Anuvinda (rulers of Avanti/Malwa and sons of a Yaduvanshi princess) and King Nila of Mahishmati all allied with the Kauravas during the Great War.\n(b) Incorrect -- Dhrishtaketu (son of Shishupala) supported the Pandavas, not the Kauravas.\n(c) Incorrect -- The Karusha kingdom (modern Baghelkhand) fought on the side of the Pandavas, according to the Bhishma Parva.\n(d) Incorrect -- Anuvinda was an ally of the Kauravas who fought in the war and was killed on the battlefield by Arjuna, not Krishna." },
+        { text: "The political geography during the Mahabharata War deeply split Central India. Which of the following groups of kingdoms fought exclusively on the side of the Pandavas?", opts: ["A. Koshal, Bhoja, Vidarbha, and Nishad.", "B. Avanti, Mahishmati, and the Vitihotra dynasty.", "C. Karusha, Dasharna, Matsya, and Chedi.", "D. The kingdoms established by Shatrughna and Kush."], ans: "C", exp: "(a) Incorrect -- Koshal (under King Brihadbala), Bhoja, Vidarbha, and Nishad all fought on the side of the Kauravas.\n(b) Incorrect -- Avanti (Vinda/Anuvinda) and Mahishmati (King Nila) fought for the Kauravas. Vitihotra was a later sub-clan.\n(c) Correct -- The kingdoms of Karusha, Dasharna, Matsya (encompassing modern Bundelkhand & Baghelkhand), and Chedi all aligned with the Pandavas during the Mahabharata War.\n(d) Incorrect -- Shatrughna (Vidisha) and Kush (Kushavati) relate to the Treta Yuga (Ramachandra Era), long before the Mahabharata War." },
+        { text: "The transition from the Dwapara Yuga to the Kaliyuga is marked by a specific historical event at the conclusion of the Mahabharata War. Which event was this?", opts: ["A. The coronation of King Parikshit, the son of Abhimanyu, after the Pandavas left for the Himalayas.", "B. The coronation of King Shishupala over the Chedi Mahajanapada.", "C. The founding of the Pradyota Dynasty in Ujjayini by Minister Punika.", "D. The grand Yajna performed by Babruvahana at Bhasma-Tekri."], ans: "A", exp: "(a) Correct -- After winning the Great War, the Pandavas handed the kingdom to Parikshit (Abhimanyu's son) and retreated to the Himalayas. His coronation marks the exact end of the Dwapara Yuga and the beginning of Kaliyuga.\n(b) Incorrect -- King Shishupala was the ruler of Chedi during the Dwapara Yuga, but he was killed by Krishna before the war, so his reign does not mark the transition to Kaliyuga.\n(c) Incorrect -- The founding of the Pradyota dynasty occurred much later (around 600 BCE), during the Mahajanapada era.\n(d) Incorrect -- Babruvahana's Yajna at Mahidpur (Manipur/Bhasma-Tekri) is a post-war archaeological legend, but the explicit chronological marker for the start of Kaliyuga is Parikshit's coronation." },
+        { text: "The great Bhrigu-Haihaya conflict was a defining era in ancient Indian history. What was the primary root cause of this massive conflict?", opts: ["A. The assassination of Sage Jamadagni by the sons of Sahasrarjuna.", "B. A dispute over the control of the holy city of Mahishmati.", "C. The refusal of the Bhrigu clan to perform Vedic Yajnas for the Lunar kings.", "D. An economic struggle driven by the Haihaya dynasty's desire to break the Bhrigu clan's absolute monopoly over Gujarat's sea trade."], ans: "D", exp: "(a) Incorrect -- The assassination of Jamadagni was a later escalation in the vengeance cycle, not the root cause that started the initial conflict.\n(b) Incorrect -- Mahishmati was already the capital of the Haihayas (captured from the Nagas). The dispute was not over this city.\n(c) Incorrect -- The cause was explicitly noted as economic, not religious.\n(d) Correct -- The primary cause of the conflict was economic trade monopoly. The Bhrigu clan controlled the sea trade in the Anarta (Gujarat) region, and the Haihaya dynasty went to war to break this monopoly and seize control of the trade routes." },
+        { text: "The Bhrigu lineage played a central role in the conflict against the Haihayas. Which of the following statements about the Bhrigu figures is NOT true?", opts: ["A. Richika, an expert archer, gave 1,000 black-eared horses to King Gadhi of Kanyakubja.", "B. Sage Jamadagni was the brother of the Kshatriya sage Vishwamitra.", "C. Following the conflict, the Bhrigu clan migrated from Gujarat (Anarta) to Kanyakubja in modern Madhya Pradesh.", "D. Parshurama was the son of Sage Jamadagni and Renuka, the daughter of King Renu of Ayodhya."], ans: "B", exp: "(a) Incorrect -- This statement is true. Richika gave the horses to King Gadhi. Therefore, it is not the correct answer for a \"NOT true\" question.\n(b) Correct -- This statement is false. Jamadagni was the son of Richika and Satyavati. Satyavati was the sister of the Kshatriya sage Vishwamitra. Therefore, Vishwamitra was Jamadagni's uncle, not his brother.\n(c) Incorrect -- This statement is true. Post-conflict, the Bhrigus migrated from Anarta to Kanyakubja.\n(d) Incorrect -- This statement is true. Parshurama's parentage is correctly stated." },
+        { text: "King Kritavirya Arjuna (Sahasrarjuna) was the most powerful ruler of the Haihaya Empire. Which of the following was one of his major military feats?", opts: ["A. He captured the region of Avanti from the Pradyota dynasty.", "B. He defeated the Pandava army during the Mahabharata war.", "C. He defeated and imprisoned Ravana when the latter attacked his territory.", "D. He assassinated Sage Jamadagni to initiate the trade war over Gujarat."], ans: "C", exp: "(a) Incorrect -- The Pradyota dynasty existed much later (600 BCE). Sahasrarjuna ruled long before them.\n(b) Incorrect -- Sahasrarjuna existed during the Parashuram Era, an epoch prior to the Dwapara Yuga/Mahabharata war.\n(c) Correct -- A highly notable exam fact is that Sahasrarjuna defeated and imprisoned Ravana (the demon king of Lanka) when Ravana attempted to attack his territory.\n(d) Incorrect -- Sahasrarjuna insulted Jamadagni, but it was his sons who assassinated the meditating sage while Parshurama was away." },
+        { text: "The conflict between Parshurama and the Haihayas escalated into a severe cycle of vengeance. Which sequence of events accurately describes this escalation?", opts: ["A. Parshurama took a vow to rid the earth of Kshatriyas 21 times immediately after Sahasrarjuna insulted his father.", "B. Sahasrarjuna killed Jamadagni directly, prompting Parshurama to capture the sea trade routes of Gujarat.", "C. In retaliation for Sahasrarjuna insulting his father, Parshurama attacked Mahishmati, cut off Sahasrarjuna's 1,000 arms, and killed him.", "D. The Karkotaka Nagas assassinated Jamadagni, forcing Parshurama to ally with the Haihayas."], ans: "C", exp: "(a) Incorrect -- The vow to rid the earth of Kshatriyas 21 times was taken as Step 4, only after Sahasrarjuna's sons murdered Sage Jamadagni, not immediately after the insult.\n(b) Incorrect -- Sahasrarjuna did not kill Jamadagni directly (his sons did), and Parshurama's retaliation was martial, not economic.\n(c) Correct -- The vengeance cycle went: Sahasrarjuna insulted Jamadagni -> Parshurama attacked Mahishmati, cut off his arms and killed him -> Sahasrarjuna's sons murdered Jamadagni -> Parshurama took the 21-time vow.\n(d) Incorrect -- The Karkotaka Nagas were defeated by Sahasrarjuna earlier to capture the Anupa region; they were not involved in Jamadagni's death." },
+        { text: "Following Parshurama's vengeance, the Haihaya dynasty eventually saw a resurgence. Which textual evidence explicitly corroborates the historical presence and eventual downfall of these later rulers?", opts: ["A. Kautilya's 'Arthashastra' explicitly mentions the downfall of King Talajangha, who attempted to restore the dynasty.", "B. The Rigveda details the reign of King Jayadhwaja over the Malwa region.", "C. The Bhagavati Sutra documents the division of the Haihayas into five sub-clans.", "D. The Dipavamsa records that King Talajangha established the city of Ujjayini."], ans: "A", exp: "(a) Correct -- King Talajangha, the son of Jayadhwaja, attempted to rebuild the Haihaya dynasty. An important exam fact is that his downfall is specifically documented in Kautilya's 'Arthashastra'.\n(b) Incorrect -- The Rigveda is much older and mentions the term 'Avanti', but does not detail King Jayadhwaja (who was killed by Parshurama).\n(c) Incorrect -- The Bhagavati Sutra is a Jain text that lists the 16 Mahajanapadas, not the five sub-clans of the post-Parshurama Haihayas.\n(d) Incorrect -- The Buddhist text Dipavamsa states that King Achyutagami founded Ujjayini, not Talajangha." },
+        { text: "The Haihaya Dynasty eventually split into five distinct sub-clans. Which of the following accurately matches a sub-clan with its associated geographical region or achievement?", opts: ["A. Sharyata – Captured the Chedi Kingdom from the Yadavas.", "B. Bhoja – Controlled the Vindhyas and modern Bundelkhand.", "C. Vitihotra – Controlled the Malwa region and gave it the name Avanti.", "D. Avanti – Controlled the Malwa region, captured Vidisha from the Yadavas, and attacked Kashi and Koshal."], ans: "D", exp: "(a) Incorrect -- It was King Vasu who captured the Chedi Kingdom from the Yadavas, not the Sharyata sub-clan.\n(b) Incorrect -- The Vindhyas/Bundelkhand region was controlled by the Vitihotra and Kundikera sub-clans, not specifically the Bhoja.\n(c) Incorrect -- The Vitihotra clan controlled the Vindhyas (Bundelkhand), not Malwa.\n(d) Correct -- The Avanti sub-clan controlled the Malwa region. King Avanti gave his name to the region, captured Vidisha from the Yadavas, and expanded his influence by attacking Kanyakubja, Kashi, and Koshal." },
+        { text: "Aside from Avanti, other distinct kingdoms emerged in Central India. Regarding the rulers of the Chedi Kingdom and Chambal coast, which statement is true?", opts: ["A. King Rantidev captured the Chedi Kingdom and was known as a 'Chakravarti' who fought for the Pandavas.", "B. King Rantidev ruled the Charmanvati (Chambal) coast and was famous for performing numerous grand Yajnas (sacrificial rituals).", "C. King Vasu ruled the Charmanvati coast and established a monopoly on sea trade.", "D. King Shishupala was the founder of the Chedi Kingdom who seized it from the Haihayas."], ans: "B", exp: "(a) Incorrect -- King Vasu, not Rantidev, captured the Chedi Kingdom from the Yadavas and was referred to in the Puranas as a 'Chakravarti' who fought alongside the Pandavas.\n(b) Correct -- King Rantidev was the king of the Charmanvati (Chambal) coast and is specifically noted for performing numerous grand Yajnas.\n(c) Incorrect -- King Vasu was the ruler of Chedi, while the sea trade monopoly belonged to the Bhrigu clan in Gujarat.\n(d) Incorrect -- Shishupala was the most famous later Chedi king (during the Mahabharata era), but he was not the founder, nor did he seize it from the Haihayas (Vasu captured it from the Yadavas)." },
+        { text: "Archaeological evidence often intersects with mythological traditions in Madhya Pradesh. What is the significance of the Bhasma-Tekri mound located near Mahidpur in the Ujjain district?", opts: ["A. It is identified as the exact location of Guru Sandipani's Ashram where Krishna studied.", "B. It provides archaeological evidence of Chalcolithic (Copper Age) culture and is traditionally considered the Yajna-ground of Arjuna's son, Babruvahana.", "C. It is the site where Parshurama severed the 1,000 arms of Sahasrarjuna, leaving behind whitish soil.", "D. It is the ancient capital of the Chedi Mahajanapada known as Shuktimati."], ans: "B", exp: "(a) Incorrect -- Guru Sandipani's Ashram is located in Ujjain itself, but Bhasma-Tekri is a distinct archaeological mound near Mahidpur.\n(b) Correct -- Bhasma-Tekri near Mahidpur contains whitish soil and Chalcolithic (Copper Age) archaeological evidence. Local tradition identifies this site as ancient 'Manipur', where Arjuna's son Babruvahana performed a grand Yajna.\n(c) Incorrect -- Parshurama attacked Sahasrarjuna at Mahishmati (modern Maheshwar), not at Bhasma-Tekri.\n(d) Incorrect -- Shuktimati, the capital of Chedi, was located on the banks of the Ken River in the Bundelkhand region, far from Ujjain." },
+        { text: "By the 6th Century BCE, Northern India was divided into 16 major Mahajanapadas. Which of the following accurately describes the Mahajanapada footprint within modern Madhya Pradesh?", opts: ["A. Four of the 16 Mahajanapadas were located within the modern boundaries of MP.", "B. The region of MP was entirely dominated by the Magadha Empire, containing no independent Mahajanapadas.", "C. Avanti and Chedi were the only two major Mahajanapadas located within the territory of present-day MP.", "D. Vatsa and Matsya were the primary Mahajanapadas governing the Narmada valley."], ans: "C", exp: "(a) Incorrect -- Only 2 out of the 16 Mahajanapadas were located in present-day MP, not 4.\n(b) Incorrect -- The Magadha Empire (specifically under Shishunaga) eventually annexed Avanti, but during the 6th Century BCE, MP had independent Mahajanapadas.\n(c) Correct -- Out of the 16 total Mahajanapadas in North India, exactly two were situated in modern Madhya Pradesh: the Avanti Mahajanapada and the Chedi Mahajanapada.\n(d) Incorrect -- Vatsa (Gwalior area) and Matsya were kingdoms/regions, but the major recognized Mahajanapadas defining MP geographically were Avanti and Chedi." },
+        { text: "The existence and names of the 16 Mahajanapadas are primarily derived from ancient religious texts. Which combination of texts serves as the primary literary sources for this era?", opts: ["A. The Rigveda and the Shatapatha Brahmana.", "B. The Skanda Purana and the Raghuvamsha.", "C. The Arthashastra and the Si-Yu-Ki.", "D. The Buddhist texts Anguttara Nikaya and Mahavastu, along with the Jain text Bhagavati Sutra."], ans: "D", exp: "(a) Incorrect -- These are earlier Vedic texts that provide geographical evidence (like 'Avanti' or 'Revottara'), but they predate the 6th Century BCE Mahajanapada list.\n(b) Incorrect -- The Skanda Purana details Krishna's education, and Raghuvamsha details Shatrughati in Vidisha. They are not the source lists for the 16 Mahajanapadas.\n(c) Incorrect -- Arthashastra mentions Talajangha, and Si-Yu-Ki is Hiuen Tsang's 7th-century travelogue.\n(d) Correct -- The Buddhist text Anguttara Nikaya is the primary source listing the 16 Mahajanapadas, supported by the Mahavastu, and the Jain text Bhagavati Sutra also references them." },
+        { text: "The Avanti Mahajanapada was a powerful central Indian state with a distinct administrative division. Which statement describes this division correctly?", opts: ["A. Avanti was divided into Northern Avanti with its capital at Ujjain, and Southern Avanti with its capital at Mahishmati.", "B. Avanti was divided into Eastern Avanti centered at Vidisha, and Western Avanti centered at Mahidpur.", "C. Northern Avanti's capital was Shuktimati, while Southern Avanti was governed from Tripuri.", "D. The division was purely linguistic, with the entire region administered centrally from Omkareshwar."], ans: "A", exp: "(a) Correct -- The Avanti Mahajanapada (around the Malwa area) was geographically divided into two parts: Northern Avanti (the more prominent half) with its capital at Ujjain, and Southern Avanti with its capital at Mahishmati (modern Maheshwar).\n(b) Incorrect -- Vidisha and Mahidpur were important cities (Dasharna and Manipur), but they were not the capitals of the split Avanti Mahajanapada.\n(c) Incorrect -- Shuktimati was the capital of the Chedi Mahajanapada, and Tripuri (Tewar) was a separate ancient city near Jabalpur.\n(d) Incorrect -- The division was a real political-geographical split with two distinct capitals, not just linguistic." },
+        { text: "Ancient texts provide various references to Avanti and the city of Ujjayini. Which of the following literary references is accurately matched with its content?", opts: ["A. The Buddhist text Dipavamsa states that King Achyutagami founded the city of Ujjayini.", "B. Panini's Ashtadhyayi contains the very first mention of the word 'Avanti' in literature.", "C. The Rigveda provides the first clear administrative details of Avanti as an established state.", "D. The Chinese pilgrim Hiuen Tsang referred to Ujjayini as 'Avantika-Rastra' in his 7th-century travelogue."], ans: "A", exp: "(a) Correct -- The Buddhist text Dipavamsa provides the high-yield historical fact that King Achyutagami founded the city of Ujjayini.\n(b) Incorrect -- The Rigveda contains the first mention of the word 'Avanti'. Panini's Ashtadhyayi provides the first clear mention of Avanti as a state/place.\n(c) Incorrect -- The Rigveda merely mentions the word; it is the Ashtadhyayi that clarifies it as a state.\n(d) Incorrect -- In his work Si-Yu-Ki, Hiuen Tsang referred to Ujjayini specifically as 'U-she-ye-na', not Avantika-Rastra." },
+        { text: "The Chedi Mahajanapada was another prominent state during the 6th Century BCE. Which of the following details correctly outlines its geography?", opts: ["A. It was located in the Malwa region and was bordered by the Narmada River.", "B. Its capital was Sotthivati (Shuktimati), located on the banks of the Ken River in the modern Bundelkhand region.", "C. It was situated in the Bastar district of Chhattisgarh, formerly known as Dandakaranya.", "D. Its capital was Tripuri, located on the banks of the Charmanvati (Chambal) River."], ans: "B", exp: "(a) Incorrect -- The Malwa region was the center of the Avanti Mahajanapada, not Chedi.\n(b) Correct -- The Chedi Mahajanapada's geographical extent covered the modern Bundelkhand region. Its capital was Sotthivati (or Shuktimati/Shaktimati), which was located on the banks of the Shuktimati (Ken) River.\n(c) Incorrect -- Bastar was the Dandakaranya forest, prominent during the Treta Yuga, not the center of the Chedi Mahajanapada.\n(d) Incorrect -- Tripuri (modern Tewar) is near Jabalpur. While Chedi was in central India, its capital was explicitly Sotthivati on the Ken River, not the Chambal." },
+        { text: "The rulers and royalty of the Chedi kingdom had deep connections to the Mahabharata Epic. Which of the following statements about them is NOT accurate?", opts: ["A. King Shishupala, the most famous king of Chedi, was killed by Lord Krishna.", "B. King Subahu was a contemporary of King Nala, and Princess Damayanti lived in his kingdom.", "C. Princess Karenumati of Chedi was married to the Pandava Arjuna.", "D. Dhrishtaketu, the son of Shishupala, chose to support the Pandavas in the Mahabharata War."], ans: "C", exp: "(a) Incorrect -- This is an accurate statement. Shishupala was famously killed by Krishna.\n(b) Incorrect -- This is an accurate statement. King Subahu of Chedi hosted Princess Damayanti.\n(c) Correct -- This statement is inaccurate. Princess Karenumati of Chedi was the wife of the Pandava Nakula, not Arjuna.\n(d) Incorrect -- This is an accurate exam-important fact. Despite his father (Shishupala) being killed by Krishna (a Pandava ally), Dhrishtaketu supported the Pandavas in the war." },
+        { text: "The Pradyota Dynasty marked a significant shift in the political landscape of Avanti. How was this dynasty founded?", opts: ["A. King Ripunjaya defeated the Magadha army and established the dynasty to protect Ujjain.", "B. Chanda Pradyota led a popular rebellion against the Bhrigu clan and crowned himself king.", "C. King Shishunaga of Magadha installed Chanda Pradyota as a puppet ruler after conquering Avanti.", "D. Minister Punika assassinated the last Vitihotra ruler, Ripunjaya, and crowned his own young son, Chanda Pradyota."], ans: "D", exp: "(a) Incorrect -- Ripunjaya was the last ruler of the preceding Vitihotra dynasty; he was assassinated, he did not found the new dynasty.\n(b) Incorrect -- Chanda Pradyota was crowned in childhood by his father; he did not lead a rebellion against the Bhrigus (who were from a much older era).\n(c) Incorrect -- Shishunaga annexed Avanti at the end of the Pradyota Dynasty's rule (during the reign of Nandivardhana), he did not install Chanda Pradyota.\n(d) Correct -- The dynasty was founded through a coup. Minister Punika assassinated Ripunjaya (Vitihotra Dynasty), but rather than taking the throne himself, he crowned his young son Chanda Pradyota, after whom the Pradyota Dynasty is named." },
+        { text: "King Chanda Pradyota of Avanti, a contemporary of Gautama Buddha, commanded significant influence and fear among neighboring states. Which event correctly illustrates his political relationships?", opts: ["A. King Ajatashatru of Magadha sent his royal physician to Avanti when Pradyota suffered from jaundice.", "B. Pradyota invaded Kosala and installed Jivaka as his governor.", "C. The Magadha King Bimbisara fortified his capital out of fear of an imminent attack by Pradyota.", "D. Magadha's King Bimbisara sent his royal physician Jivaka to treat Pradyota for jaundice, indicating diplomatic ties."], ans: "D", exp: "(a) Incorrect -- It was King Bimbisara, not Ajatashatru, who sent the physician for jaundice (Panduroga).\n(b) Incorrect -- Jivaka was a royal physician from Magadha, not a governor installed in Kosala.\n(c) Incorrect -- It was Ajatashatru (not Bimbisara) who fortified his capital, Rajgriha, out of fear of a Pradyota attack, as recorded in the Majjhima Nikaya.\n(d) Correct -- In a famous diplomatic gesture, when Pradyota suffered from jaundice, Bimbisara of Magadha sent his royal physician, Jivaka, to treat him." },
+        { text: "Every dynasty eventually declines. How did the Pradyota Dynasty of Avanti come to an end?", opts: ["A. The Magadha ruler Shishunaga annexed Avanti into the Magadha Empire during the reign of the last king, Nandivardhana.", "B. Ajatashatru successfully breached the walls of Ujjain and executed Chanda Pradyota.", "C. The Vitihotra dynasty resurged under King Talajangha and reclaimed their ancestral throne.", "D. The dynasty collapsed from within after Gautama Buddha convinced the last ruler to dismantle the military."], ans: "A", exp: "(a) Correct -- After Chanda Pradyota's death, weak successors led to decline. The dynasty officially ended when the Magadha ruler Shishunaga annexed Avanti during the reign of the final Pradyota king, Nandivardhana.\n(b) Incorrect -- Ajatashatru fortified his own city against Pradyota; he did not execute Chanda Pradyota.\n(c) Incorrect -- The Vitihotra dynasty preceded the Pradyotas. Talajangha was an even earlier Haihaya king who tried to rebuild after Parshurama's attacks.\n(d) Incorrect -- There is no record of the dynasty ending due to forced demilitarization by Gautama Buddha." },
+        { text: "Mapping ancient names to modern districts is crucial for understanding historical geography. Which of the following pairs is NOT correctly matched?", opts: ["A. Avanti / Avantika — Ujjain", "B. Vatsa — Vidisha", "C. Nalpur — Shivpuri-Narwar area", "D. Anoop — Nimar (Khandwa / Khargone)"], ans: "B", exp: "(a) Incorrect -- This is a correct match. Ancient Avanti is modern Ujjain.\n(b) Correct -- This pair is mismatched. The ancient name Vatsa corresponds to modern Gwalior. The ancient name for Vidisha was Dasharna (or Basenagar).\n(c) Incorrect -- This is a correct match. Nalpur corresponds to the Shivpuri-Narwar area.\n(d) Incorrect -- This is a correct match. Anoop corresponds to the modern Nimar region." },
+        { text: "Continuing with ancient geographical mapping, which of the following pairs accurately links an ancient city with its modern counterpart?", opts: ["A. Tundikar — Khargone", "B. Dasharna — Gwalior", "C. Mandhata — Omkareshwar", "D. Mahishmati — Damoh"], ans: "C", exp: "(a) Incorrect -- Ancient Tundikar corresponds to the modern district of Damoh, not Khargone.\n(b) Incorrect -- Ancient Dasharna corresponds to modern Vidisha. Gwalior was known as Vatsa.\n(c) Correct -- Mandhata, founded by King Mandhatri of the Solar Dynasty, perfectly corresponds to modern Omkareshwar in the Khandwa district.\n(d) Incorrect -- Mahishmati corresponds to Maheshwar (Khargone), while Damoh was Tundikar." },
+        { text: "The Chaturbhuj Nala is a highly significant archaeological site in Madhya Pradesh. What is its location and primary historical significance?", opts: ["A. It is an ancient stupa complex built by King Achyutagami near Ujjain.", "B. It is a Chalcolithic settlement near Mahidpur associated with Babruvahana's Yajna.", "C. Located near Bhanpura in Mandsaur district, it is the largest rock shelter site in the state, depicting prehistoric life.", "D. It is the ancient fortress of Muchukunda built on the banks of the Narmada in the Khandwa district."], ans: "C", exp: "(a) Incorrect -- Ujjayini was founded by Achyutagami, but Chaturbhuj Nala is not a stupa complex near Ujjain.\n(b) Incorrect -- The Chalcolithic settlement near Mahidpur is Bhasma-Tekri, not Chaturbhuj Nala.\n(c) Correct -- Chaturbhuj Nala is located near Bhanpura in Mandsaur district (within the Gandhi Sagar Sanctuary). Extending over 5 km, it is the state's largest rock shelter site, featuring prehistoric rock art of hunting, dancing, and human life.\n(d) Incorrect -- Muchukunda built his fort at Mahishmati (Maheshwar) on the Narmada, which is not a rock shelter site." },
+        { text: "\"Karush Pradesh\" is an ancient geographical name frequently mentioned in texts like the Mahabharata. To which modern region of Madhya Pradesh does it correspond?", opts: ["A. Bundelkhand", "B. Baghelkhand", "C. Malwa", "D. Mahakoshal"], ans: "B", exp: "(a) Incorrect -- Bundelkhand corresponds to ancient regions like Chedi or the territory held by the Vitihotra sub-clan.\n(b) Correct -- Karush Pradesh is the ancient name for modern Baghelkhand. Mentioned in the Adi, Bhishma, and Karna Parvas of the Mahabharata, the Karush kingdom fought on the side of the Pandavas.\n(c) Incorrect -- Malwa corresponds to ancient Avanti.\n(d) Incorrect -- Mahakoshal (the center of Aryan culture during the Epic era) corresponds to ancient Koshal." },
+        { text: "The ancient city of Tripuri is connected both to the Mahabharata and the lineage of Lord Rama. Where is the modern equivalent of this city located, and who historically ruled the related region of Vidisha?", opts: ["A. Tripuri is modern Ujjain; Vidisha was ruled by Kush.", "B. Tripuri is modern Maheshwar; Vidisha was ruled by King Nila.", "C. Tripuri is modern Omkareshwar; Vidisha was ruled by Luv.", "D. Tripuri is modern Tewar village near Jabalpur; Vidisha was ruled by Shatrughati (son of Shatrughna)."], ans: "D", exp: "(a) Incorrect -- Ujjain is Avanti. Kush established Kushavati near the Vindhyas.\n(b) Incorrect -- Maheshwar is Mahishmati, ruled by King Nila during the Mahabharata.\n(c) Incorrect -- Omkareshwar is Mandhata. Luv's birthplace was Valmiki's ashram on the Tons river.\n(d) Correct -- The ancient city of Tripuri corresponds to modern Tewar village near Jabalpur. Furthermore, Kalidasa's 'Raghuvamsha' states that Shatrughna's son, Shatrughati, ruled the connected ancient city of Vidisha." },
+        { text: "The rivers of ancient Madhya Pradesh had distinct historical names. Which of the following is correctly matched?", opts: ["A. Shuktimati (or Shuktimanati) — Ken River", "B. Charmanvati — Betwa River", "C. Vetravati — Tons River", "D. Tamsa — Chambal River"], ans: "A", exp: "(a) Correct -- The ancient Shuktimati (or Shuktimanati) River corresponds to the modern Ken River. It was the river on whose banks the Chedi capital of Sotthivati was located.\n(b) Incorrect -- The Charmanvati corresponds to the modern Chambal River.\n(c) Incorrect -- The Vetravati corresponds to the modern Betwa River.\n(d) Incorrect -- The Tamsa River corresponds to the modern Tons River, famous as the site of Valmiki's Ashram." },
+        { text: "Comparing the Bhrigu and Haihaya dynasties provides key insights into ancient MP. Which of the following statements accurately highlights a difference between them?", opts: ["A. The Bhrigu clan was based in Mahishmati, while the Haihaya Empire was centered in Anarta.", "B. The Bhrigu dynasty originally held absolute control over the sea trade in Gujarat before migrating to Kanyakubja.", "C. King Urva of the Haihaya dynasty established an empire spanning from the Narmada to the Himalayas.", "D. The Haihaya dynasty was primarily known for its archery skills, while the Bhrigu clan focused purely on military expansion."], ans: "B", exp: "(a) Incorrect -- The locations are reversed. The Haihayas were based in Mahishmati (MP), while the Bhrigus were initially in Anarta (Gujarat).\n(b) Correct -- The Bhrigus held absolute monopoly over Gujarat's sea trade (Anarta). After the bloody conflict with the Haihayas, they migrated to Kanyakubja (MP).\n(c) Incorrect -- Urva was the founding patriarch of the Bhrigu lineage, not the Haihaya dynasty. Sahasrarjuna expanded the Haihaya empire to the Himalayas.\n(d) Incorrect -- The Bhrigu clan (specifically figures like Richika and Jamadagni) were the ones renowned as experts in archery, while the Haihayas were noted for their aggressive military expansion." },
+        { text: "Integrating the events of various epochs, which of the following statements provides a historically accurate synthesis of ancient MP's timeline?", opts: ["A. The transition from the Dwapara Yuga to the Kaliyuga is marked by the coronation of King Parikshit, to whom the Pandavas handed their kingdom after the Great War.", "B. The spread of Aryan culture through Mahakoshal occurred during the Parashuram Era, driven by the Bhrigu migration.", "C. King Avanti defeated the Karkotaka Nagas to establish the capital of Mahishmati during the Mahajanapada era.", "D. The Vitihotra dynasty ultimately defeated the Magadha Empire, preventing the annexation of Ujjain."], ans: "A", exp: "(a) Correct -- The Dwapara Yuga ends and the Kaliyuga begins exactly with the coronation of King Parikshit (son of Abhimanyu), who took the throne when the Pandavas left for the Himalayas.\n(b) Incorrect -- Aryan culture spread through Mahakoshal during the Ramchandra Era (Treta Yuga) via Rama's exile, not the Parashuram Era.\n(c) Incorrect -- It was Sahasrarjuna (Haihaya) who defeated the Karkotaka Nagas to capture Mahishmati, long before King Avanti or the Mahajanapada era.\n(d) Incorrect -- The Vitihotra dynasty was overthrown by Minister Punika (Pradyota Dynasty). Eventually, Avanti was annexed by the Magadha Empire under Shishunaga." },
+        { text: "The geographical awareness of ancient Vedic authors is reflected in their texts. Which of the following provides an indirect mention of the Vindhya Mountains?", opts: ["A. The Anguttara Nikaya", "B. The Skanda Purana", "C. The Kaushitaki Brahmanopanishad", "D. The Ashtadhyayi"], ans: "C", exp: "(a) Incorrect -- The Anguttara Nikaya is a much later Buddhist text that provides the list of the 16 Mahajanapadas.\n(b) Incorrect -- The Skanda Purana details Krishna's education in Avanti during the Dwapara Yuga.\n(c) Correct -- The Kaushitaki Brahmanopanishad (Brahmanopanishad) is the specific Vedic text that contains an indirect mention of the Vindhya Mountains, placing them in the ancient geographic consciousness.\n(d) Incorrect -- Panini's Ashtadhyayi provides the first clear mention of Avanti as a state." },
+        { text: "The identification of ancient river names is a crucial archaeological task. Who identified the earliest literary reference to the Narmada River, and in which text was it found?", opts: ["A. Sage Valmiki identified the river Reva in the Raghuvamsha.", "B. Minister Punika recorded the river's name in the Dipavamsa.", "C. Kautilya identified the river as Charmanvati in the Arthashastra.", "D. Historian Weber identified the term 'Revottara' in the Shatapatha Brahmana."], ans: "D", exp: "(a) Incorrect -- Valmiki is associated with the Tamsa river ashram. The Raghuvamsha was written by Kalidasa.\n(b) Incorrect -- Punika was a minister in Avanti. The Dipavamsa is a Buddhist text that mentions Ujjayini's founder.\n(c) Incorrect -- Kautilya's Arthashastra mentions King Talajangha. Charmanvati is the Chambal river.\n(d) Correct -- The Shatapatha Brahmana contains the term 'Revottara', which historian Weber identified as the earliest literary reference to the Rewa/Narmada River." },
+        { text: "The traditional 5-Pillar Chronology organizes the ancient epochs of MP. Which is the correct description of the Parashuram Era?", opts: ["A. It was the era when King Mandhatri built Omkareshwar.", "B. It marked the beginning of Kaliyuga with Parikshit's coronation.", "C. It was the foundational era from which dynastic lineages originated.", "D. It was defined by the great Bhrigu-Haihaya conflict and massive vengeance campaigns."], ans: "D", exp: "(a) Incorrect -- Mandhatri building cities characterizes the Mandhatri Era.\n(b) Incorrect -- Parikshit's coronation marks the end of the Krishna Era (Dwapara Yuga) and the start of Kaliyuga.\n(c) Incorrect -- The origin of dynastic lineages occurred in the Yayati Era.\n(d) Correct -- The Parashuram Era is explicitly marked by the brutal Bhrigu-Haihaya conflict, where Parshurama carried out his vengeance campaigns." },
+        { text: "The Solar and Lunar dynasties operated concurrently but extended across different mythological epochs. Which of the following is correct regarding their association with the Yugas?", opts: ["A. The Lunar Dynasty was destroyed entirely at the end of the Treta Yuga.", "B. The Solar Dynasty originated in the Dwapara Yuga under Vaivasvata Manu.", "C. The Solar Dynasty is strongly associated with the Treta Yuga (Sri Ramachandra Era), while the Lunar Dynasty continued prominently into the Dwapara Yuga (Sri Krishna Era).", "D. Both dynasties were established by Emperor Bharat at the dawn of the Kaliyuga."], ans: "C", exp: "(a) Incorrect -- The Lunar Dynasty did not end in the Treta Yuga; it flourished through the Dwapara Yuga (e.g., the Yadavas and Kauravas/Pandavas).\n(b) Incorrect -- The Solar Dynasty was prominent in the Treta Yuga (Rama's era), not originating in the Dwapara Yuga.\n(c) Correct -- The Solar Dynasty is deeply connected to the Treta Yuga (Rama's exile), whereas the Lunar Dynasty (Chandra Vansh) continued through the Dwapara Yuga, encompassing the Krishna Era and the Mahabharata War.\n(d) Incorrect -- Emperor Bharat was of the Lunar Dynasty, but he predated the Kaliyuga by a vast margin." },
+        { text: "Pururava was the founder of the Ail Vansh (Lunar Dynasty) whose empire spanned from Bundelkhand to Baghelkhand. How did his reign conclude?", opts: ["A. He was defeated in battle by the Solar King Ikshvaku.", "B. He persecuted Brahmins in his final days, leading the Rishis to rebel and kill him.", "C. He surrendered his kingdom to the Bhrigu clan to secure trade routes.", "D. He died of jaundice because the Magadha physician Jivaka arrived too late."], ans: "B", exp: "(a) Incorrect -- Pururava and Ikshvaku were contemporaries (founders of their respective branches), but Ikshvaku did not defeat Pururava.\n(b) Correct -- The downfall of Pururava occurred because, in his final days, he harassed and persecuted Brahmins. This provoked the Rishis, who rebelled and ultimately killed him.\n(c) Incorrect -- The Bhrigu trade conflict occurred later, involving the Haihayas, not Pururava.\n(d) Incorrect -- The king who suffered from jaundice (Panduroga) and was treated by Jivaka was Chanda Pradyota of Avanti, centuries later." },
+        { text: "Upon the death of Pururava, the Lunar Dynasty throne had to be passed on. What was the specific inheritance outcome among his sons?", opts: ["A. Ayu inherited the core empire, while his brother Amavasu did not inherit the main territory.", "B. Amavasu inherited the main empire, forcing Ayu to establish a new kingdom in Avanti.", "C. Nahusha inherited the empire directly, bypassing both Ayu and Amavasu.", "D. Yadu and Turvasu divided the empire immediately after Pururava's death."], ans: "A", exp: "(a) Correct -- After Pururava's death, the throne passed to his son Ayu, who inherited the core empire as the primary successor. Another son, Amavasu, did not inherit the main empire.\n(b) Incorrect -- Amavasu did not inherit the main empire; Ayu did.\n(c) Incorrect -- Nahusha was the son of Ayu, so he inherited the throne in the next generation, not directly from Pururava.\n(d) Incorrect -- The empire was split between Yadu and Turvasu generations later by Emperor Yayati, not after Pururava's death." },
+        { text: "Emperor Yayati's reign was highly significant for the political geography of ancient Madhya Pradesh. Why is he particularly noted in the Lunar lineage?", opts: ["A. He is regarded as the most glorious ruler of the Lunar Dynasty and his division of the empire created two distinct territorial zones.", "B. He was the first Lunar king to conquer the Dandakaranya forest from the Solar Dynasty.", "C. He established the first theatre (Rangshala) on earth to entertain the Naga kings.", "D. He annexed Avanti into the Magadha empire after defeating the Vitihotras."], ans: "A", exp: "(a) Correct -- Yayati (son of Nahusha) is explicitly regarded as the most glorious ruler of the Lunar Dynasty. His reign is central because he enacted the \"Imperial Split\", dividing the empire between his sons Yadu and Turvasu, shaping the geography of ancient MP.\n(b) Incorrect -- Dandakaranya was ruled by Dandak (Solar Dynasty), and Yayati is not noted for conquering it.\n(c) Incorrect -- It was Yayati's father, Nahusha, who historically established the first theatre (Rangshala) on Earth.\n(d) Incorrect -- The annexation of Avanti into Magadha was done by Shishunaga at the end of the Pradyota Dynasty, centuries later." },
+        { text: "Emperor Yayati divided his kingdom between his sons Yadu and Turvasu. What was the exact geographic extent of Yadu's territory?", opts: ["A. He controlled the regions near modern Rewa.", "B. He governed the Narmada valley and built a fort at Omkareshwar.", "C. He ruled the Mahakoshal region and the Dandaka forest.", "D. He controlled the rivers Charmanvati (Chambal), Vetravati (Betwa), and Shuktimati (Ken)."], ans: "D", exp: "(a) Incorrect -- The region near Rewa (modern Baghelkhand) was granted to Turvasu, not Yadu.\n(b) Incorrect -- Omkareshwar (Mandhata) was built by Mandhatri of the Solar Dynasty.\n(c) Incorrect -- Mahakoshal and Dandakaranya are heavily associated with the Ramayana era and the Solar Dynasty.\n(d) Correct -- Yadu's designated territory in the imperial split was defined by his control over the rivers Charmanvati (Chambal), Vetravati (Betwa), and Shuktimati (Ken)." },
+        { text: "The lineage that gave India its name, 'Bharat', involves figures from different ancient clans. What was the specific lineage of Emperor Bharat's mother?", opts: ["A. She was the daughter of Sage Jamadagni of the Bhrigu clan.", "B. She was an Ail Rajkumari named Bindumati.", "C. She was Shakuntala, the daughter of the Kshatriya sage Vishwamitra.", "D. She was the daughter of the Naga King who renamed the Narmada river."], ans: "C", exp: "(a) Incorrect -- Jamadagni was the father of Parshurama, not Shakuntala.\n(b) Incorrect -- Bindumati was the Ail princess who married King Mandhatri of the Solar Dynasty.\n(c) Correct -- Emperor Bharat's mother was Shakuntala. She was the daughter of the great sage Vishwamitra, and she married King Dushyant of the Lunar Dynasty.\n(d) Incorrect -- The Naga King's daughter was Narmada, who married Purukutsa." },
+        { text: "The establishment of the Solar Dynasty in Madhya Pradesh traces back to a divine/mythological progenitor. Who originally granted the region to the dynasty's founder?", opts: ["A. Parshurama granted it to King Dandak after clearing it of Kshatriyas.", "B. Vaivasvata Manu granted the state of Madhya Pradesh to his son Ikshvaku.", "C. The Naga King granted the territory to Purukutsa as a dowry.", "D. Sage Valmiki granted the Tamsa river basin to Luv and Kush."], ans: "B", exp: "(a) Incorrect -- Parshurama's actions occurred in a later era and were against the Lunar/Haihaya kings. He did not grant land to Dandak.\n(b) Correct -- The foundational myth of the Solar Dynasty in this region is that Vaivasvata Manu granted the state of Madhya Pradesh to his son Ikshvaku, making him the progenitor of the Solar line there.\n(c) Incorrect -- The Naga King's connection was through marrying his daughter Narmada to Purukutsa, not founding the dynasty's land claim.\n(d) Incorrect -- Valmiki provided sanctuary to Sita at his ashram on the Tamsa river, where Luv and Kush were born, but he did not \"grant\" the territory to found the dynasty." },
+        { text: "King Mandhatri was one of the most powerful rulers of the Solar Dynasty. What specific title did he hold that reflected his supreme authority?", opts: ["A. Yaduvanshi", "B. Vitihotra", "C. Chakravarti Samrat", "D. Talajangha"], ans: "C", exp: "(a) Incorrect -- Yaduvanshi refers to the descendants of Yadu (the Yadavas) of the Lunar Dynasty.\n(b) Incorrect -- Vitihotra was a post-Parshurama sub-clan of the Haihaya dynasty.\n(c) Correct -- Mandhatri (son of Yuvanashva) held the title 'Chakravarti Samrat', which translates to 'Great Conqueror' or paramount emperor, reflecting his expansion of the empire to the Narmada River.\n(d) Incorrect -- Talajangha was a later king of the Haihaya dynasty who attempted to rebuild after Parshurama's attacks." },
+        { text: "Inter-dynastic and inter-clan marriages heavily influenced the geography of ancient MP. Who did the Solar king Purukutsa marry?", opts: ["A. Bindumati, an Ail princess.", "B. Narmada, the daughter of the Naga King.", "C. Renuka, the daughter of King Renu.", "D. Karenumati, a princess of Chedi."], ans: "B", exp: "(a) Incorrect -- Bindumati (an Ail princess) married Mandhatri, who was Purukutsa's father.\n(b) Correct -- Purukutsa married Narmada, the daughter of the Naga King. Following this marriage connection, Purukutsa renamed the ancient river 'Reva' to 'Narmada'.\n(c) Incorrect -- Renuka was the wife of the Bhrigu sage Jamadagni.\n(d) Incorrect -- Karenumati was a Chedi princess who married the Pandava Nakula." },
+        { text: "Muchukunda, a son of King Mandhatri, achieved temporary military success. What was the specific nature and geographical location of his conquest?", opts: ["A. He captured Ujjayini from King Achyutagami.", "B. He defeated the Karkotaka Nagas in the Anupa region.", "C. He successfully besieged the Magadha capital of Rajgriha.", "D. He conquered the Pariyatra and Riksha mountains and built a fort on the banks of the Narmada."], ans: "D", exp: "(a) Incorrect -- Ujjayini was founded by Achyutagami much later; Muchukunda had no connection to it.\n(b) Incorrect -- Defeating the Karkotaka Nagas in the Anupa region was the achievement of Sahasrarjuna of the Haihaya dynasty.\n(c) Incorrect -- Rajgriha was fortified by Ajatashatru due to fear of Chanda Pradyota, not Muchukunda.\n(d) Correct -- Muchukunda conquered the Pariyatra (Vidhyachal) and Riksha (Maikal) mountain ranges and built a fort on the Narmada (which became Mahishmati). He was subsequently defeated by the Haihayas." },
+        { text: "The modern cities of Omkareshwar and Maheshwar hold significant dual heritage. What is their combined historical importance regarding ancient dynastic geography?", opts: ["A. Both cities stand on the Narmada River, representing the geographical convergence of the Solar and Lunar dynasties in Madhya Pradesh.", "B. They were the northern and southern capitals of the Avanti Mahajanapada.", "C. They were the twin capitals of the Bhrigu clan's sea trade empire.", "D. Both were established by the Magadha Empire to govern the newly annexed Malwa region."], ans: "A", exp: "(a) Correct -- Omkareshwar (founded as Mandhata by the Solar king Mandhatri) and Maheshwar (built as Mahishmati by the Solar king Muchukunda, but captured and renamed by the Lunar/Haihaya king Mahishmant) both sit on the Narmada. Together, they represent the key geographical convergence point of the Surya and Chandra Vanshas.\n(b) Incorrect -- The capitals of Avanti were Ujjain (North) and Mahishmati (South). Omkareshwar was not an Avanti capital.\n(c) Incorrect -- The Bhrigu trade empire was based in Anarta (Gujarat) before they migrated.\n(d) Incorrect -- Magadha only annexed Avanti later; they did not establish these ancient cities." },
+        { text: "The path of Lord Rama's exile (Vanwas) heavily traverses present-day Madhya Pradesh. Where did the famous 'Bharat-Milap' (the meeting of Rama and his brother Bharat) take place?", opts: ["A. Mahakoshal", "B. Vidisha", "C. Kushavati", "D. Chitrakoot"], ans: "D", exp: "(a) Incorrect -- Mahakoshal was the broader region that became the center of Aryan culture, but the specific meeting did not happen there.\n(b) Incorrect -- Vidisha was an ancient city later governed by Shatrughna, not the site of the Bharat-Milap.\n(c) Incorrect -- Kushavati was a city established post-exile by Rama's son Kush near the Vindhyas.\n(d) Correct -- Chitrakoot, located in modern-day Satna district, MP, was the starting point of Rama's exile journey and is definitively the site of the famous Bharat-Milap." },
+        { text: "During his exile in the Dandakaranya forest, Lord Rama visited several key figures. With which modern region is Shabari's ashram historically associated?", opts: ["A. Modern Chhattisgarh", "B. Modern Bundelkhand", "C. Modern Gwalior", "D. Modern Malwa"], ans: "A", exp: "(a) Correct -- Shabari's ashram was located within the vast Dandakaranya forest region, which corresponds primarily to the Bastar district of modern-day Chhattisgarh.\n(b) Incorrect -- Bundelkhand corresponds to ancient Chedi and the Vitihotra territories, not Dandakaranya.\n(c) Incorrect -- Gwalior corresponds to the ancient region of Vatsa.\n(d) Incorrect -- Malwa corresponds to the ancient region of Avanti." },
+        { text: "Following the Ramayana era, Rama's descendants established their own strongholds. Where did his son Kush establish the city of Kushavati?", opts: ["A. On the banks of the Chambal (Charmanvati) River.", "B. Near the Vindhya mountain ranges in modern Madhya Pradesh.", "C. Within the Dandakaranya forest in Bastar.", "D. Near the Bhasma-Tekri mound in Ujjain."], ans: "B", exp: "(a) Incorrect -- The Chambal coast was ruled later by figures like King Rantidev.\n(b) Correct -- Kush (Rama's son) established the city of Kushavati near the Vindhya mountain ranges in modern MP during the post-exile (Uttara-Ramayana) period.\n(c) Incorrect -- Dandakaranya was the site of the exile, not where Kush built his city.\n(d) Incorrect -- Bhasma-Tekri in Ujjain is associated with Babruvahana's Yajna from the Mahabharata era." },
+        { text: "During the Uttara-Ramayana period, the governance of central Indian regions was divided among the royal family. Who governed the historically significant region of Vidisha?", opts: ["A. Rama's son Luv", "B. Sage Valmiki", "C. Rama's younger brother Shatrughna", "D. King Avanti"], ans: "C", exp: "(a) Incorrect -- Luv was born at Valmiki's ashram but is not specifically noted for governing Vidisha.\n(b) Incorrect -- Valmiki was a sage whose ashram was on the Tamsa river; he did not govern cities.\n(c) Correct -- Shatrughna, the younger brother of Rama, governed the region of Vidisha. (Later, Kalidasa's Raghuvamsha notes that Shatrughna's son Shatrughati ruled there).\n(d) Incorrect -- King Avanti (of the Haihaya sub-clan) did eventually capture Vidisha from the Yadavas, but this was much later in the timeline, not during the Uttara-Ramayana period." },
+        { text: "Guru Sandipani's Ashram in Avanti is a pivotal location in the Dwapara Yuga timeline. According to texts, what exactly occurred there?", opts: ["A. Parshurama trained his disciples in archery to defeat the Haihayas.", "B. Lord Krishna and his brother Balarama received their education, mastering all arts and sciences during their youth.", "C. The Pandavas hid their weapons there during their incognito exile.", "D. Gautama Buddha delivered his first sermon to King Chanda Pradyota."], ans: "B", exp: "(a) Incorrect -- Parshurama's father was Jamadagni (an archery expert), but the Sandipani Ashram is specifically famous for Krishna's education, not Parshurama's military academy.\n(b) Correct -- The Skanda Purana clearly notes that at Guru Sandipani Ashram in Avanti (Ujjain), Krishna and Balarama mastered all arts and sciences during their childhood/youth.\n(c) Incorrect -- The Pandavas hid their weapons in a Shami tree near the Matsya kingdom, not at Sandipani's ashram.\n(d) Incorrect -- Buddha delivered his first sermon at Sarnath. He was a contemporary of Chanda Pradyota, but the ashram is from the earlier Dwapara Yuga." },
+        { text: "The alliance of Central Indian kings in the Mahabharata War was heavily influenced by lineage. Who were Vinda and Anuvinda, and whom did they fight for?", opts: ["A. They were the sons of King Shishupala who fought for the Pandavas.", "B. They were descendants of the Naga King who remained neutral during the war.", "C. They were the twin sons of Guru Sandipani who fought for the Pandavas.", "D. They were the sons of a Yaduvanshi Princess who ruled Avanti (Malwa) and fought as allies of the Kauravas."], ans: "D", exp: "(a) Incorrect -- Shishupala's son was Dhrishtaketu, who did fight for the Pandavas, but Vinda and Anuvinda were from Avanti, not Chedi.\n(b) Incorrect -- The Naga King is associated with an earlier era (giving Narmada to Purukutsa). They did not stay neutral; they fought.\n(c) Incorrect -- They were not sons of Guru Sandipani.\n(d) Correct -- Vinda and Anuvinda were rulers of Avanti (Malwa), the sons of a Yaduvanshi Princess. They allied with the Kauravas during the war, and Anuvinda was ultimately killed by Arjuna." },
+        { text: "The Bhrigu clan's influence in Madhya Pradesh, following their migration from Gujarat, spanned several modern districts. According to classroom annotations, which route best describes their area of influence?", opts: ["A. Indore (Janapav) → Malwa (Bigar) → Dhar region → Dhoupgarh.", "B. Gwalior (Vatsa) → Shivpuri (Nalpur) → Vidisha (Dasharna).", "C. Bastar (Dandakaranya) → Satna (Chitrakoot) → Rewa (Baghelkhand).", "D. Ujjain (Avanti) → Maheshwar (Mahishmati) → Omkareshwar (Mandhata)."], ans: "A", exp: "(a) Correct -- Classroom annotations explicitly state that the Bhrigu clan's influence extended across Indore (Janapav), Malwa (Bigar), the Dhar region, and Dhoupgarh in MP.\n(b) Incorrect -- These are ancient city equivalents, not the recorded Bhrigu influence path.\n(c) Incorrect -- These locations trace the general eastward path of Rama's exile, not the Bhrigu clan's footprint.\n(d) Incorrect -- These are the major capitals of Avanti and the Solar/Lunar cities on the Narmada, not the specific Bhrigu geographic spread noted in the text." },
+        { text: "Following Parshurama's devastating campaigns against the Kshatriyas, the Haihaya dynasty struggled to survive. Which ancient text specifically documents the downfall of the Haihaya King Talajangha during this period of attempted rebuilding?", opts: ["A. The Skanda Purana", "B. The Majjhima Nikaya", "C. Kautilya's 'Arthashastra'", "D. The Dipavamsa"], ans: "C", exp: "(a) Incorrect -- The Skanda Purana documents that Avanti was the educational capital where Krishna studied.\n(b) Incorrect -- The Majjhima Nikaya is a Buddhist text that mentions Ajatashatru fortifying Rajgriha out of fear of Chanda Pradyota.\n(c) Correct -- Kautilya's 'Arthashastra' is the specific text noted for mentioning the downfall of King Talajangha (son of Jayadhwaja), who had attempted to rebuild the Haihaya dynasty post-Parshurama.\n(d) Incorrect -- The Dipavamsa notes that King Achyutagami founded Ujjayini" }
+    ];
+
+    const topicName = "Vedic Age and Ancient Literature";
+
+    // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
+    const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
+    const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
+
+    const TOTAL_QS = FULL_QUIZ.length;
+
+    // --- Firebase Setup ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDX9dw3QKC23S7ukdqvropANz4qUvI3Bq0",
+        authDomain: "aditya-quizzes-5a3c6.firebaseapp.com",
+        databaseURL: "https://aditya-quizzes-5a3c6-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "aditya-quizzes-5a3c6",
+        storageBucket: "aditya-quizzes-5a3c6.firebasestorage.app",
+        messagingSenderId: "792902679820",
+        appId: "1:792902679820:web:6af51ad185fcb8e1341d29"
+    };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    let mode = null;
+    let order = [];
+    let currentPos = 0;
+    let answersState = [];
+    let userSelections = [];
+    let startTime = null;
+    let timerInterval = null;
+    let quizActive = true;
+    let skipReviewMode = false;
+    let skipReviewList = [];
+    let currentSkipReviewIndex = 0;
+    let reviewItems = [];
+    let reviewCurrentIdx = 0;
+
+    let timerPaused = false;
+    let elapsedSeconds = 0;
+    let quizInProgress = false;
+    let timerPausedByBeforeUnload = false;
+    let isDarkMode = false;
+    let currentFontSize = 16;
+    let leaderboardLoggedForThisSession = false;
+
+    // --- Utility ---
+    function getCurrentDateTime() {
+        const now = new Date();
+        const day = now.getDate();
+        const month = now.toLocaleString('default', { month: 'long' });
+        const year = now.getFullYear();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        return { date: `${day}.${month}.${year}`, time: `${hours}:${minutes} ${ampm}` };
+    }
+    function formatTime(sec) {
+        return `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+    }
+    function computeStats() {
+        let correct = 0, incorrect = 0, skipped = 0;
+        for (let i = 0; i < answersState.length; i++) {
+            if (answersState[i] === 'correct') correct++;
+            else if (answersState[i] === 'incorrect') incorrect++;
+            else if (answersState[i] === 'skipped') skipped++;
+        }
+        let attempted = correct + incorrect;
+        let score = correct * 1 + incorrect * -0.33;
+        let displayScore = attempted > 0 ? score.toFixed(2) : "0.00";
+        return { correct, incorrect, skipped, attempted, total: TOTAL_QS, score, displayScore };
+    }
+    function updateTopStats() {
+        const { correct, incorrect, skipped } = computeStats();
+        const sc = document.getElementById('statCorrect');
+        const sw = document.getElementById('statWrong');
+        const ss = document.getElementById('statSkip');
+        if (sc) sc.innerText = correct;
+        if (sw) sw.innerText = incorrect;
+        if (ss) ss.innerText = skipped;
+        updateNavPaneColors();
+    }
+    function getNextUnansweredPos(startPos) {
+        for (let i = startPos; i < order.length; i++) if (answersState[order[i]] === 'unanswered') return i;
+        return -1;
+    }
+    function formatExplanationRich(expText) {
+        const lines = expText.split(/\r?\n/);
+        let htmlLines = [];
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+            const regex = /^(\([a-d]\))\s*(Correct|Incorrect)\s*[-–—]+\s*(.*)$/i;
+            const match = line.match(regex);
+            if (match) {
+                const isCorrect = match[2].toLowerCase() === 'correct';
+                htmlLines.push(`<div class="explanation-line"><span class="${isCorrect ? 'exp-correct' : 'exp-incorrect'}">${match[1]} ${match[2]}</span><span class="exp-text"> – ${match[3]}</span></div>`);
+            } else {
+                htmlLines.push(`<div class="explanation-line"><span class="exp-text">${line}</span></div>`);
+            }
+        }
+        return htmlLines.join('');
+    }
+
+    // --- Leaderboard ---
+    async function loadLeaderboard() {
+        try {
+            const snap = await db.ref(LEADERBOARD_KEY).get();
+            return snap.exists() ? Object.values(snap.val()) : [];
+        } catch(e) { return []; }
+    }
+    async function saveLeaderboard(lb) {
+        try {
+            await db.ref(LEADERBOARD_KEY).set(
+                Object.fromEntries(lb.map((entry, i) => [i, entry]))
+            );
+        } catch(e) { console.error("Leaderboard save failed", e); }
+    }
+    async function addAttemptToLeaderboard(scoreValue, attemptedCount, totalQS) {
+        if (leaderboardLoggedForThisSession) return;
+        if (attemptedCount <= 0.4 * totalQS) return;
+        const lb = await loadLeaderboard();
+        const { date, time } = getCurrentDateTime();
+        lb.push({ attempt: lb.length + 1, score: scoreValue, attempted: attemptedCount, total: totalQS, date, time });
+        await saveLeaderboard(lb);
+        leaderboardLoggedForThisSession = true;
+    }
+    async function renderLeaderboard() {
+        const container = document.getElementById('leaderboardContainer');
+        if (!container) return;
+        container.innerHTML = '<div class="leaderboard-empty">⏳ Loading scores...</div>';
+        const lb = await loadLeaderboard();
+        if (lb.length === 0) {
+            container.innerHTML = '<div class="leaderboard-empty">✨ No attempts recorded yet. Complete a quiz (attempting >40% of questions) to see your scores here.</div>';
+            return;
+        }
+        let html = '<div class="leaderboard-table-container"><table class="leaderboard-table"><thead><tr><th>Attempt</th><th>Score</th><th>Questions Attempt</th><th>Date</th><th>Time</th></tr></thead><tbody>';
+        for (let e of lb) {
+            html += `<tr><td>${e.attempt}</td><td>${e.score.toFixed(2)} / ${e.attempted}</td><td>${e.attempted} / ${e.total}</td><td>${e.date || '—'}</td><td>${e.time || '—'}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+    async function resetLeaderboard() {
+        if (confirm("⚠️ WARNING: All leaderboard stats will be deleted permanently.\nAre you sure you want to proceed?")) {
+            await db.ref(LEADERBOARD_KEY).remove();
+            renderLeaderboard();
+        }
+    }
+
+    // --- Save / Resume ---
+    async function saveQuizState() {
+        if (!quizInProgress) return;
+        const state = {
+            mode, order, currentPos, answersState, userSelections, elapsedSeconds, timerPaused,
+            skipReviewMode, skipReviewList, currentSkipReviewIndex,
+            isDarkMode: document.body.classList.contains('dark-theme'),
+            fontSize: parseInt(document.documentElement.style.fontSize) || 16,
+            version: 2
+        };
+        try {
+            await db.ref(STORAGE_KEY).set(state);
+        } catch(e) {
+            // Fallback to localStorage if Firebase fails
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+    }
+    async function loadQuizState() {
+        try {
+            const snap = await db.ref(STORAGE_KEY).get();
+            if (snap.exists()) {
+                const state = snap.val();
+                if (state && state.order && state.answersState && state.userSelections && state.mode) return state;
+            }
+        } catch(e) {}
+        // Fallback to localStorage
+        try {
+            const state = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (state && state.order && state.answersState && state.userSelections && state.mode) return state;
+        } catch(e) {}
+        return null;
+    }
+    async function clearSavedState() {
+        try { await db.ref(STORAGE_KEY).remove(); } catch(e) {}
+        localStorage.removeItem(STORAGE_KEY);
+    }
+    async function autoSave() { if (quizInProgress) await saveQuizState(); }
+    function applyUIPreferences(isDark, fontSize) {
+        if (isDark) document.body.classList.add('dark-theme');
+        else document.body.classList.remove('dark-theme');
+        document.documentElement.style.fontSize = fontSize + 'px';
+        currentFontSize = fontSize;
+        const btn = document.getElementById('darkModeToggle');
+        if (btn) btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+        const slider = document.getElementById('fontSlider');
+        const pct = document.getElementById('fontPercent');
+        if (slider && pct) { slider.value = fontSize; pct.innerText = Math.round((fontSize/16)*100) + '%'; }
+    }
+
+    // --- Timer ---
+    function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+    function pauseTimer() {
+        if (!quizActive || timerPaused) return;
+        elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        stopTimer();
+        timerPaused = true;
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '0.7'; el.title = 'Paused - Click or interact to resume'; }
+        autoSave();
+    }
+    function resumeTimer() {
+        if (!quizActive || !timerPaused) return;
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        timerInterval = setInterval(() => {
+            if (!quizActive || timerPaused) return;
+            document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+        }, 1000);
+        timerPaused = false;
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
+        autoSave();
+    }
+    function toggleTimerPause() { if (!quizActive) return; timerPaused ? resumeTimer() : pauseTimer(); }
+    function autoResumeTimerIfPaused() { if (timerPaused && quizActive) { resumeTimer(); timerPausedByBeforeUnload = false; } }
+    function startTimer() {
+        if (timerInterval) stopTimer();
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        timerPaused = false;
+        timerPausedByBeforeUnload = false;
+        timerInterval = setInterval(() => {
+            if (!quizActive || timerPaused) return;
+            document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+        }, 1000);
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
+    }
+
+    // --- Per-question capture ---
+    async function captureSingleQuestion(origIdx) {
+        const q = FULL_QUIZ[origIdx];
+        const userChoice = userSelections[origIdx];
+        let optsHtml = '';
+        for (let i = 0; i < q.opts.length; i++) {
+            const optLetter = String.fromCharCode(65 + i);
+            let extraClass = '';
+            if (optLetter === q.ans) extraClass = 'correct-highlight';
+            else if (userChoice === optLetter && userChoice !== q.ans) extraClass = 'wrong-highlight';
+            optsHtml += `<div class="option ${extraClass}">${q.opts[i]}</div>`;
+        }
+        const questionNumber = order.indexOf(origIdx) + 1;
+        const captureDiv = document.createElement('div');
+        captureDiv.className = 'jpeg-capture';
+        captureDiv.style.cssText = 'position:absolute; top:-9999px; left:-9999px; width:800px; background:' + (document.body.classList.contains('dark-theme') ? '#1a1f2c' : 'white');
+        captureDiv.innerHTML = `<div class="jpeg-capture"><h1 style="text-align:center;">📸 ${topicName}</h1><div class="question-block"><div class="question-text">${questionNumber}. ${q.text}</div><div class="options-list">${optsHtml}</div><div class="explanation-box">${formatExplanationRich(q.exp)}</div></div><p style="text-align:center;">Captured on ${new Date().toLocaleString()}</p></div>`;
+        document.body.appendChild(captureDiv);
+        try {
+            const canvas = await html2canvas(captureDiv, { scale: 2 });
+            const a = document.createElement('a');
+            a.download = `${topicName.replace(/[^\w\s]/g, '').replace(/\s+/g, '_')} - Q${questionNumber}.jpg`;
+            a.href = canvas.toDataURL('image/jpeg', 0.92);
+            a.click();
+        } catch(e) { console.error(e); alert("Capture failed"); }
+        finally { document.body.removeChild(captureDiv); }
+    }
+
+    // --- Nav pane ---
+    function buildNavPane() {
+        const navGrid = document.getElementById('navGrid');
+        if (!navGrid) return;
+        navGrid.innerHTML = '';
+        for (let i = 0; i < order.length; i++) {
+            const btn = document.createElement('div');
+            btn.className = 'nav-btn unanswered';
+            btn.textContent = (i + 1).toString();
+            btn.addEventListener('click', (pos => () => moveToQuestion(pos))(i));
+            navGrid.appendChild(btn);
+        }
+        updateNavPaneColors();
+    }
+    function updateNavPaneColors() {
+        const navGrid = document.getElementById('navGrid');
+        if (!navGrid) return;
+        const btns = navGrid.querySelectorAll('.nav-btn');
+        for (let i = 0; i < btns.length; i++) {
+            const state = answersState[order[i]];
+            const btn = btns[i];
+            btn.classList.remove('correct', 'incorrect', 'skipped', 'unanswered');
+            if (state === 'correct') btn.classList.add('correct');
+            else if (state === 'incorrect') btn.classList.add('incorrect');
+            else if (state === 'skipped') btn.classList.add('skipped');
+            else btn.classList.add('unanswered');
+        }
+    }
+    function toggleNavPane() { document.getElementById('navPane').classList.toggle('show'); }
+    function moveToQuestion(newPos) {
+        if (!quizActive) return;
+        if (skipReviewMode) {
+            if (skipReviewList.includes(order[newPos])) {
+                currentPos = newPos;
+                currentSkipReviewIndex = skipReviewList.indexOf(order[newPos]);
+                renderCurrent(); autoSave();
+            }
+            return;
+        }
+        if (newPos >= 0 && newPos < order.length) { currentPos = newPos; renderCurrent(); autoSave(); }
+    }
+
+    // --- Answer / Skip / Finish ---
+    function handleAnswer(selectedLetter) {
+        autoResumeTimerIfPaused();
+        if (!quizActive) return;
+        const origIdx = order[currentPos];
+        const isCorrect = selectedLetter === FULL_QUIZ[origIdx].ans;
+        if (skipReviewMode) {
+            if (answersState[origIdx] !== 'skipped') return;
+            userSelections[origIdx] = selectedLetter;
+            answersState[origIdx] = isCorrect ? 'correct' : 'incorrect';
+            updateTopStats(); renderCurrent(); autoSave();
+            return;
+        }
+        if (answersState[origIdx] === 'unanswered' || answersState[origIdx] === 'skipped') {
+            userSelections[origIdx] = selectedLetter;
+            answersState[origIdx] = isCorrect ? 'correct' : 'incorrect';
+            updateTopStats(); renderCurrent(); autoSave();
+        }
+    }
+    function nextAfterAnswer() {
+        if (!quizActive) return;
+        if (skipReviewMode) {
+            let idx = skipReviewList.indexOf(order[currentPos]);
+            if (idx !== -1) skipReviewList.splice(idx, 1);
+            if (skipReviewList.length > 0) {
+                let nextPos = order.indexOf(skipReviewList[0]);
+                if (nextPos !== -1) moveToQuestion(nextPos);
+            } else endSkipReviewSession();
+            autoSave(); return;
+        }
+        const currentOrig = order[currentPos];
+        if (answersState[currentOrig] === 'correct' || answersState[currentOrig] === 'incorrect') {
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+            autoSave();
+        }
+    }
+    function skipCurrent() {
+        autoResumeTimerIfPaused();
+        if (!quizActive) return;
+        const currentOrig = order[currentPos];
+        if (!skipReviewMode && (answersState[currentOrig] === 'correct' || answersState[currentOrig] === 'incorrect')) return;
+        if (skipReviewMode) {
+            if (currentSkipReviewIndex + 1 < skipReviewList.length) {
+                let nextPos = order.indexOf(skipReviewList[currentSkipReviewIndex + 1]);
+                if (nextPos !== -1) moveToQuestion(nextPos);
+            } else endSkipReviewSession();
+            autoSave(); return;
+        }
+        if (answersState[currentOrig] === 'unanswered') {
+            answersState[currentOrig] = 'skipped';
+            updateTopStats();
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+        } else if (answersState[currentOrig] === 'skipped') {
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+        }
+        autoSave();
+    }
+    function promptFinishOrReview() {
+        if (!quizActive) return;
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>Finish Quiz?</h3><p>Do you want to finish this quiz?</p><button id="yesFinish">Yes, Finish</button><button id="noFinish">No, Review Skipped</button></div>`;
+        document.body.appendChild(modalDiv);
+        document.getElementById('yesFinish').onclick = () => { modalDiv.remove(); finishQuiz(); };
+        document.getElementById('noFinish').onclick = () => {
+            modalDiv.remove();
+            const skippedIndices = [];
+            for (let i = 0; i < answersState.length; i++) if (answersState[i] === 'skipped') skippedIndices.push(i);
+            if (skippedIndices.length === 0) finishQuiz(); else enterSkipReviewMode(skippedIndices);
+        };
+    }
+    function enterSkipReviewMode(skippedIndices) {
+        skipReviewMode = true; skipReviewList = [...skippedIndices]; currentSkipReviewIndex = 0;
+        let firstPos = order.indexOf(skipReviewList[0]);
+        if (firstPos !== -1) moveToQuestion(firstPos); else renderCurrent();
+        autoSave();
+    }
+    function endSkipReviewSession() { skipReviewMode = false; skipReviewList = []; promptFinishOrReview(); }
+
+    // --- Full review JPEG capture ---
+    async function saveReviewAsJPEG() {
+        const reviewQuestions = [];
+        for (let i = 0; i < order.length; i++) {
+            const origIdx = order[i];
+            const state = answersState[origIdx];
+            if (state === 'incorrect' || state === 'skipped') {
+                const q = FULL_QUIZ[origIdx];
+                reviewQuestions.push({ id: origIdx+1, question: q.text, options: q.opts, correctAnswer: q.ans, userAnswer: userSelections[origIdx] || null, explanation: q.exp, status: state });
+            }
+        }
+        if (reviewQuestions.length === 0) { alert("No incorrect or skipped questions."); return; }
+        const captureDiv = document.createElement('div');
+        captureDiv.className = 'jpeg-capture';
+        captureDiv.style.cssText = 'position:absolute; top:-9999px; left:-9999px; width:800px; background:' + (document.body.classList.contains('dark-theme') ? '#1a1f2c' : 'white');
+        let html = `<h1 style="text-align:center;">📝 Quiz Review: Incorrect & Skipped</h1><p style="text-align:center;">${new Date().toLocaleString()}</p>`;
+        for (let item of reviewQuestions) {
+            let optsHtml = '';
+            for (let opt of item.options) {
+                let optLetter = opt.charAt(0);
+                let extraClass = '';
+                if (optLetter === item.correctAnswer) extraClass = 'correct-highlight';
+                else if (item.userAnswer === optLetter && item.userAnswer !== item.correctAnswer) extraClass = 'wrong-highlight';
+                optsHtml += `<div class="option ${extraClass}">${opt}</div>`;
+            }
+            html += `<div class="question-block"><div class="question-text">${item.id}. ${item.question}</div><div class="options-list">${optsHtml}</div><div style="margin:10px 0;">Your answer: ${item.userAnswer || 'Skipped'} | Correct: ${item.correctAnswer}</div><div class="explanation-box">${formatExplanationRich(item.explanation)}</div></div><hr>`;
+        }
+        captureDiv.innerHTML = html;
+        document.body.appendChild(captureDiv);
+        try {
+            const canvas = await html2canvas(captureDiv, { scale: 2 });
+            const a = document.createElement('a');
+            const now = new Date();
+            const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
+            a.download = `${topicName.replace(/[^\w\s]/g, '').replace(/\s+/g, '_')}_${ts}.jpg`;
+            a.href = canvas.toDataURL('image/jpeg', 0.92);
+            a.click();
+        } catch(e) { console.error(e); alert("Capture failed"); }
+        finally { document.body.removeChild(captureDiv); }
+    }
+
+    // --- Finish & Stats ---
+    function finishQuiz() {
+        if (timerInterval) stopTimer();
+        quizActive = false; quizInProgress = false;
+        const { score, attempted, displayScore } = computeStats();
+        addAttemptToLeaderboard(score, attempted, TOTAL_QS);
+        clearSavedState();
+        let finalElapsed = elapsedSeconds;
+        if (!timerPaused && startTime) finalElapsed = Math.floor((Date.now() - startTime) / 1000);
+        const stats = computeStats();
+        const finalHtml = `<div class="finish-stats"><h2>🎉 QUIZ COMPLETE! 🎉</h2><div class="score-big">⭐ ${stats.displayScore} / ${stats.attempted} ⭐</div><div class="stats-grid"><div class="stat-card"><span>✅ CORRECT</span><span>${stats.correct}</span></div><div class="stat-card"><span>❌ INCORRECT</span><span>${stats.incorrect}</span></div><div class="stat-card"><span>⏭️ SKIPPED</span><span>${stats.skipped}</span></div><div class="stat-card"><span>🎯 ATTEMPTED</span><span>${stats.attempted} / ${stats.total}</span></div></div><p style="margin:1rem 0;">⏱️ Time taken: <strong>${formatTime(finalElapsed)}</strong></p><button id="reviewBtn" style="background:#ff9040;">📖 Review Incorrect & Skipped</button><button id="jpegSaveBtn" style="background:#2c6e8f;">📸 Capture Review</button><button id="restartQuizBtn" style="background:#3c6e8f;">🔄 Restart Quiz</button><div class="leaderboard-section"><h3>🏆 Leaderboard <button class="reset-logs-btn" id="resetLeaderboardBtn">🗑️ Reset Logs</button></h3><div id="leaderboardContainer"></div></div></div>`;
+        document.getElementById('quizMainContent').innerHTML = finalHtml;
+        document.getElementById('reviewBtn').onclick = () => enterPostReviewMode();
+        document.getElementById('jpegSaveBtn').onclick = () => saveReviewAsJPEG();
+        document.getElementById('restartQuizBtn').onclick = () => { clearSavedState(); location.reload(); };
+        renderLeaderboard();
+        document.getElementById('resetLeaderboardBtn').onclick = () => resetLeaderboard();
+    }
+
+    // --- Post-finish review ---
+    function enterPostReviewMode() {
+        const incorrectSkipped = [];
+        for (let i = 0; i < order.length; i++) {
+            const state = answersState[order[i]];
+            if (state === 'incorrect' || state === 'skipped') incorrectSkipped.push(order[i]);
+        }
+        if (incorrectSkipped.length === 0) return;
+        reviewItems = incorrectSkipped; reviewCurrentIdx = 0; showReviewItem(0);
+    }
+    function showReviewItem(idx) {
+        const orig = reviewItems[idx];
+        const q = FULL_QUIZ[orig];
+        const userChoice = userSelections[orig];
+        let optsHtml = '';
+        for (let i = 0; i < q.opts.length; i++) {
+            const optLetter = String.fromCharCode(65 + i);
+            let cls = '';
+            if (optLetter === q.ans) cls = 'correct-highlight';
+            else if (userChoice === optLetter && userChoice !== q.ans) cls = 'wrong-highlight';
+            optsHtml += `<div class="option ${cls}" style="pointer-events:none;">${q.opts[i]}</div>`;
+        }
+        const reviewHtml = `<div class="review-counter">📌 Review ${idx+1} of ${reviewItems.length}</div><div class="question-text">${q.text}</div><div class="options-list">${optsHtml}</div><div class="explanation-box">${formatExplanationRich(q.exp)}</div><div style="display:flex; gap:12px; justify-content:center; margin-top:20px;"><button id="reviewPrev" ${idx===0?'disabled':''}>Previous</button><button id="reviewNext" ${idx===reviewItems.length-1?'disabled':''}>Next</button><button id="reviewBackStats">Back to Stats</button></div>`;
+        document.getElementById('quizMainContent').innerHTML = reviewHtml;
+        document.getElementById('reviewPrev')?.addEventListener('click', () => showReviewItem(idx-1));
+        document.getElementById('reviewNext')?.addEventListener('click', () => showReviewItem(idx+1));
+        document.getElementById('reviewBackStats').onclick = () => finishQuiz();
+    }
+
+    // --- Render question ---
+    function renderCurrent() {
+        if (!quizActive) return;
+        const origIdx = order[currentPos];
+        const q = FULL_QUIZ[origIdx];
+        const state = answersState[origIdx];
+        const userChoice = userSelections[origIdx];
+        let optionsHtml = '';
+        for (let i = 0; i < q.opts.length; i++) {
+            const optLetter = String.fromCharCode(65 + i);
+            let addClass = '';
+            let isClickable = true;
+            if (state === 'correct' || state === 'incorrect') {
+                if (optLetter === q.ans) addClass = 'correct-highlight';
+                else if (userChoice === optLetter && userChoice !== q.ans) addClass = 'wrong-highlight';
+                isClickable = false;
+            }
+            optionsHtml += `<div class="option ${addClass}" ${isClickable ? `onclick="handleAnswer('${optLetter}')"` : ''} ${!isClickable ? 'style="pointer-events:none;"' : ''}>${q.opts[i]}</div>`;
+        }
+        let explanationBlock = '', actionRow = '';
+        if (state === 'correct' || state === 'incorrect') {
+            explanationBlock = `<div class="explanation-box">${formatExplanationRich(q.exp)}</div>`;
+            actionRow = `<div class="action-row"><button class="next-btn" id="nextAfterAnswerBtn">➡ Next Question</button><button class="capture-btn" id="captureSingleBtn" title="Capture this question as JPG">📷 Capture</button></div>`;
+        }
+        let infoMsg = '';
+        if (state === 'unanswered') infoMsg = '<div class="info-message">⚡ Select an answer above. Use Skip if unsure.</div>';
+        else if (state === 'skipped') infoMsg = '<div class="info-message">⏭️ This question was skipped. You can answer now.</div>';
+        document.getElementById('quizMainContent').innerHTML = `<div class="question-text">${currentPos+1}. ${q.text}</div><div class="options-list">${optionsHtml}</div>${explanationBlock}${actionRow}${infoMsg}`;
+        if (state === 'correct' || state === 'incorrect') {
+            document.getElementById('nextAfterAnswerBtn').onclick = nextAfterAnswer;
+            document.getElementById('captureSingleBtn').onclick = () => captureSingleQuestion(origIdx);
+        }
+    }
+
+    // --- Font slider ---
+    function initFontSlider() {
+        const fontBtn = document.getElementById('fontToggleBtn');
+        if (!fontBtn) return;
+        const old = document.querySelector('.font-slider-panel');
+        if (old) old.remove();
+        let visible = false;
+        const panel = document.createElement('div');
+        panel.className = 'font-slider-panel';
+        panel.style.display = 'none';
+        panel.innerHTML = `<label>🔤 Font size:</label><input type="range" id="fontSlider" min="10" max="32" step="1" value="16"><span id="fontPercent">100%</span>`;
+        document.querySelector('.stats-bar').insertAdjacentElement('afterend', panel);
+        const slider = document.getElementById('fontSlider');
+        const pct = document.getElementById('fontPercent');
+        const current = parseInt(document.documentElement.style.fontSize) || 16;
+        slider.value = current;
+        pct.innerText = Math.round((current/16)*100) + '%';
+        slider.addEventListener('input', (e) => {
+            const px = parseInt(e.target.value);
+            document.documentElement.style.fontSize = px + 'px';
+            pct.innerText = Math.round((px/16)*100) + '%';
+            currentFontSize = px; autoSave();
+        });
+        fontBtn.addEventListener('click', () => { visible = !visible; panel.style.display = visible ? 'flex' : 'none'; });
+    }
+
+    // --- Dark mode toggle ---
+    function initDarkModeToggle() {
+        const btn = document.getElementById('darkModeToggle');
+        if (!btn) return;
+        const update = () => {
+            const dark = document.body.classList.contains('dark-theme');
+            btn.innerHTML = dark ? '☀️ Light' : '🌙 Dark';
+            isDarkMode = dark; autoSave();
+        };
+        btn.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); update(); });
+        update();
+    }
+
+    // --- Resume saved quiz ---
+    function resumeSavedQuiz(savedState) {
+        mode = savedState.mode; order = savedState.order; currentPos = savedState.currentPos;
+        answersState = savedState.answersState; userSelections = savedState.userSelections;
+        elapsedSeconds = savedState.elapsedSeconds; timerPaused = savedState.timerPaused;
+        skipReviewMode = savedState.skipReviewMode || false;
+        skipReviewList = savedState.skipReviewList || [];
+        currentSkipReviewIndex = savedState.currentSkipReviewIndex || 0;
+        if (savedState.isDarkMode !== undefined) applyUIPreferences(savedState.isDarkMode, savedState.fontSize || 16);
+        quizActive = true; quizInProgress = true;
+        renderMainUI(); initDarkModeToggle(); initFontSlider();
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        if (!timerPaused) {
+            timerInterval = setInterval(() => {
+                if (!quizActive || timerPaused) return;
+                document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+            }, 1000);
+        } else {
+            const el = document.getElementById('timerContainer');
+            if (el) el.style.opacity = '0.7';
+        }
+        updateTopStats(); buildNavPane(); renderCurrent();
+        leaderboardLoggedForThisSession = false;
+    }
+
+    // --- Init quiz ---
+    function initializeQuiz(selectedMode) {
+        mode = selectedMode;
+        let indices = [...Array(TOTAL_QS).keys()];
+        if (mode === 'random') {
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+        }
+        order = indices;
+        answersState = new Array(TOTAL_QS).fill('unanswered');
+        userSelections = new Array(TOTAL_QS).fill(null);
+        currentPos = 0; quizActive = true;
+        skipReviewMode = false; skipReviewList = [];
+        elapsedSeconds = 0; timerPaused = false;
+        quizInProgress = true; leaderboardLoggedForThisSession = false;
+        clearSavedState();
+        startTimer(); renderMainUI(); initDarkModeToggle(); initFontSlider();
+    }
+
+    // --- Render main quiz UI ---
+    function renderMainUI() {
+        const root = document.getElementById('root');
+        root.innerHTML = `<div class="quiz-container"><div class="stats-bar"><div class="stats-group"><div class="stat"><span>✅ Correct</span> <span id="statCorrect">0</span></div><div class="stat"><span>❌ Wrong</span> <span id="statWrong">0</span></div><div class="stat"><span>⏭️ Skip</span> <span id="statSkip">0</span></div></div><div class="timer" id="timerContainer">⏱️ <span id="timerDisplay">00:00</span></div><div class="action-buttons"><button class="action-btn" id="toggleNavBtn">☰ Questions</button><button class="action-btn" id="skipBtn">⏭️ Skip</button><button class="action-btn" id="finishQuizBtn">🏁 Finish</button><button class="action-btn dark-mode-btn" id="darkModeToggle">🌙 Dark</button><button class="action-btn" id="fontToggleBtn">🔤 A</button></div></div><div id="navPane" class="nav-pane"><div id="navGrid" class="nav-grid"></div></div><div id="quizMainContent" class="question-panel"></div></div>`;
+        document.getElementById('toggleNavBtn').onclick = toggleNavPane;
+        document.getElementById('skipBtn').onclick = skipCurrent;
+        document.getElementById('finishQuizBtn').onclick = () => { if (!skipReviewMode) promptFinishOrReview(); else endSkipReviewSession(); };
+        document.getElementById('timerContainer').addEventListener('click', toggleTimerPause);
+        buildNavPane(); renderCurrent(); updateTopStats();
+    }
+
+    // --- beforeunload exit warning ---
+    function setupBeforeUnload() {
+        window.addEventListener('beforeunload', (e) => {
+            if (quizInProgress) {
+                if (!timerPaused) pauseTimer();
+                e.preventDefault();
+                e.returnValue = 'You have unsaved quiz progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+        window.addEventListener('focus', () => {
+            if (timerPausedByBeforeUnload && timerPaused && quizInProgress) { resumeTimer(); timerPausedByBeforeUnload = false; }
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && timerPausedByBeforeUnload && timerPaused && quizInProgress) { resumeTimer(); timerPausedByBeforeUnload = false; }
+        });
+    }
+    setupBeforeUnload();
+
+    // --- Instructions modal ---
+    function showInstructions() {
+        const modal = document.createElement('div');
+        modal.className = 'instructions-modal';
+        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>📷 Capture:</strong> After answering any question, click the camera button to save a JPG snapshot of that question (including correct/wrong highlights and the explanation). Perfect for revising tricky questions later.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions, and export them as a JPG.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
+        document.body.appendChild(modal);
+        document.getElementById('closeInstructionsBtn').onclick = () => modal.remove();
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    // --- Welcome screen ---
+    async function showWelcome() {
+        const root = document.getElementById('root');
+        root.innerHTML = `<div class="welcome-overlay"><div class="welcome-card" style="text-align:center;"><p style="font-size:1.2rem;">⏳ Loading...</p></div></div>`;
+        const saved = await loadQuizState();
+        if (saved) {
+            const overlay = document.createElement('div');
+            overlay.className = 'welcome-overlay';
+            overlay.innerHTML = `<div class="welcome-card"><h2>📀 Saved Progress Found</h2><p>You have an unfinished quiz. Do you want to resume where you left off?</p><div class="mode-buttons"><button class="mode-btn" id="resumeYesBtn" style="background:#2c9e4c;">✅ Yes, Resume</button><button class="mode-btn" id="resumeNoBtn" style="background:#c7362b;">❌ No, Start Fresh</button></div></div>`;
+            root.innerHTML = '';
+            document.body.appendChild(overlay);
+            document.getElementById('resumeYesBtn').onclick = () => { overlay.remove(); resumeSavedQuiz(saved); };
+            document.getElementById('resumeNoBtn').onclick = async () => { overlay.remove(); await clearSavedState(); showWelcome(); };
+            return;
+        }
+        root.innerHTML = `<div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><h1>${topicName}</h1><div class="quiz-stats-badge">🏺 ${TOTAL_QS} Questions · +1 / -0.33</div><p style="font-weight: 500; margin: 0.5rem 0 0; font-size: 1rem;">Please choose your mode</p><div class="mode-buttons"><button class="mode-btn" id="sysMode">📖 Systematic Mode</button><button class="mode-btn rand" id="randMode">🎲 Random Mode</button></div><div style="text-align: center; margin-top: 12px;"><button class="instructions-small" id="instructionsBtn">📋 Instructions</button></div></div></div>`;
+        document.getElementById('sysMode').onclick = () => { document.getElementById('welcomeOverlay').remove(); initializeQuiz('systematic'); };
+        document.getElementById('randMode').onclick = () => { document.getElementById('welcomeOverlay').remove(); initializeQuiz('random'); };
+        document.getElementById('instructionsBtn').onclick = () => showInstructions();
+    }
+    showWelcome();
+</script>
+</body>
+</html>
