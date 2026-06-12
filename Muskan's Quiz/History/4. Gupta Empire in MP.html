@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Gupta Empire in MP Quiz</title>
+    <!-- Firebase scripts below -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+        }
+        html { font-size: 16px; }
+        body {
+            background: linear-gradient(145deg, #e9eef3 0%, #d4dfe9 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        body.dark-theme { background: #0a0f1a; }
+        body.dark-theme .quiz-container {
+            background: #1a1f2c;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6);
+        }
+        body.dark-theme .stats-bar {
+            background: #0b0f17;
+            border-bottom-color: #ffae42;
+        }
+        body.dark-theme .stats-group { background: #04070c; }
+        body.dark-theme .stat span:first-child { color: #9ab3d5; }
+        body.dark-theme .timer {
+            background: #000000aa;
+            color: #ffdd99;
+            cursor: pointer;
+        }
+        body.dark-theme .action-btn { background: #2a405b; }
+        body.dark-theme .question-text { color: #eef4ff; border-left-color: #ffae42; }
+        body.dark-theme .option { background: #262d3d; border-color: #3f4a60; color: #e2e9ff; }
+        body.dark-theme .option:hover { background: #2f384c; border-color: #ffa559; }
+        body.dark-theme .option.correct-highlight { background: #1e5631; border-color: #5fad6e; color: #e2ffea; }
+        body.dark-theme .option.wrong-highlight { background: #792e26; border-color: #cc6b5e; color: #ffe0dc; }
+        body.dark-theme .explanation-box { background: #2b2f3e; border-left-color: #ffae42; color: #f0f3fc; }
+        body.dark-theme .exp-correct { background: #1e5631; color: #c6ffd0; }
+        body.dark-theme .exp-incorrect { background: #792e26; color: #ffcfc5; }
+        body.dark-theme .exp-text { color: #e0e6f5; }
+        body.dark-theme .info-message { background: #232838; color: #bbd0ff; }
+        body.dark-theme .nav-pane { background: #1a1f2c; border-color: #2c3548; }
+        body.dark-theme .nav-btn { background: #2a3245; color: #cddcff; border-color: #3d4962; }
+        body.dark-theme .nav-btn.correct { background: #2c9e4c; color: white; border-color: #1a6b2f; }
+        body.dark-theme .nav-btn.incorrect { background: #d9534f; color: white; border-color: #a12a26; }
+        body.dark-theme .nav-btn.skipped { background: #3a86ff; color: white; border-color: #1e5bc0; }
+        body.dark-theme .nav-btn.unanswered { background: #4a5568; color: #dce6f5; border-color: #5d6e8a; }
+        body.dark-theme .finish-stats { background: linear-gradient(135deg, #2c2f3a, #1f2230); color: #f0e6d0; }
+        body.dark-theme .finish-stats .stat-card { background: #2a2f41; color: #ffd9a5; }
+        body.dark-theme .review-counter { background: #2e364a; color: #ffdbaa; }
+        body.dark-theme .modal-content { background: #1e2434; color: white; }
+        body.dark-theme button { background: #3a5a7a; }
+        body.dark-theme .dark-mode-btn {
+            background: #ffae42;
+            color: #1e2c3a;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(0.96);
+        }
+        .font-slider-panel {
+            background: #eef2f7;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        body.dark-theme .font-slider-panel { background: #1f2538; border-bottom-color: #3a4560; color: #f0e6d0; }
+        .font-slider-panel label { font-weight: 600; color: #2c3e4e; }
+        body.dark-theme .font-slider-panel label { color: #ffddb0; }
+        .font-slider-panel input { width: 200px; cursor: pointer; }
+        .font-slider-panel span { min-width: 55px; font-weight: bold; }
+        .stats-bar {
+            background: #1e2c3a;
+            color: white;
+            padding: 0.9rem 1.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 3px solid #ffb347;
+        }
+        .stats-group {
+            display: flex;
+            gap: 1.5rem;
+            background: #0f1a24;
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+        }
+        .stat { font-weight: 600; font-size: 1rem; }
+        .stat span:first-child { color: #bbd4f0; margin-right: 6px; }
+        .stat span:last-child { color: #ffdd99; font-size: 1.2rem; font-weight: bold; }
+        .timer {
+            background: #00000055;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #f5f9ff;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .timer:hover { transform: scale(1.02); background: #000000aa; }
+        .action-buttons { display: flex; gap: 12px; align-items: center; }
+        .action-btn {
+            background: #2e4a6e;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-btn:hover { background: #ff8c42; transform: scale(0.97); }
+        .question-panel { padding: 2rem 2rem 1.8rem; }
+        .question-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #0a2f44;
+            margin-bottom: 1.8rem;
+            line-height: 1.3;
+            border-left: 5px solid #ffb347;
+            padding-left: 1rem;
+        }
+        .options-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        .option {
+            background: #f8fafd;
+            border: 1.5px solid #cbdde9;
+            border-radius: 1.2rem;
+            padding: 0.9rem 1.2rem;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: 0.15s;
+            font-weight: 500;
+            color: #1e4663;
+        }
+        .option:hover { background: #eef3fc; border-color: #ffa559; transform: translateX(6px); }
+        .option.correct-highlight {
+            background: #d3f0d9;
+            border-color: #2b7e3a;
+            color: #145c23;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0,100,0,0.1);
+        }
+        .option.wrong-highlight {
+            background: #ffe0e0;
+            border-color: #c7362b;
+            text-decoration: line-through;
+            color: #a51b0f;
+        }
+        .explanation-box {
+            background: #fef7e0;
+            border-left: 6px solid #ffb347;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            margin: 1.8rem 0 1rem;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+        .explanation-line { margin-bottom: 0.8rem; line-height: 1.5; }
+        .exp-correct {
+            color: #1f6e2f;
+            font-weight: bold;
+            background: #e0f3e3;
+            padding: 0.2rem 0.6rem;
+            border-radius: 24px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        .exp-incorrect {
+            color: #bc3f2e;
+            font-weight: bold;
+            background: #ffe1dc;
+            padding: 0.2rem 0.6rem;
+            border-radius: 24px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        .exp-text { color: #2c3e4e; font-weight: 600; font-size: 1rem; }
+        body.dark-theme .exp-text { color: #e0e6f5; }
+        .action-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .save-btn {
+            background: #3a6ea5;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .save-btn:hover { background: #ff8c42; transform: scale(0.97); }
+        .save-btn.saved { background: #ffb347; color: #5a3400; }
+        .save-btn.saved:hover { background: #ff8c42; color: white; }
+        body.dark-theme .save-btn.saved { background: #cc8a2e; color: #1e1400; }
+        .next-btn {
+            background: #2c6e2c;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+        .next-btn:hover { background: #1c5a1c; transform: scale(0.98); }
+        .info-message {
+            background: #eef2fa;
+            padding: 10px;
+            border-radius: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .nav-pane {
+            background: #f2f6f9;
+            border-top: 2px solid #cbdbe0;
+            border-bottom: 2px solid #cbdbe0;
+            padding: 1rem;
+            display: none;
+            margin-top: 0px;
+        }
+        .nav-pane.show { display: block; }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(52px, 58px));
+            gap: 8px;
+            justify-content: center;
+        }
+        .nav-btn {
+            background: #e2e8f0;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.9rem;
+            border: 1px solid #bfcfdf;
+        }
+        .nav-btn.correct { background: #2c9e4c; color: white; border-color: #1a6b2f; }
+        .nav-btn.incorrect { background: #d9534f; color: white; border-color: #a12a26; }
+        .nav-btn.skipped { background: #3a86ff; color: white; border-color: #1e5bc0; }
+        .nav-btn.unanswered { background: #cbdbe2; color: #1f2a3e; }
+        /* ===== VIVID WELCOME PAGE (matching quiz aesthetic) ===== */
+        .welcome-overlay {
+            background: linear-gradient(145deg, #e9eef3 0%, #d4dfe9 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.4s ease;
+        }
+        body.dark-theme .welcome-overlay {
+            background: #0a0f1a;
+        }
+        .welcome-card {
+            background: linear-gradient(145deg, #fffef7, #fff5e6);
+            border-radius: 2rem;
+            padding: 2.5rem 2rem;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 180, 70, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: cardFloat 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        body.dark-theme .welcome-card {
+            background: linear-gradient(145deg, #1f2a3a, #16212e);
+            border-color: rgba(255, 180, 70, 0.2);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes cardFloat {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Decorative top bar */
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #ffb347, #ff8c42, #ffb347);
+        }
+        .welcome-card h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #c43a0b;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.05);
+            letter-spacing: -0.5px;
+        }
+        body.dark-theme .welcome-card h1 {
+            color: #ffae42;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .quiz-stats-badge {
+            background: #f5e6d3;
+            border-radius: 50px;
+            padding: 8px 24px;
+            font-weight: 600;
+            color: #a5530e;
+            display: inline-block;
+            margin: 1rem 0 0.5rem;
+            font-size: 0.9rem;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.05);
+        }
+        body.dark-theme .quiz-stats-badge {
+            background: #2a2f41;
+            color: #ffd9a5;
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            background: #2e4a6e;
+            padding: 12px 32px;
+            border-radius: 60px;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 0 #1a2f46;
+            position: relative;
+            top: 0;
+        }
+        .mode-btn.rand {
+            background: #aa6f20;
+            box-shadow: 0 6px 0 #7c4f15;
+        }
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #1a2f46;
+            filter: brightness(1.02);
+        }
+        .mode-btn.rand:hover {
+            box-shadow: 0 8px 0 #7c4f15;
+        }
+        .mode-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #1a2f46;
+        }
+        .instructions-small {
+            background: #6c757d;
+            padding: 7px 24px;
+            border-radius: 60px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-block;
+            margin-top: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .instructions-small:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .finish-stats {
+            background: linear-gradient(135deg, #f9f3e0, #ffe6c9);
+            border-radius: 2rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            margin: 10px;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .finish-stats h2 {
+            font-size: 2.4rem;
+            background: linear-gradient(120deg, #ff6a00, #ee0979);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .finish-stats .score-big {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #c43a0b;
+            text-shadow: 2px 2px 0 #ffcd94;
+            margin: 1rem 0;
+        }
+        .finish-stats .stats-grid { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 1.5rem 0; }
+        .finish-stats .stat-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            min-width: 120px;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+        }
+        .finish-stats .stat-card span:first-child { font-size: 1rem; font-weight: 600; display: block; }
+        .finish-stats .stat-card span:last-child { font-size: 2rem; font-weight: 800; }
+        .review-counter {
+            background: #e6eef9;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        .modal-content { background: white; border-radius: 1.8rem; padding: 2rem; max-width: 420px; text-align: center; }
+        button { background: #2c6e9e; border: none; padding: 10px 20px; margin: 6px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
+        /* .saved-question-view: kept for portal reuse. Renders a saved question exactly as it appears
+           mid-quiz (correct option highlighted green, full colour-coded explanation). The portal's
+           "Saved" section reuses these classes/colours to display saved questions consistently. */
+        .saved-question-view {
+            background: white;
+            color: black;
+            padding: 30px;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        body.dark-theme .saved-question-view { background: #1a1f2c; color: #eef4ff; }
+        .saved-question-view .question-block { margin-bottom: 30px; border-bottom: 2px solid #ffb347; padding-bottom: 20px; }
+        .saved-question-view .question-text { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; border-left: 5px solid #ffb347; padding-left: 1rem; }
+        .saved-question-view .options-list { display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+        .saved-question-view .option { background: #f8fafd; border: 1.5px solid #cbdde9; border-radius: 1rem; padding: 0.7rem 1rem; font-size: 1rem; font-weight: 500; }
+        .saved-question-view .option.correct-highlight { background: #d3f0d9; border-color: #2b7e3a; color: #145c23; font-weight: bold; }
+        .saved-question-view .option.wrong-highlight { background: #ffe0e0; border-color: #c7362b; text-decoration: line-through; color: #a51b0f; }
+        .saved-question-view .explanation-box { background: #fef7e0; border-left: 6px solid #ffb347; border-radius: 1rem; padding: 1rem; margin: 1rem 0; font-size: 0.95rem; }
+        body.dark-theme .saved-question-view .option { background: #262d3d; border-color: #3f4a60; color: #e2e9ff; }
+        body.dark-theme .saved-question-view .option.correct-highlight { background: #1e5631; border-color: #5fad6e; color: #e2ffea; }
+        body.dark-theme .saved-question-view .option.wrong-highlight { background: #792e26; border-color: #cc6b5e; color: #ffe0dc; }
+        body.dark-theme .saved-question-view .explanation-box { background: #2b2f3e; border-left-color: #ffae42; color: #f0f3fc; }
+        .saved-question-view .exp-correct { color: #1f6e2f; font-weight: bold; background: #e0f3e3; padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; }
+        .saved-question-view .exp-incorrect { color: #bc3f2e; font-weight: bold; background: #ffe1dc; padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; }
+        .saved-question-view .exp-text { color: #2c3e4e; font-weight: 600; }
+        body.dark-theme .saved-question-view .exp-text { color: #e0e6f5; }
+        .saved-question-view .explanation-line { margin-bottom: 0.8rem; }
+        /* Instructions modal */
+        .instructions-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            animation: fadeIn 0.3s ease;
+        }
+        .instructions-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fef9e6 100%);
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow-y: auto;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+        }
+        body.dark-theme .instructions-card { background: #1e2434; color: #eef4ff; }
+        .instructions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ffb347;
+        }
+        .instructions-header h3 { font-size: 1.6rem; margin: 0; }
+        .close-instructions { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #c7362b; padding: 0; margin: 0; line-height: 1; }
+        .close-instructions:hover { transform: scale(1.1); }
+        body.dark-theme .close-instructions { color: #ffae42; }
+        .instructions-list { list-style: none; padding: 0; margin: 0; }
+        .instructions-list li { margin-bottom: 1rem; padding-left: 1.8rem; position: relative; line-height: 1.4; }
+        .instructions-list li:before { content: "✨"; position: absolute; left: 0; color: #ffb347; }
+        body.dark-theme .instructions-list li:before { color: #ffae42; }
+        .instructions-list strong { color: #c43a0b; }
+        body.dark-theme .instructions-list strong { color: #ffae42; }
+        /* Leaderboard */
+        .leaderboard-section {
+            margin-top: 2rem;
+            text-align: left;
+            border-top: 2px solid #ffb347;
+            padding-top: 1rem;
+        }
+        .leaderboard-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-weight: 600;
+        }
+        .leaderboard-table-container { max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(0,0,0,0.2); }
+        body.dark-theme .leaderboard-table-container { border-color: rgba(255,255,255,0.25); }
+        .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-family: inherit; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px 16px; text-align: center; border: 1px solid #cbd5e1; }
+        body.dark-theme .leaderboard-table th, body.dark-theme .leaderboard-table td { border-color: #334155; }
+        .leaderboard-table th { background: #ff9040; color: #1e2c3a; font-weight: 700; position: sticky; top: 0; z-index: 10; }
+        body.dark-theme .leaderboard-table th { background: #cc6e2e; color: #ffffff; }
+        .leaderboard-table tbody tr { background-color: #fef9e6; }
+        .leaderboard-table tbody tr:nth-child(even) { background-color: #fef0d8; }
+        body.dark-theme .leaderboard-table tbody tr { background-color: #1a1f2c; }
+        body.dark-theme .leaderboard-table tbody tr:nth-child(even) { background-color: #2a2f41; }
+        .leaderboard-table tbody tr:hover { background-color: #e2e8f0; transition: 0.1s; }
+        body.dark-theme .leaderboard-table tbody tr:hover { background-color: #3a4055; }
+        .reset-logs-btn { background: #dc2626; border: none; color: white; padding: 8px 18px; border-radius: 60px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .reset-logs-btn:hover { background: #b91c1c; transform: translateY(-1px); }
+        body.dark-theme .reset-logs-btn { background: #e11d48; }
+        body.dark-theme .reset-logs-btn:hover { background: #be123c; }
+        .leaderboard-empty { text-align: center; padding: 2rem; font-style: italic; color: #64748b; }
+        body.dark-theme .leaderboard-empty { color: #94a3b8; }
+        @media (max-width: 650px) {
+            .stats-bar { flex-direction: column; align-items: stretch; }
+            .stats-group { justify-content: center; }
+            .action-buttons { justify-content: center; flex-wrap: wrap; }
+            .font-slider-panel { justify-content: center; }
+            .option { font-size: 1rem; }
+            .explanation-box { font-size: 0.95rem; }
+            .action-row { flex-direction: column; align-items: stretch; }
+            .save-btn, .next-btn { justify-content: center; width: 100%; }
+            .leaderboard-table th, .leaderboard-table td { padding: 8px 10px; font-size: 0.75rem; }
+            .instructions-card { padding: 1rem; }
+            .instructions-header h3 { font-size: 1.3rem; }
+            .mode-buttons { flex-direction: column; align-items: stretch; gap: 12px; }
+            .mode-btn { width: 100%; }
+            .welcome-card { padding: 1.5rem; }
+            .welcome-card h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+    const FULL_QUIZ = [
+        { text: "Which of the following pairs correctly identifies the founder of the Gupta Empire and the dynasty's royal emblem?", opts: ["A. Samudragupta and the Lion", "B. Chandragupta I and the Bull", "C. Shrigupta and the Garuda", "D. Ghatotkacha and the Elephant"], ans: "C", exp: "(a) Incorrect -- Samudragupta was a later imperial ruler known as the 'Indian Napoleon', not the founder. The lion was used on certain specific coins (like those of Ramagupta) but was not the primary dynastic emblem.\n(b) Incorrect -- Chandragupta I was the first independent sovereign ruler (Maharajadhiraja) and real founder of the imperial power, but not the original dynastic founder. The bull was not their emblem.\n(c) Correct -- Shrigupta is the founder of the Gupta Empire, which emerged in the 4th century CE. The Garuda (the divine eagle) served as the official royal emblem of the Gupta dynasty.\n(d) Incorrect -- Ghatotkacha was the son and immediate successor of Shrigupta, not the founder. The elephant was not the royal emblem of the Guptas." },
+        { text: "The Gupta rulers proudly adopted the title 'Parama Bhagavata'. What does this title signify about their religious affiliation?", opts: ["A. They were primary patrons of the Buddhist Sangha.", "B. They were supreme devotees of Vishnu.", "C. They were strict followers of the Jain Tirthankaras.", "D. They were exclusive worshippers of Shiva (Mahesh)."], ans: "B", exp: "(a) Incorrect -- While the Guptas showed religious tolerance (e.g., donating to Buddhist monks at Sanchi), Buddhism was not their primary, official dynastic religion.\n(b) Correct -- 'Parama Bhagavata' translates to 'Supreme devotee of Vishnu'. The official religion of the Gupta Empire was Vaishnavism, and this title proudly reflected their devotion within the Trimurti tradition (Brahma, Mahesh, Vishnu).\n(c) Incorrect -- The Guptas were tolerant of Jainism (as seen in Jain caves at Udayagiri) but did not use this title to signify Jain devotion.\n(d) Incorrect -- Some Gupta ministers (like Virasena) were Shaivites, but the kings themselves primarily worshipped Vishnu, not Shiva." },
+        { text: "Which of the following represents the correct chronological succession of the major Gupta emperors?", opts: ["A. Ramagupta → Chandragupta I → Skandagupta → Bhanagupta", "B. Samudragupta → Ramagupta → Govindagupta → Chandragupta I", "C. Chandragupta II → Kumaragupta I → Samudragupta → Skandagupta", "D. Chandragupta I → Samudragupta → Ramagupta → Chandragupta II"], ans: "D", exp: "(a) Incorrect -- Chandragupta I preceded Ramagupta by several generations, making this order highly inaccurate.\n(b) Incorrect -- Chandragupta I was the predecessor of Samudragupta, not a successor to Govindagupta.\n(c) Incorrect -- Samudragupta was an early emperor who ruled before Chandragupta II and Kumaragupta I.\n(d) Correct -- The proper imperial succession begins with the \"real founder\" Chandragupta I, followed by his son Samudragupta, then the disputed king Ramagupta, and subsequently Chandragupta II." },
+        { text: "Which ruler initiated the Gupta Era (Gupta Samvat) in 319–320 CE, and how did he significantly increase the legitimacy of his empire?", opts: ["A. Chandragupta I, by marrying the Lichchhavi Princess Kumaradevi", "B. Samudragupta, by erecting a victory monument at Eran", "C. Chandragupta II, by defeating the Shaka Kshatrapa Rudrasimha III", "D. Skandagupta, by repairing the Sudharshan Lake in Saurashtra"], ans: "A", exp: "(a) Correct -- Chandragupta I started the Gupta Era in 319–320 CE, reckoning it from his coronation. His strategic marriage to the Lichchhavi Princess Kumaradevi significantly boosted the empire's power and legitimacy.\n(b) Incorrect -- Samudragupta did erect a victory monument at Eran after a military campaign, but he did not start the Gupta Era, nor was this the primary source of his initial dynastic legitimacy.\n(c) Incorrect -- Chandragupta II did defeat Rudrasimha III, but this occurred much later than 319 CE and is associated with his expansion, not the founding of the era.\n(d) Incorrect -- Skandagupta's repair of the Sudharshan Lake occurred during the later phase of the empire, dealing with internal infrastructure and defence, not the establishment of the Gupta Era." },
+        { text: "Who holds the distinction of being the first Gupta king to issue gold coins?", opts: ["A. Samudragupta", "B. Chandragupta I", "C. Ramagupta", "D. Skandagupta"], ans: "B", exp: "(a) Incorrect -- Samudragupta issued various types of coins, and his coins have been found in places like Bonala and Sakor, but he was not the first in the dynasty to issue gold currency.\n(b) Correct -- Chandragupta I was the first Gupta king to issue gold coins. Notably, these foundational coins featured the image of his wife, Queen Kumaradevi, alongside his own.\n(c) Incorrect -- Ramagupta is primarily known for 4th–5th century copper coins of the Lion (Simha) and Garuda types found in Vidisha and Eran.\n(d) Incorrect -- Gold coins of Skandagupta have indeed been found at Sakaur (Damoh district), but he was a much later ruler, not the first to issue them." },
+        { text: "Historian V.A. Smith coined the nickname 'The Indian Napoleon' for which Gupta emperor due to his extensive military conquests?", opts: ["A. Chandragupta Maurya", "B. Chandragupta II", "C. Samudragupta", "D. Bhanagupta"], ans: "C", exp: "(a) Incorrect -- Chandragupta Maurya belongs to the Mauryan Empire, not the Gupta dynasty, and is not referred to as the Indian Napoleon by V.A. Smith.\n(b) Incorrect -- Chandragupta II was a great conqueror known by titles like Vikramaditya and Shakari, but he is not the one nicknamed the Indian Napoleon.\n(c) Correct -- Samudragupta earned the nickname 'The Indian Napoleon' from historian V.A. Smith because of his aggressive military campaigns (Digvijaya) and massive territorial expansion.\n(d) Incorrect -- Bhanagupta is known for his defensive military efforts against the Huna invaders under Toramana, not for sweeping Napoleonic conquests." },
+        { text: "During his campaign into central India, Samudragupta referred to a specific urban and strategic centre as 'Svabhoganagara' (City of Pleasure). Which city was this?", opts: ["A. Eran", "B. Ujjayini", "C. Dashapura", "D. Padmavati"], ans: "A", exp: "(a) Correct -- Eran (located in modern Sagar District) was an important urban centre that Samudragupta affectionately called 'Svabhoganagara' (City of Pleasure / Self-Enjoyment).\n(b) Incorrect -- Ujjayini (Ujjain) later became the second capital and cultural heartland under Chandragupta II, but it was not the city labelled Svabhoganagara by Samudragupta.\n(c) Incorrect -- Dashapura (Mandsaur) is famous for the Aulikara rulers and the Mandsaur Inscription, not as Samudragupta's City of Pleasure.\n(d) Incorrect -- Padmavati was the domain of the Naga ruler Nagasena, whom Samudragupta defeated, as recorded in the Prayag Prashasti." },
+        { text: "Which historical text records Samudragupta’s complete victory over Achyuta and Nagasena, and who composed it?", opts: ["A. The Mandsaur Inscription, composed by Vatsabhatti", "B. The Brihat Samhita, composed by Varahamihira", "C. The Devichandraguptam, composed by Vishakhadatta", "D. The Prayag Prashasti, composed by Harisena"], ans: "D", exp: "(a) Incorrect -- The Mandsaur Inscription was composed by Vatsabhatti, but it records the reign of Kumaragupta I and the migration of silk weavers, not Samudragupta's victories.\n(b) Incorrect -- The Brihat Samhita is a scientific and encyclopaedic text by the astrologer-mathematician Varahamihira, unrelated to military records of Samudragupta.\n(c) Incorrect -- The Devichandraguptam is a Sanskrit play by Vishakhadatta detailing the dramatic events surrounding Ramagupta, Dhruvadevi, and Chandragupta II.\n(d) Correct -- The Prayag Prashasti (Allahabad Pillar Inscription) was composed by Samudragupta's court poet Harisena. It explicitly records the emperor's victories over several kings, including Achyuta and Nagasena." },
+        { text: "Numismatic evidence mapping Samudragupta's presence in Madhya Pradesh has primarily been recovered from which of the following sites?", opts: ["A. Sanchi and Vidisha", "B. Pattan and Bamnala", "C. Bonala and Sakor", "D. Supia and Tumain"], ans: "C", exp: "(a) Incorrect -- Sanchi and Vidisha are prominent Gupta sites, but they are more closely associated with Chandragupta II and Ramagupta in terms of specific administrative and epigraphic evidence.\n(b) Incorrect -- Coins found at Pattan, Bamnala, Seoni, Sihora, and Harda belong to Chandragupta II, mapping his later imperial expansion.\n(c) Correct -- Coins of Samudragupta have been specifically recovered from Bonala (Khargone) and Sakor/Sukur (Damoh).\n(d) Incorrect -- Supia and Tumain are famous for their inscriptions relating to Skandagupta and Kumaragupta I respectively, not primarily for Samudragupta's coins." },
+        { text: "To commemorate his victory over the Shaka feudatory Shridharavarman of Vidisha, Samudragupta constructed a Victory Monument (Vijay Smarak) in which district?", opts: ["A. Raisen", "B. Sagar", "C. Panna", "D. Dhar"], ans: "B", exp: "(a) Incorrect -- Raisen is home to Sanchi, where Chandragupta II's general Amrakardava left inscriptions regarding donations to Buddhist monks.\n(b) Correct -- Samudragupta built his Victory Monument at Eran, which is located in the Sagar district, following his defeat of Shridharavarman.\n(c) Incorrect -- Panna district is known for the Nachna Kuthara Parvati Temple associated with the Bharashiva Naga rulers, not Samudragupta's monument.\n(d) Incorrect -- Dhar district is the location of the Bagh Caves featuring 5th–6th century Buddhist paintings." },
+        { text: "The historical episode surrounding King Ramagupta (~375 CE) is considered unprecedented in Gupta history because:", opts: ["A. He agreed to surrender his wife, Queen Dhruvadevi, to a rival Shaka king out of cowardice.", "B. He was the first king to convert entirely to Jainism, abandoning Vaishnavism.", "C. He successfully defeated the Huna invasion single-handedly at the Narmada River.", "D. He established Ujjain as the new primary capital of the empire, replacing Pataliputra."], ans: "A", exp: "(a) Correct -- Facing defeat against the Shakas, Ramagupta shamefully agreed to surrender his wife, Queen Dhruvadevi, to the enemy to save himself and his subjects—an act of extreme cowardice that plunged the empire into crisis.\n(b) Incorrect -- While Jain statues from his era exist at Durjanpura, there is no evidence he abandoned Vaishnavism or converted the state religion.\n(c) Incorrect -- Ramagupta fought the Shakas, not the Hunas. The Hunas invaded much later during the reigns of Kumaragupta I, Skandagupta, and Bhanagupta.\n(d) Incorrect -- Ujjain was made the second/western capital by his successor, Chandragupta II, not by Ramagupta." },
+        { text: "Despite his disputed legacy, epigraphic and physical evidence confirms Ramagupta's royal status. Where has this evidence been found?", opts: ["A. Jain cave inscriptions at Udayagiri and late 4th-century Jain statues at Durjanpura.", "B. Silver coins at Mandsaur and a victory pillar at Eran.", "C. The Sanchi Stone Inscription and Buddhist paintings at Bagh Caves.", "D. The Supia Inscription in Rewa and the Bhetari Inscription."], ans: "A", exp: "(a) Correct -- Ramagupta's existence is verified by a Jain cave inscription at Udayagiri (Vidisha) calling him 'Maharajadhiraja', and three late 4th-century Jain statues with Brahmi inscriptions found at Durjanpura.\n(b) Incorrect -- He did not issue silver coins (Chandragupta II did), and the victory pillar at Eran belongs to Samudragupta.\n(c) Incorrect -- The Sanchi Stone Inscription belongs to Chandragupta II, and the Bagh Cave paintings are Buddhist art from the 5th–6th century, unrelated to Ramagupta's specific epigraphy.\n(d) Incorrect -- The Supia and Bhetari inscriptions are strictly associated with the later ruler Skandagupta." },
+        { text: "Chandragupta II held multiple celebrated epithets. Which of the following was NOT a title held by him?", opts: ["A. Vikramaditya", "B. Shakari", "C. Simha Vikram", "D. Mahendraditya"], ans: "D", exp: "(a) Incorrect -- Vikramaditya ('Sun of Valour') was his most celebrated title among the approximately 14 titles he held.\n(b) Incorrect -- He held the title Shakari ('Destroyer of Shakas') after defeating Rudrasimha III. He was the second ruler to hold this title after a 1st-century BCE Ujjain ruler.\n(c) Incorrect -- Simha Vikram was a title explicitly found on his coinage.\n(d) Correct -- Mahendraditya was the imperial title of his successor, Kumaragupta I, not Chandragupta II." },
+        { text: "The Gupta Empire under Chandragupta II operated from two major capital cities. Which pair correctly identifies them?", opts: ["A. Dashapura and Padmavati", "B. Eran and Sanchi", "C. Pataliputra and Ujjayini", "D. Saket and Prayag"], ans: "C", exp: "(a) Incorrect -- Dashapura was an administrative centre (ruled by Aulikaras), and Padmavati was a Naga stronghold, neither were the imperial capitals.\n(b) Incorrect -- Eran and Sanchi were important strategic and religious sites respectively, but not the capitals of the empire.\n(c) Correct -- The primary capital remained Pataliputra (Patna), while Ujjayini (Ujjain) was established as the second or western capital, becoming the cultural heartland of the empire.\n(d) Incorrect -- Saket and Prayag define the early extent of the empire under Chandragupta I, not the dual capitals of Chandragupta II." },
+        { text: "How did Chandragupta II commemorate his victory over the Shaka Kshatrapa Rudrasimha III and the annexation of their territory?", opts: ["A. He commissioned the creation of the giant Varaha Avatar statue at Udayagiri.", "B. He issued silver coins, becoming the first Gupta king to do so, adopting the Shaka currency tradition.", "C. He founded Nalanda University to serve as a monument of learning and victory.", "D. He repaired the Sudharshan Lake to provide water for the newly conquered territories."], ans: "B", exp: "(a) Incorrect -- While Cave 5 at Udayagiri houses the Varaha statue from the Gupta era, it was not specifically the primary commemorative act for the Shaka victory.\n(b) Correct -- To celebrate the defeat of Rudrasimha III and the annexation of Gujarat and Kathiawar, Chandragupta II issued silver coins. These were the first silver coins of the Gupta era, intentionally continuing the local Shaka tradition of silver currency.\n(c) Incorrect -- Nalanda University was founded by his successor, Kumaragupta I.\n(d) Incorrect -- The repair of Sudharshan Lake was a major achievement of Skandagupta, not Chandragupta II." },
+        { text: "The Sanchi Stone Inscription reveals key details about Chandragupta II’s administration in Madhya Pradesh. Who is mentioned as his military general in this inscription?", opts: ["A. Virasena", "B. Bandhuvarma", "C. Amrakardava", "D. Goparaj"], ans: "C", exp: "(a) Incorrect -- Virasena was his Hereditary Minister of War and Peace, known from the Udayagiri Cave Inscription, not the Sanchi Stone Inscription.\n(b) Incorrect -- Bandhuvarma was a 'Gopta' (governor/general) under Kumaragupta I, mentioned in the Mandsaur Inscription.\n(c) Correct -- Amrakardava is explicitly named as the General (Commander) of Chandragupta II in the Sanchi Stone Inscription, which also records donations to Buddhist monks.\n(d) Incorrect -- Goparaj was a general/feudatory of the later ruler Bhanagupta, known for dying in battle against the Hunas at Eran." },
+        { text: "The Chinese traveller Fa-Hien (Faxian) made a significant geographical and climatic observation during his visit to India. What was it?", opts: ["A. He noted that Pataliputra was entirely abandoned due to heavy flooding.", "B. He recorded the complete destruction of Eran by the invading Huna forces.", "C. He stated that the coastal regions of Gujarat were the wealthiest in the empire.", "D. He described the climate of the Malwa region as the best in India."], ans: "D", exp: "(a) Incorrect -- Fa-Hien made no such claim about Pataliputra being abandoned due to floods; it remained a vibrant primary capital.\n(b) Incorrect -- The Huna invasions occurred long after Fa-Hien's visit, during the latter half of the empire's timeline.\n(c) Incorrect -- While Gujarat was annexed for wealth and trade, this was not Fa-Hien's most famous climatic observation.\n(d) Correct -- Visiting during the reign of Chandragupta II, Fa-Hien explicitly praised the Malwa region, describing its climate as the best in India." },
+        { text: "The author Vishakhadatta, often called the 'Gem of the Gupta era', wrote three major Sanskrit dramas. Which two are the most historically significant for understanding Gupta politics?", opts: ["A. Mudrarakshasa and Devichandraguptam", "B. Brihat Samhita and Panchasiddhantika", "C. Raghavananda Natakam and Kitab-ul-Hind", "D. Prayag Prashasti and Mudrarakshasa"], ans: "A", exp: "(a) Correct -- Vishakhadatta authored 'Mudrarakshasa' (dealing with Chandragupta Maurya's political intrigue) and 'Devichandraguptam' (detailing the Ramagupta–Dhruvadevi episode), both crucial texts.\n(b) Incorrect -- These are scientific treatises on astronomy and astrology written by Varahamihira, not dramas by Vishakhadatta.\n(c) Incorrect -- Raghavananda Natakam is his third play, but Kitab-ul-Hind was written centuries later by the Arab traveller Al-Biruni.\n(d) Incorrect -- The Prayag Prashasti is an epigraphic inscription composed by Harisena, not a drama by Vishakhadatta." },
+        { text: "What is the specific historical subject matter of the play 'Devichandraguptam'?", opts: ["A. The foundation of Nalanda University by Kumaragupta I.", "B. The controversial episode involving Ramagupta, Queen Dhruvadevi, and the Shaka king.", "C. Samudragupta's southern military campaign and his victory over Nagasena.", "D. The heroic death of Goparaj and the subsequent Sati of his wife."], ans: "B", exp: "(a) Incorrect -- Nalanda's foundation is a factual event from Kumaragupta I's reign, not the subject of this play.\n(b) Correct -- 'Devichandraguptam' dramatizes the crisis where Ramagupta surrenders Queen Dhruvadevi to the Shakas, and how his brother Chandragupta II disguises himself as the queen to kill the Shaka king and seize the throne.\n(c) Incorrect -- Samudragupta's campaigns are recorded in epigraphy like the Prayag Prashasti, not in this specific play.\n(d) Incorrect -- The death of Goparaj and the Sati event are documented in the Eran Inscription (510 CE) during Bhanagupta's era, not in this play." },
+        { text: "The Udayagiri Cave Inscription of Chandragupta II is considered a strong piece of evidence for the religious tolerance practiced within his court. Why?", opts: ["A. It mentions the direct conversion of the king from Vaishnavism to Jainism.", "B. It shows the king donating exactly 25 dinars to build a Shaiva temple next to a Jain cave.", "C. It mandates that all subjects must worship the Trimurti equally.", "D. It reveals that the devoutly Vaishnava king employed a staunch Shaivite, Virasena, as his senior Minister of War and Peace."], ans: "D", exp: "(a) Incorrect -- Chandragupta II never converted to Jainism; he remained a Vaishnava follower (Vaishnav dharmanuyayi) with the title Rajadhiraja.\n(b) Incorrect -- The donation of 25 dinars to Buddhist monks is recorded in the Sanchi Stone Inscription, not the Udayagiri text.\n(c) Incorrect -- The inscription does not issue state mandates on civilian worship practices regarding the Trimurti.\n(d) Correct -- The inscription demonstrates high-level religious tolerance by noting that Chandragupta II, a Vaishnava, appointed Virasena—a scholar of grammar and a Shaiva follower—as his hereditary Minister of War and Peace." },
+        { text: "Chandragupta II expanded Gupta influence through diplomacy as well as war. To which powerful dynasty did he marry his daughter, Prabhavati Gupta?", opts: ["A. The Vakataka dynasty", "B. The Lichchhavi dynasty", "C. The Aulikara dynasty", "D. The Abhira dynasty"], ans: "A", exp: "(a) Correct -- Prabhavati Gupta was married to Rudrasena II of the Vakataka dynasty. She became a famous queen who eventually ruled in her own right, securing the southern flank of the Gupta Empire.\n(b) Incorrect -- The Lichchhavi alliance was formed earlier when Chandragupta I married Princess Kumaradevi.\n(c) Incorrect -- The Aulikaras were feudatories/governors (like Bandhuvarma) serving the Guptas in western MP, not the dynasty Prabhavati married into.\n(d) Incorrect -- The Abhiras were a transitional power in Khandesh prior to this era, not the targets of this specific royal marriage." },
+        { text: "Based on the Mandsaur Inscription, what was the primary role of Govindagupta before his brother Kumaragupta I ascended the throne?", opts: ["A. He was a rebel leader who allied with the Pushyamitras against the empire.", "B. He was the court poet who composed the world's first advertisement.", "C. He was a transitional sovereign and served as the administrator of Western Malwa.", "D. He was the general who ultimately defeated the Huna king Toramana."], ans: "C", exp: "(a) Incorrect -- Govindagupta was a legitimate son of Chandragupta II, not a rebel allied with the Pushyamitras (who rebelled later during Kumaragupta I's reign).\n(b) Incorrect -- The poet who composed the Mandsaur Inscription (featuring the advertisement) was Vatsabhatti.\n(c) Correct -- Govindagupta was a transitional sovereign who ruled for about 3 years after Chandragupta II's death. The Mandsaur inscription notes his role as the administrator of Western Malwa, alongside his general Vayurakshita.\n(d) Incorrect -- Toramana was fought by Bhanagupta and Skandagupta, much later in the imperial timeline." },
+        { text: "Which Gupta emperor held the title 'Mahendraditya' and is credited with founding the ancient world's great centre of learning, Nalanda University?", opts: ["A. Shrigupta", "B. Ramagupta", "C. Bhanagupta", "D. Kumaragupta I"], ans: "D", exp: "(a) Incorrect -- Shrigupta was the founder of the empire, living centuries before Nalanda was established.\n(b) Incorrect -- Ramagupta's brief reign was defined by his conflict with the Shakas, not monumental educational foundations.\n(c) Incorrect -- Bhanagupta was a late ruler occupied with defending the fracturing empire against Huna invasions.\n(d) Correct -- Kumaragupta I (~414 CE) held the title Mahendraditya and is historically credited as the founder of Nalanda University." },
+        { text: "The Mandsaur Inscription provides crucial evidence of feudatory administration during Kumaragupta I's reign. Who is identified as his 'Gopta' (Governor/General) in this region?", opts: ["A. Vatsabhatti", "B. Bandhuvarma", "C. Amrakardava", "D. Yashodharman"], ans: "B", exp: "(a) Incorrect -- Vatsabhatti was the poet who authored the text of the Mandsaur Inscription, not the governor.\n(b) Correct -- The inscription reveals that the Aulikara ruler Bandhuvarma served as the 'Gopta' for Kumaragupta I, evidencing a strong feudatory administrative network in western Madhya Pradesh.\n(c) Incorrect -- Amrakardava was a general under Chandragupta II, recorded at Sanchi.\n(d) Incorrect -- Yashodharman was a later Aulikara ruler who famously defeated the Huna king Mihirakula, long after Kumaragupta I's reign." },
+        { text: "During the late reign of Kumaragupta I, the empire faced a massive internal threat when a group rebelled on the banks of the Narmada River. Who were these rebels?", opts: ["A. The Pushyamitras (Yuddhamitras)", "B. The Shaka Kshatrapas", "C. The Bharashiva Nagas", "D. The Lata silk weavers"], ans: "A", exp: "(a) Correct -- The Pushyamitras (also known as Yuddhamitras) mounted a serious rebellion on the banks of the Narmada River, which was eventually crushed by Kumaragupta's brave son, Skandagupta.\n(b) Incorrect -- The Shakas had already been definitively defeated and annexed by Chandragupta II decades earlier.\n(c) Incorrect -- The Bharashiva Nagas were an earlier dynasty credited with the Nachna Kuthara temple, not the rebels of this specific crisis.\n(d) Incorrect -- The Lata silk weavers were peaceful migrants to Mandsaur who built a Sun Temple, as recorded in the Mandsaur Inscription." },
+        { text: "Skandagupta, known as the Warrior Emperor, achieved two massive feats of defence and infrastructure. What were they?", opts: ["A. He built the Udayagiri caves and completely eradicated the Abhira dynasty.", "B. He founded Nalanda University and issued the first silver coins of the empire.", "C. He repaired the ancient Sudharshan Lake and repelled the invading Hunas under Toramana.", "D. He erected the pillars of Sanchi and defeated the Aulikara rulers of Mandsaur."], ans: "C", exp: "(a) Incorrect -- The Udayagiri caves were heavily patronized by Chandragupta II and others, and eradicating the Abhiras was not his main achievement.\n(b) Incorrect -- Nalanda was founded by his father, Kumaragupta I, and Chandragupta II issued the first silver coins.\n(c) Correct -- Skandagupta's reign is defined by his successful military defence against the invading Hunas (repelling Toramana initially) and his grand civic achievement of repairing the Sudharshan Lake in Saurashtra.\n(d) Incorrect -- Sanchi pillars belong to the broader Gupta era but aren't his specific singular achievement, and the Aulikaras were Gupta feudatories during this time, not his enemies." },
+        { text: "The Sudarshan Lake in Gujarat underwent construction and renovation by three major historical figures across different eras. Which sequence correctly identifies them?", opts: ["A. Bimbisara, Kanishka, Samudragupta", "B. Chandragupta I, Ramagupta, Chandragupta II", "C. Ghatotkacha, Govindagupta, Bhanagupta", "D. Pushya Gupta, Rudradaman I, Skandagupta"], ans: "D", exp: "(a) Incorrect -- None of these rulers are associated with the engineering of the Sudarshan Lake.\n(b) Incorrect -- These are sequential Gupta rulers, but they were not involved in the construction or repair of this specific reservoir.\n(c) Incorrect -- These rulers are not linked to the lake's architectural history.\n(d) Correct -- The lake was originally constructed by Pushya Gupta (governor under Ashoka), rebuilt 3 times stronger by the Shaka king Rudradaman I, and finally renovated again by the Gupta emperor Skandagupta." },
+        { text: "Epigraphic and numismatic evidence for Skandagupta in Madhya Pradesh comes from specific locations, but his reign also marks a significant territorial loss. What was this loss?", opts: ["A. He lost the capital city of Pataliputra to the Vakatakas.", "B. He lost control of Western Malwa, signalling the empire's fragmentation.", "C. He surrendered the Eran region to the Naga dynasty.", "D. He abandoned the Bagh Caves after they were destroyed by floods."], ans: "B", exp: "(a) Incorrect -- Pataliputra remained the primary capital and was not lost to the Vakatakas during his reign.\n(b) Correct -- While he had influence in the Mahakoshal region (evidenced by Sakaur gold coins in Damoh) and Rewa (Supia Inscription), Skandagupta's reign saw the devastating loss of Western Malwa, an early sign of the Gupta empire's decline.\n(c) Incorrect -- Eran remained a prominent site, later utilized by Bhanagupta, and was not surrendered to the Nagas.\n(d) Incorrect -- The Bagh Caves are famous 5th-6th century Buddhist sites; their abandonment due to fragile stone is an architectural reality, not a political territorial loss of his reign." },
+        { text: "The Eran Inscription of 510 CE records the final significant military effort of the imperial Guptas. Who was the Gupta ruler, and who was the enemy?", opts: ["A. Bhanagupta fighting against the Huna King Toramana", "B. Samudragupta fighting against the Naga King Nagasena", "C. Ramagupta fighting against the Shaka Kshatrapa Rudrasimha III", "D. Kumaragupta I fighting against the Pushyamitras"], ans: "A", exp: "(a) Correct -- The 510 CE Eran Inscription records the battle between the Gupta king Bhanagupta and the invading Huna forces led by King Toramana.\n(b) Incorrect -- Samudragupta's battle against Nagasena is recorded in the Prayag Prashasti, much earlier.\n(c) Incorrect -- Ramagupta's conflict with the Shakas happened around 375 CE. Chandragupta II actually defeated Rudrasimha III.\n(d) Incorrect -- Kumaragupta I's conflict with the Pushyamitras occurred on the Narmada river and did not involve the 510 CE Eran inscription." },
+        { text: "The Eran Inscription of Bhanagupta is considered an extremely high-yield historical source for competitive exams primarily because it contains:", opts: ["A. The first mathematical calculation of a solar eclipse.", "B. The earliest architectural plans for a structural Hindu temple.", "C. The first epigraphic evidence of the Sati practice in India.", "D. The only known royal decree enforcing Buddhism across the empire."], ans: "C", exp: "(a) Incorrect -- Astronomical and mathematical calculations were the domain of scholars like Varahamihira in Ujjain, not recorded in the martial Eran inscription.\n(b) Incorrect -- Early structural temples (like Tigawa and Nachna) predate this 510 CE inscription and are not detailed within it.\n(c) Correct -- The inscription records that after General Goparaj died fighting the Hunas, his wife committed self-immolation on his funeral pyre. This is the very first written (epigraphic) evidence of the Sati practice in Indian history.\n(d) Incorrect -- The Guptas were Vaishnavas, and there was never a decree enforcing Buddhism upon the empire." },
+        { text: "Following the reign of Bhanagupta, what was the political reality in Madhya Pradesh by the end of the 6th century?", opts: ["A. The region was unified under the powerful new Abhira dynasty.", "B. The Shakas returned from Gujarat to reclaim their lost territories.", "C. The Vakataka dynasty absorbed the entire state into their southern empire.", "D. A political vacuum emerged, leading to the rise of the Later Gupta Dynasty (Uttar Gupta Vansh)."], ans: "D", exp: "(a) Incorrect -- The Abhira dynasty was a transitional power that existed much earlier, between the Satavahanas and Vakatakas (around 248 CE).\n(b) Incorrect -- The Shakas had been permanently eradicated as a ruling power by Chandragupta II.\n(c) Incorrect -- The Vakatakas were contemporaries of Chandragupta II, but they did not absorb MP at the end of the 6th century.\n(d) Correct -- The massive Gupta Empire fragmented after Bhanagupta, creating a political vacuum in MP. Power eventually transitioned to the Later Gupta Dynasty, which inherited parts of the realm but had no direct biological link to the imperial Guptas." },
+        { text: "Gupta-era sculpture (Murtikala) is considered the \"Zenith of Life\". Which of the following statements does NOT accurately describe Gupta sculptural art?", opts: ["A. It achieved lifelike proportions and anatomical perfection.", "B. It exclusively depicted Vaishnava deities, completely ignoring Buddhist and Jain subjects.", "C. It skillfully conveyed deep inner feelings and spiritual states.", "D. It fused bodily physical grace with spiritual serenity."], ans: "B", exp: "(a) Incorrect -- Gupta artists are celebrated for balancing natural human forms with ideal proportions.\n(b) Correct -- Gupta sculpture was highly diverse. While it depicted Vaishnava deities (Vishnu, Varaha) and Shaiva deities (Shiva, Kartikeya), it prominently featured magnificent Buddhist (Buddha, Bodhisattva) and Jain art as well.\n(c) Incorrect -- The expression of intense human emotion and spiritual depth is a hallmark of the era.\n(d) Incorrect -- The defining characteristic of Gupta art is this exact unmatched fusion of physical beauty and spiritual calm." },
+        { text: "The Bagh Caves, representing some of the finest Gupta-era painting, are notable for several reasons. Which description accurately identifies their location, main subject, and structural reality?", opts: ["A. Located in Vidisha on the Betwa river, they feature Vaishnava paintings that have remained perfectly intact.", "B. Located in Panna, they contain Jain art carved into durable Nagauri stone.", "C. Located in Dhar District on the Bagh river, they feature Buddhist art (like Cave 4 'Rangmahal') but are fading due to fragile raw stone.", "D. Located in Katni, they are an exact replica of the Ajanta caves but dedicated exclusively to Shiva."], ans: "C", exp: "(a) Incorrect -- Vidisha is home to the Udayagiri caves (stone sculptures), not the painted Bagh Caves.\n(b) Incorrect -- Panna contains the structural Nachna Kuthara temple, not the Bagh Caves. Nagauri stone was used for Sanchi pillars.\n(c) Correct -- The Bagh Caves are in Dhar District on the Bagh River. They are 5th–6th century Buddhist sites (famous across Asia), with Cave 4 known as 'Rangmahal'. Because they were carved into fragile raw stone, the paintings are temporary and fading compared to Ajanta.\n(d) Incorrect -- Katni is home to the Tigawa Temple. While Bagh is stylistically similar to Ajanta, it is not a Shaiva site." },
+        { text: "The Pillars of Sanchi are magnificent examples of Gupta craftsmanship. Which of the following pairs linking a pillar to its specific feature is INCORRECTLY matched?", opts: ["A. Main material used — Nagauri Stone", "B. Pillar 26 — Height ~6.75 metres", "C. Pillar 35 — Found in pieces, associated with Vajrapani Bodhisattva", "D. Pillar 34 — Houses the Ekamukhi Shiva Linga"], ans: "D", exp: "(a) Incorrect -- Nagauri stone was specially sourced and is the hallmark material for these pillars.\n(b) Incorrect -- Pillar 26 is specifically noted to be approximately 6.75 metres tall.\n(c) Incorrect -- A 3.70 metre piece of Pillar 35 was found, and it is associated with the Vajrapani Bodhisattva deity.\n(d) Correct -- Pillar 34 is characterized by being in broken pieces (Bhagnavastha) with a bell-shaped capital and a Lion square base. The Ekamukhi Shiva Linga is a unique feature of the Bhumara Temple in Satna, not a Sanchi pillar." },
+        { text: "The Tigawa Temple is an important structural achievement of the Gupta era. Which of the following accurately describes its location and key architectural features?", opts: ["A. Located in Katni District, dedicated to Kankali Devi and Vishnu, featuring Makarvahini Ganga and Kacchapvahini Yamuna on the doorways.", "B. Located in Panna District, built by the Bharashiva Nagas, featuring an early structural Parvati shrine.", "C. Located in Satna District, famous as a Shaiva temple housing the Ekamukhi Shiva Linga.", "D. Located in Vidisha District, known for the giant monolithic Varaha Avatar statue carved into the cliff."], ans: "A", exp: "(a) Correct -- The Tigawa Temple is in Bahoriband Tehsil, Katni District. It is dedicated to Kankali Devi and Vishnu and is famous for its iconic doorway guardians: Ganga riding a Makara and Yamuna riding a tortoise. It is also described as a 'Vaishnava replica of Buddhist Toranas'.\n(b) Incorrect -- This describes the Nachna Kuthara temple.\n(c) Incorrect -- This describes the Bhumara Temple.\n(d) Incorrect -- This describes Cave 5 of the Udayagiri Caves." },
+        { text: "Which structural Shaiva temple located in Satna District is structurally similar to the Nachna Temple and is famous for its rare 'Ekamukhi Shiva Linga'?", opts: ["A. The Sanchi Stupa Complex", "B. The Bhumara Temple", "C. The Tigawa Temple", "D. The Dashavatara Temple"], ans: "B", exp: "(a) Incorrect -- Sanchi is a massive Buddhist complex in Raisen, not a structural Shaiva temple in Satna.\n(b) Correct -- The Bhumara Temple in Satna District is a Shaiva temple famous for its unique and rare Ekamukhi (single-faced) Shiva Linga. Its layout shares strong similarities with the Nachna Temple.\n(c) Incorrect -- The Tigawa Temple is a Vaishnava/Shakti temple located in Katni District.\n(d) Incorrect -- While a famous Gupta temple (Deogarh), it is not the Satna temple housing the Ekamukhi Shiva Linga." },
+        { text: "Evidence of the Naga dynasty's patronage of Gupta-style architecture is best seen in one of the earliest known structural Parvati temples in India. Where is this located?", opts: ["A. Nachna Kuthara, Panna District", "B. Udayagiri Hills, Vidisha District", "C. Eran City, Sagar District", "D. Dashapura, Mandsaur District"], ans: "A", exp: "(a) Correct -- The Parvati Temple at Nachna Kuthara (near Ajaygarh, Panna District) was built in the late 5th century CE. It is credited to the Bharashiva Naga rulers of Padmavati, demonstrating their patronage of Gupta-style architecture.\n(b) Incorrect -- Udayagiri features rock-cut caves patronized mainly by Chandragupta II and his ministers, not structural temples by the Nagas.\n(c) Incorrect -- Eran features Gupta-era Narasimha, Varaha, and Vishnu temples, but not the specific Parvati temple linked to the Nagas.\n(d) Incorrect -- Dashapura (Mandsaur) is known for the Sun Temple built by silk weavers during Bandhuvarma's rule." },
+        { text: "The Mandsaur Inscription (Dashapur Abhilekh) is a treasure trove of information. Which combination of facts accurately represents it?", opts: ["A. Located on the Betwa River; composed by Harisena; records the military victories of Samudragupta.", "B. Located on the Bagh River; composed by Vishakhadatta; describes the creation of Buddhist cave paintings.", "C. Located on the Shivna River; composed by Vatsabhatti; records the rule of Kumaragupta I and Governor Bandhuvarma.", "D. Located on the Narmada River; composed by Virasena; details the defeat of the Pushyamitra rebellion."], ans: "C", exp: "(a) Incorrect -- The Prayag Prashasti (Allahabad) was composed by Harisena for Samudragupta. Eran is on the Betwa/Bina rivers.\n(b) Incorrect -- The Bagh Caves are on the Bagh River. Vishakhadatta was a playwright, not the author of an inscription detailing paintings.\n(c) Correct -- The Mandsaur Inscription is located at Mahadev Ghat on the Shivna River. Authored by the poet Vatsabhatti, it documents the reign of Kumaragupta I and his local Aulikara governor, Bandhuvarma (who was bestowed the title 'Tilak of the Earth').\n(d) Incorrect -- The Pushyamitra rebellion occurred on the Narmada, but the Mandsaur inscription does not document it. Virasena was a minister at Udayagiri." },
+        { text: "The Mandsaur Inscription is famously tagged in competitive exams as the \"World's First Advertisement\". What specific commercial activity did it advertise?", opts: ["A. The sale of Nagauri stone to sculptors across the empire.", "B. The migration and establishment of a guild of silk weavers (Pattavaya) from Lata (Gujarat) to Mandsaur.", "C. The availability of agricultural land near the newly repaired Sudharshan Lake.", "D. The mass production of gold and silver coins by the royal mint in Ujjain."], ans: "B", exp: "(a) Incorrect -- Nagauri stone was used for Sanchi pillars, but no inscription advertises its sale.\n(b) Correct -- The inscription acts as a business advertisement by recording the migration of 'Pattavaya' (Tantuwaya / silk weavers) from Lata (Gujarat) to Mandsaur in the 5th century. It highlighted their success and the Sun Temple they built, proving the value of advertisement in commerce.\n(c) Incorrect -- The Sudharshan Lake was repaired by Skandagupta in Saurashtra, completely unrelated to Mandsaur's commercial records.\n(d) Incorrect -- Coin production was a state function, not a private commercial enterprise advertised by guilds." },
+        { text: "Which inscription, located in the modern Ashoknagar district and dated to 435 CE (Gupta Era Year 116), mentions both Kumaragupta I and Ghatotkacha Gupta?", opts: ["A. Sanchi Stone Inscription", "B. Bhetari Pillar Inscription", "C. Supia Inscription", "D. Tumain Inscription"], ans: "D", exp: "(a) Incorrect -- The Sanchi Inscription is located in Raisen and primarily deals with Chandragupta II and his general Amrakardava.\n(b) Incorrect -- The Bhetari Inscription is a key source for Skandagupta's reign.\n(c) Incorrect -- The Supia Inscription is located in Rewa and is another major source for Skandagupta.\n(d) Correct -- The Tumain Inscription is located in Ashoknagar district. It is explicitly dated to 435 CE and records the names of both Kumaragupta I and Ghatotkacha Gupta." },
+        { text: "The Eran Stone Pillar Inscription site serves as a historical ledger for multiple rulers over centuries. Which of the following rulers is NOT recorded in the inscriptions found at Eran?", opts: ["A. Mihirakula", "B. Toramana", "C. Buddhagupta", "D. Samudragupta"], ans: "A", exp: "(a) Correct -- Mihirakula (the fierce son of Toramana) was heavily defeated in Malwa by Yashodharman-Vishnuvardhan of Mandsaur, but he is not one of the 5 key rulers explicitly recorded in the Eran inscriptions.\n(b) Incorrect -- Toramana (the Huna invader) left records at Eran, showing the extent of Huna influence before their defeat.\n(c) Incorrect -- Buddhagupta is recorded at Eran, famously calling the region 'Kalindi-Narmadhomadhye' (land between the Yamuna and Narmada).\n(d) Incorrect -- Samudragupta is recorded there, calling it 'Swabhognagari' and leaving a Victory Monument. (Bhanugupta and Shridhar Varma also have records there)." },
+        { text: "The Sanchi Stone Inscription provides insight into the religious tolerance of Chandragupta II. Which of the following statements regarding this inscription is FALSE?", opts: ["A. It mentions the ancient name of Sanchi as Kakanadabota.", "B. It records the migration of a guild of silk weavers from Gujarat to Raisen.", "C. It names Senapati Amrakardava as the military commander of the emperor.", "D. It records a donation of the Ishwarvasaka area and 25 dinars for food and light to Buddhist monks."], ans: "B", exp: "(a) Incorrect -- Kakanadabota is explicitly mentioned as the ancient name of Sanchi in this Sanskrit/Brahmi text.\n(b) Correct -- The migration of silk weavers (Pattavaya) from Lata (Gujarat) is recorded in the Mandsaur Inscription, not the Sanchi Stone Inscription.\n(c) Incorrect -- General Amrakardava is directly named in the text.\n(d) Incorrect -- Despite Chandragupta II being Vaishnava, the inscription proves tolerance by recording his donation of 25 dinars to Buddhist institutions." },
+        { text: "The Udayagiri Caves in Vidisha reflect the zenith of Gupta civilization in art and religious tolerance. Which pair of caves perfectly highlights the coexistence of Hindu and Jain worship at this site?", opts: ["A. Cave 1 housing a Buddha statue, and Cave 4 known as Rangmahal.", "B. Cave 26 made of Nagauri stone, and Cave 35 showing the Ekamukhi Linga.", "C. Cave 5 housing the giant Varaha Avatar, and Cave 20 housing the Jain Tirthankara Parasnath.", "D. Cave 4 showing Makarvahini Ganga, and Cave 5 showing Kacchapvahini Yamuna."], ans: "C", exp: "(a) Incorrect -- Rangmahal is Cave 4 of the Bagh Caves in Dhar, not Udayagiri.\n(b) Incorrect -- 26 and 35 refer to Pillar numbers at Sanchi, not caves at Udayagiri.\n(c) Correct -- Cave 5 is an iconic Hindu monument featuring a massive rock-cut statue of Vishnu's Varaha Avatar. Cave 20 (from the Kumaragupta era, 425 CE) contains the idol of Jain Tirthankara Parasnath installed by Shankar, proving the site supported both faiths.\n(d) Incorrect -- The Ganga and Yamuna doorway motifs are key features of the Tigawa Temple in Katni, not specific cave designations at Udayagiri." },
+        { text: "Ujjayini was the intellectual capital of the Gupta era, producing unparalleled scientific excellence. Who was the Ujjain-born polymath that authored the 'Brihat Samhita' and 'Panchasiddhantika'?", opts: ["A. Vishakhadatta", "B. Varahamihira", "C. Harisena", "D. Rajashekhara"], ans: "B", exp: "(a) Incorrect -- Vishakhadatta was a playwright ('Devichandraguptam', 'Mudrarakshasa'), not a scientist or astronomer.\n(b) Correct -- Varahamihira, born in Kapitthaka (modern Kayatha, near Ujjain), was a master of mathematics and astrology. His major encyclopaedic works include the 'Brihat Samhita' and the 'Panchasiddhantika'.\n(c) Incorrect -- Harisena was the court poet who composed the Prayag Prashasti for Samudragupta.\n(d) Incorrect -- Kavi Rajashekhara was a poet who noted Ujjain's status as a literary capital where poetic examinations were held, but he did not write the scientific texts mentioned." },
+        { text: "Centuries after the Gupta Golden Age, which foreign traveller explicitly recognized Varahamihira as a master of predictive astrology in his writings?", opts: ["A. Megasthenes in the 'Indica'", "B. Fa-Hien in his travel diaries", "C. Hiuen Tsang during his visit to Nalanda", "D. Al-Biruni in the 'Kitab-ul-Hind'"], ans: "D", exp: "(a) Incorrect -- Megasthenes visited the Mauryan court centuries before the Gupta era began.\n(b) Incorrect -- Fa-Hien visited during Chandragupta II's reign, focusing on Buddhist sites and the Malwa climate, not predictive astrology.\n(c) Incorrect -- Hiuen Tsang visited during Harsha's era, well after Varahamihira, but it was Al-Biruni who famously documented Varahamihira's mastery.\n(d) Correct -- The 11th-century Arab traveller and scholar Al-Biruni recorded his deep respect for Varahamihira's mastery of predictive astrology in his famous book, 'Kitab-ul-Hind'." },
+        { text: "The devastating Phase 2 of the Huna invasions was led by the fierce king Mihirakula. Who successfully defeated him on the Malwa front, resulting in the expulsion of the Hunas from Madhya Pradesh?", opts: ["A. Yashodharman-Vishnuvardhan of Dashapura", "B. Chandragupta II of Ujjayini", "C. Bhanagupta and General Goparaj at Eran", "D. Skandagupta at the Sudharshan Lake"], ans: "A", exp: "(a) Correct -- While Baladitya defeated Mihirakula on the Magadha front, it was the powerful Aulikara ruler Yashodharman-Vishnuvardhan of Dashapura (Mandsaur) who badly defeated Mihirakula on the Malwa front, expelling the Hunas.\n(b) Incorrect -- Chandragupta II defeated the Shakas, not the Hunas.\n(c) Incorrect -- Bhanagupta and Goparaj fought Toramana (Mihirakula's father) during Phase 1 of the invasions.\n(d) Incorrect -- Skandagupta repelled the initial waves of Hunas (under Toramana) much earlier, but Yashodharman dealt the final blow to Mihirakula in Malwa." },
+        { text: "The Abhira Dynasty played a crucial role in central Indian history before the Guptas reached their peak. Which statement accurately describes them?", opts: ["A. They were founded by King Shridharavarman and ruled exclusively from Eran.", "B. They were originally from Magadha and conquered Ujjain to establish the Malwa era.", "C. They originated in Khandesh, were founded by King Ishwarsena, and acted as a transitional power.", "D. They were direct feudatories of Samudragupta who rebelled along the Narmada River."], ans: "C", exp: "(a) Incorrect -- Shridharavarman was a Shaka feudatory of Vidisha defeated by Samudragupta, completely unrelated to the Abhiras.\n(b) Incorrect -- They originated in Western India (Khandesh), not Magadha.\n(c) Correct -- The Abhiras were originally a Kshatriya-pastoralist community from Khandesh. Founded by King Ishwarsena, they acted as a vital 'Transitional Power' filling the political gap between the declining Satavahanas and the rising Vakatakas, expanding into Nimar and Malwa.\n(d) Incorrect -- The Pushyamitras were the ones who rebelled on the Narmada against Kumaragupta I." },
+        { text: "Time calculation in ancient central India often relied on the 'Chedi' or 'Kalachuri' Era. In what year did this era officially begin, linked to the coronation of the Abhira King Ishwarsena?", opts: ["A. 319 CE", "B. 248 CE", "C. 435 CE", "D. 510 CE"], ans: "B", exp: "(a) Incorrect -- 319–320 CE is the start of the Gupta Era, reckoned from the coronation of Chandragupta I.\n(b) Correct -- The Chedi/Kalachuri Samvat officially began in 248 CE (the standard year recognized by competitive exams like MPPSC), marking the coronation of King Ishwarsena.\n(c) Incorrect -- 435 CE is the date of the Tumain Inscription recording Kumaragupta I and Ghatotkacha.\n(d) Incorrect -- 510 CE is the date of the Eran Inscription recording Bhanagupta's battle and the first Sati evidence." },
+        { text: "The landscape of Ancient Madhya Pradesh was defined by key cities acting as hubs of culture, conflict, and epigraphy. Which of the following locations is INCORRECTLY matched with its historical significance?", opts: ["A. Ujjayini — The cultural hub of the Golden Age and home to Varahamihira.", "B. Dashapura — The region where the Abhira Dynasty first originated and established their transitional power.", "C. Eran — Called Svabhoganagara and the site of the first epigraphic Sati evidence.", "D. Udayagiri — Represents the climax of Gupta civilization with both Hindu (Cave 5 Varaha) and Jain monuments."], ans: "B", exp: "(a) Incorrect -- Ujjayini was indeed the cultural and intellectual capital, hosting scholars like Varahamihira and poets for examinations.\n(b) Correct -- Dashapura (Mandsaur) was the stronghold of the Aulikara rulers (who defeated Mihirakula) and the site of the World's First Advertisement. The Abhira Dynasty originated in Khandesh / Nimar, not Dashapura.\n(c) Incorrect -- Eran was Samudragupta's Svabhoganagara and the location of the 510 CE Sati inscription.\n(d) Incorrect -- Udayagiri, visited by Fa-Hien, contains brilliant religious caves highlighting both Vaishnava and Jain tolerance." },
+        { text: "Which notable literary figure explicitly recorded the fact that poets from all over India gathered in Ujjain to participate in poetic examinations, cementing its status as India's literary capital?", opts: ["A. Kavi Rajasekhara", "B. Vatsabhatti", "C. Harisena", "D. Vishakhadatta"], ans: "A", exp: "(a) Correct -- Kavi Rajasekhara is the specific literary figure whose statement confirms that poets travelled from across India to Ujjain for poetic examinations during this golden era.\n(b) Incorrect -- Vatsabhatti was a poet, but his major known contribution is writing the Mandsaur Inscription for Bandhuvarma.\n(c) Incorrect -- Harisena was Samudragupta's court poet at Prayag, not the one who wrote about Ujjain's literary examinations.\n(d) Incorrect -- Vishakhadatta authored dramas about political intrigue, but Rajasekhara made the statement about Ujjain's poetic dominance." },
+        { text: "A common mnemonic to remember the religious framework and key ruler titles of the Gupta period is 'B/M/V'. What does this represent?", opts: ["A. The three primary religions patronized: Buddhism, Manichaeism, Vaishnavism.", "B. The three great empires: Bindusara, Maurya, Vakataka.", "C. The three major enemies of the state: Bharashiva, Mihirakula, Vatsabhatti.", "D. The Trimurti tradition: Brahma, Mahesh (Shiva), Vishnu."], ans: "D", exp: "(a) Incorrect -- The Guptas did not patronize Manichaeism, and while tolerant of Buddhism, their state religion was Vaishnavism.\n(b) Incorrect -- These are unrelated dynastic names from different eras.\n(c) Incorrect -- Bharashiva were allies/predecessors, Vatsabhatti was a poet, only Mihirakula was an enemy.\n(d) Correct -- B/M/V stands for Brahma, Mahesh (Shiva), and Vishnu, representing the Trimurti tradition. The Guptas proudly associated themselves with this framework, specifically styling themselves as 'Parama Bhagavata' (devotees of Vishnu)." },
+        { text: "Aside from recording the migration of silk weavers, the Mandsaur Inscription acts as a detailed cultural record of the era. Which of the following elements are explicitly mentioned in it as flourishing during the Gupta period?", opts: ["A. Only military weapons and cavalry formations.", "B. Only agricultural techniques and irrigation systems.", "C. Sculpture, Painting, Pillars, Temples, Inscriptions, and Cities.", "D. Only international trade routes to the Roman Empire."], ans: "C", exp: "(a) Incorrect -- The inscription focuses heavily on civic and cultural achievements, not just military treatises.\n(b) Incorrect -- While agriculture was important, the inscription is a record of urban and artistic development.\n(c) Correct -- The Mandsaur Inscription is unique because it acts as a comprehensive art record, explicitly mentioning that Sculpture (Murtikala), Painting (Chitrakala), Pillars (Stambh), Temples (Mandir), Inscriptions (Abhilekh), and Cities (Nagar) were all flourishing.\n(d) Incorrect -- The text focuses on domestic trade (guilds from Gujarat to Mandsaur) rather than international Roman trade." },
+        { text: "Samudragupta’s empire reached immense territorial boundaries due to his aggressive campaigns. Which geographical feature marked the Southern boundary of his empire?", opts: ["A. The Yamuna River", "B. The Narmada River", "C. The Hooghly River", "D. The Himalayan Foothills"], ans: "B", exp: "(a) Incorrect -- The Yamuna and Chambal rivers marked the Western boundary of his empire.\n(b) Correct -- The Narmada River served as the Southern boundary of Samudragupta's massive territorial extent.\n(c) Incorrect -- The Hooghly river in Bengal marked the Eastern boundary.\n(d) Incorrect -- The Himalayan Foothills marked the Northern boundary." },
+        { text: "The ancient city of Eran in the Sagar district is highly significant for epigraphy and monuments. On the banks of which two rivers is it strategically located?", opts: ["A. Narmada and Tapti", "B. Chambal and Shipra", "C. Shivna and Mahi", "D. Betwa and Bina"], ans: "D", exp: "(a) Incorrect -- The Narmada and Tapti are major rivers in southern/western MP, not near Sagar.\n(b) Incorrect -- The Shipra flows through Ujjain, and the Chambal forms the north-western border of MP.\n(c) Incorrect -- The Shivna river is in Mandsaur, where the Aulikara inscriptions are found.\n(d) Correct -- Eran City is strategically located on the banks of the Betwa (ancient name Betravati) and Bina (ancient name Venva) rivers." },
+        { text: "Which inscription, located in the modern Rewa district, is considered the major epigraphic source for the reign, administration, and political details of Emperor Skandagupta?", opts: ["A. The Supia Inscription", "B. The Sanchi Stone Inscription", "C. The Udayagiri Cave Inscription", "D. The Tumain Inscription"], ans: "A", exp: "(a) Correct -- The Supia Inscription, found in the Rewa District, is the primary inscriptional source documenting the reign of Skandagupta.\n(b) Incorrect -- The Sanchi Stone Inscription belongs to Chandragupta II and his general Amrakardava.\n(c) Incorrect -- The Udayagiri inscriptions largely belong to Ramagupta, Chandragupta II, and Kumaragupta I.\n(d) Incorrect -- The Tumain Inscription (Ashoknagar) records the reign of Kumaragupta I and Ghatotkacha." },
+        { text: "While Chandragupta II issued silver coins and Chandragupta I issued gold, what type of numismatic evidence has been found to confirm the brief and disputed reign of Ramagupta in Vidisha and Eran?", opts: ["A. 1st-century BCE gold coins of the Archer type.", "B. 6th-century CE silver coins of the Peacock type.", "C. 4th–5th century CE copper coins of the Lion and Garuda type.", "D. Nagauri stone currency used exclusively by Jain merchants."], ans: "C", exp: "(a) Incorrect -- Ramagupta ruled in the late 4th century CE, not the 1st century BCE, and his primary recovered coins are not gold archer types.\n(b) Incorrect -- Silver coins were introduced by his successor Chandragupta II (following the Shaka style), and the peacock type is associated with later rulers.\n(c) Correct -- Historical evidence of Ramagupta includes 4th–5th century copper coins of the Lion (Simha) and Garuda types found specifically in Vidisha and Eran. The Garuda was the royal emblem of the Guptas.\n(d) Incorrect -- Nagauri stone was a high-quality building material used for the Sanchi pillars, not minted as currency." }
+    ];
+
+    const topicName = "Gupta Empire in MP";
+
+    // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
+    const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
+    const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
+    const SAVED_KEY = `quiz_saved_questions_${safeTopicName}`;
+
+    const TOTAL_QS = FULL_QUIZ.length;
+
+    // --- Firebase Setup ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDX9dw3QKC23S7ukdqvropANz4qUvI3Bq0",
+        authDomain: "aditya-quizzes-5a3c6.firebaseapp.com",
+        databaseURL: "https://aditya-quizzes-5a3c6-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "aditya-quizzes-5a3c6",
+        storageBucket: "aditya-quizzes-5a3c6.firebasestorage.app",
+        messagingSenderId: "792902679820",
+        appId: "1:792902679820:web:6af51ad185fcb8e1341d29"
+    };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    let mode = null;
+    let order = [];
+    let currentPos = 0;
+    let answersState = [];
+    let userSelections = [];
+    let startTime = null;
+    let timerInterval = null;
+    let quizActive = true;
+    let skipReviewMode = false;
+    let skipReviewList = [];
+    let currentSkipReviewIndex = 0;
+    let reviewItems = [];
+    let reviewCurrentIdx = 0;
+
+    let timerPaused = false;
+    let elapsedSeconds = 0;
+    let quizInProgress = false;
+    let timerPausedByBeforeUnload = false;
+    let isDarkMode = false;
+    let currentFontSize = 16;
+    let leaderboardLoggedForThisSession = false;
+    let savedQuestions = new Set();
+
+    // --- Utility ---
+    function getCurrentDateTime() {
+        const now = new Date();
+        const day = now.getDate();
+        const month = now.toLocaleString('default', { month: 'long' });
+        const year = now.getFullYear();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        return { date: `${day}.${month}.${year}`, time: `${hours}:${minutes} ${ampm}` };
+    }
+    function formatTime(sec) {
+        return `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+    }
+    function computeStats() {
+        let correct = 0, incorrect = 0, skipped = 0;
+        for (let i = 0; i < answersState.length; i++) {
+            if (answersState[i] === 'correct') correct++;
+            else if (answersState[i] === 'incorrect') incorrect++;
+            else if (answersState[i] === 'skipped') skipped++;
+        }
+        let attempted = correct + incorrect;
+        let score = correct * 1 + incorrect * -0.33;
+        let displayScore = attempted > 0 ? score.toFixed(2) : "0.00";
+        return { correct, incorrect, skipped, attempted, total: TOTAL_QS, score, displayScore };
+    }
+    function updateTopStats() {
+        const { correct, incorrect, skipped } = computeStats();
+        const sc = document.getElementById('statCorrect');
+        const sw = document.getElementById('statWrong');
+        const ss = document.getElementById('statSkip');
+        if (sc) sc.innerText = correct;
+        if (sw) sw.innerText = incorrect;
+        if (ss) ss.innerText = skipped;
+        updateNavPaneColors();
+    }
+    function getNextUnansweredPos(startPos) {
+        for (let i = startPos; i < order.length; i++) if (answersState[order[i]] === 'unanswered') return i;
+        return -1;
+    }
+    function formatExplanationRich(expText) {
+        const lines = expText.split(/\r?\n/);
+        let htmlLines = [];
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+            const regex = /^(\([a-d]\))\s*(Correct|Incorrect)\s*[-–—]+\s*(.*)$/i;
+            const match = line.match(regex);
+            if (match) {
+                const isCorrect = match[2].toLowerCase() === 'correct';
+                htmlLines.push(`<div class="explanation-line"><span class="${isCorrect ? 'exp-correct' : 'exp-incorrect'}">${match[1]} ${match[2]}</span><span class="exp-text"> – ${match[3]}</span></div>`);
+            } else {
+                htmlLines.push(`<div class="explanation-line"><span class="exp-text">${line}</span></div>`);
+            }
+        }
+        return htmlLines.join('');
+    }
+
+    // --- Leaderboard ---
+    async function loadLeaderboard() {
+        try {
+            const snap = await db.ref(LEADERBOARD_KEY).get();
+            return snap.exists() ? Object.values(snap.val()) : [];
+        } catch(e) { return []; }
+    }
+    async function saveLeaderboard(lb) {
+        try {
+            await db.ref(LEADERBOARD_KEY).set(
+                Object.fromEntries(lb.map((entry, i) => [i, entry]))
+            );
+        } catch(e) { console.error("Leaderboard save failed", e); }
+    }
+    async function addAttemptToLeaderboard(scoreValue, attemptedCount, totalQS) {
+        if (leaderboardLoggedForThisSession) return;
+        if (attemptedCount <= 0.4 * totalQS) return;
+        const lb = await loadLeaderboard();
+        const { date, time } = getCurrentDateTime();
+        lb.push({ attempt: lb.length + 1, score: scoreValue, attempted: attemptedCount, total: totalQS, date, time });
+        await saveLeaderboard(lb);
+        leaderboardLoggedForThisSession = true;
+    }
+    async function renderLeaderboard() {
+        const container = document.getElementById('leaderboardContainer');
+        if (!container) return;
+        container.innerHTML = '<div class="leaderboard-empty">⏳ Loading scores...</div>';
+        const lb = await loadLeaderboard();
+        if (lb.length === 0) {
+            container.innerHTML = '<div class="leaderboard-empty">✨ No attempts recorded yet. Complete a quiz (attempting >40% of questions) to see your scores here.</div>';
+            return;
+        }
+        let html = '<div class="leaderboard-table-container"><table class="leaderboard-table"><thead><tr><th>Attempt</th><th>Score</th><th>Questions Attempt</th><th>Date</th><th>Time</th></tr></thead><tbody>';
+        for (let e of lb) {
+            html += `<tr><td>${e.attempt}</td><td>${e.score.toFixed(2)} / ${e.attempted}</td><td>${e.attempted} / ${e.total}</td><td>${e.date || '—'}</td><td>${e.time || '—'}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+    async function resetLeaderboard() {
+        if (confirm("⚠️ WARNING: All leaderboard stats will be deleted permanently.\nAre you sure you want to proceed?")) {
+            await db.ref(LEADERBOARD_KEY).remove();
+            renderLeaderboard();
+        }
+    }
+
+    // --- Save / Resume ---
+    async function saveQuizState() {
+        if (!quizInProgress) return;
+        const state = {
+            mode, order, currentPos, answersState, userSelections, elapsedSeconds, timerPaused,
+            skipReviewMode, skipReviewList, currentSkipReviewIndex,
+            isDarkMode: document.body.classList.contains('dark-theme'),
+            fontSize: parseInt(document.documentElement.style.fontSize) || 16,
+            version: 2
+        };
+        try {
+            await db.ref(STORAGE_KEY).set(state);
+        } catch(e) {
+            // Fallback to localStorage if Firebase fails
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+    }
+    async function loadQuizState() {
+        try {
+            const snap = await db.ref(STORAGE_KEY).get();
+            if (snap.exists()) {
+                const state = snap.val();
+                if (state && state.order && state.answersState && state.userSelections && state.mode) return state;
+            }
+        } catch(e) {}
+        // Fallback to localStorage
+        try {
+            const state = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (state && state.order && state.answersState && state.userSelections && state.mode) return state;
+        } catch(e) {}
+        return null;
+    }
+    async function clearSavedState() {
+        try { await db.ref(STORAGE_KEY).remove(); } catch(e) {}
+        localStorage.removeItem(STORAGE_KEY);
+    }
+    async function autoSave() { if (quizInProgress) await saveQuizState(); }
+    function applyUIPreferences(isDark, fontSize) {
+        if (isDark) document.body.classList.add('dark-theme');
+        else document.body.classList.remove('dark-theme');
+        document.documentElement.style.fontSize = fontSize + 'px';
+        currentFontSize = fontSize;
+        const btn = document.getElementById('darkModeToggle');
+        if (btn) btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+        const slider = document.getElementById('fontSlider');
+        const pct = document.getElementById('fontPercent');
+        if (slider && pct) { slider.value = fontSize; pct.innerText = Math.round((fontSize/16)*100) + '%'; }
+    }
+
+    // --- Timer ---
+    function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+    function pauseTimer() {
+        if (!quizActive || timerPaused) return;
+        elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        stopTimer();
+        timerPaused = true;
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '0.7'; el.title = 'Paused - Click or interact to resume'; }
+        autoSave();
+    }
+    function resumeTimer() {
+        if (!quizActive || !timerPaused) return;
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        timerInterval = setInterval(() => {
+            if (!quizActive || timerPaused) return;
+            document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+        }, 1000);
+        timerPaused = false;
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
+        autoSave();
+    }
+    function toggleTimerPause() { if (!quizActive) return; timerPaused ? resumeTimer() : pauseTimer(); }
+    function autoResumeTimerIfPaused() { if (timerPaused && quizActive) { resumeTimer(); timerPausedByBeforeUnload = false; } }
+    function startTimer() {
+        if (timerInterval) stopTimer();
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        timerPaused = false;
+        timerPausedByBeforeUnload = false;
+        timerInterval = setInterval(() => {
+            if (!quizActive || timerPaused) return;
+            document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+        }, 1000);
+        const el = document.getElementById('timerContainer');
+        if (el) { el.style.opacity = '1'; el.title = 'Running - Click to pause'; }
+    }
+
+    // --- Save question for later review ---
+    async function loadSavedQuestions() {
+        try {
+            const snap = await db.ref(SAVED_KEY).get();
+            savedQuestions = new Set(snap.exists() ? Object.keys(snap.val()).map(Number) : []);
+        } catch(e) { savedQuestions = new Set(); }
+    }
+    async function toggleSaveQuestion(origIdx) {
+        const canonicalId = origIdx + 1;
+        const q = FULL_QUIZ[origIdx];
+        const btn = document.getElementById('saveQuestionBtn');
+        try {
+            if (savedQuestions.has(canonicalId)) {
+                await db.ref(`${SAVED_KEY}/${canonicalId}`).remove();
+                savedQuestions.delete(canonicalId);
+            } else {
+                await db.ref(`${SAVED_KEY}/${canonicalId}`).set({ text: q.text, opts: q.opts, ans: q.ans, exp: q.exp });
+                savedQuestions.add(canonicalId);
+            }
+            if (btn) {
+                const isSaved = savedQuestions.has(canonicalId);
+                btn.classList.toggle('saved', isSaved);
+                btn.innerHTML = isSaved ? '🔖 Saved' : '🔖 Save';
+            }
+        } catch(e) { console.error(e); alert("Could not update saved questions. Check your connection."); }
+    }
+
+    // --- Nav pane ---
+    function buildNavPane() {
+        const navGrid = document.getElementById('navGrid');
+        if (!navGrid) return;
+        navGrid.innerHTML = '';
+        for (let i = 0; i < order.length; i++) {
+            const btn = document.createElement('div');
+            btn.className = 'nav-btn unanswered';
+            btn.textContent = (i + 1).toString();
+            btn.addEventListener('click', (pos => () => moveToQuestion(pos))(i));
+            navGrid.appendChild(btn);
+        }
+        updateNavPaneColors();
+    }
+    function updateNavPaneColors() {
+        const navGrid = document.getElementById('navGrid');
+        if (!navGrid) return;
+        const btns = navGrid.querySelectorAll('.nav-btn');
+        for (let i = 0; i < btns.length; i++) {
+            const state = answersState[order[i]];
+            const btn = btns[i];
+            btn.classList.remove('correct', 'incorrect', 'skipped', 'unanswered');
+            if (state === 'correct') btn.classList.add('correct');
+            else if (state === 'incorrect') btn.classList.add('incorrect');
+            else if (state === 'skipped') btn.classList.add('skipped');
+            else btn.classList.add('unanswered');
+        }
+    }
+    function toggleNavPane() { document.getElementById('navPane').classList.toggle('show'); }
+    function moveToQuestion(newPos) {
+        if (!quizActive) return;
+        if (skipReviewMode) {
+            if (skipReviewList.includes(order[newPos])) {
+                currentPos = newPos;
+                currentSkipReviewIndex = skipReviewList.indexOf(order[newPos]);
+                renderCurrent(); autoSave();
+            }
+            return;
+        }
+        if (newPos >= 0 && newPos < order.length) { currentPos = newPos; renderCurrent(); autoSave(); }
+    }
+
+    // --- Answer / Skip / Finish ---
+    function handleAnswer(selectedLetter) {
+        autoResumeTimerIfPaused();
+        if (!quizActive) return;
+        const origIdx = order[currentPos];
+        const isCorrect = selectedLetter === FULL_QUIZ[origIdx].ans;
+        if (skipReviewMode) {
+            if (answersState[origIdx] !== 'skipped') return;
+            userSelections[origIdx] = selectedLetter;
+            answersState[origIdx] = isCorrect ? 'correct' : 'incorrect';
+            updateTopStats(); renderCurrent(); autoSave();
+            return;
+        }
+        if (answersState[origIdx] === 'unanswered' || answersState[origIdx] === 'skipped') {
+            userSelections[origIdx] = selectedLetter;
+            answersState[origIdx] = isCorrect ? 'correct' : 'incorrect';
+            updateTopStats(); renderCurrent(); autoSave();
+        }
+    }
+    function nextAfterAnswer() {
+        if (!quizActive) return;
+        if (skipReviewMode) {
+            let idx = skipReviewList.indexOf(order[currentPos]);
+            if (idx !== -1) skipReviewList.splice(idx, 1);
+            if (skipReviewList.length > 0) {
+                let nextPos = order.indexOf(skipReviewList[0]);
+                if (nextPos !== -1) moveToQuestion(nextPos);
+            } else endSkipReviewSession();
+            autoSave(); return;
+        }
+        const currentOrig = order[currentPos];
+        if (answersState[currentOrig] === 'correct' || answersState[currentOrig] === 'incorrect') {
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+            autoSave();
+        }
+    }
+    function skipCurrent() {
+        autoResumeTimerIfPaused();
+        if (!quizActive) return;
+        const currentOrig = order[currentPos];
+        if (!skipReviewMode && (answersState[currentOrig] === 'correct' || answersState[currentOrig] === 'incorrect')) return;
+        if (skipReviewMode) {
+            if (currentSkipReviewIndex + 1 < skipReviewList.length) {
+                let nextPos = order.indexOf(skipReviewList[currentSkipReviewIndex + 1]);
+                if (nextPos !== -1) moveToQuestion(nextPos);
+            } else endSkipReviewSession();
+            autoSave(); return;
+        }
+        if (answersState[currentOrig] === 'unanswered') {
+            answersState[currentOrig] = 'skipped';
+            updateTopStats();
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+        } else if (answersState[currentOrig] === 'skipped') {
+            let nxt = getNextUnansweredPos(currentPos + 1);
+            if (nxt !== -1) moveToQuestion(nxt); else promptFinishOrReview();
+        }
+        autoSave();
+    }
+    function promptFinishOrReview() {
+        if (!quizActive) return;
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>Finish Quiz?</h3><p>Do you want to finish this quiz?</p><button id="yesFinish">Yes, Finish</button><button id="noFinish">No, Review Skipped</button></div>`;
+        document.body.appendChild(modalDiv);
+        document.getElementById('yesFinish').onclick = () => { modalDiv.remove(); finishQuiz(); };
+        document.getElementById('noFinish').onclick = () => {
+            modalDiv.remove();
+            const skippedIndices = [];
+            for (let i = 0; i < answersState.length; i++) if (answersState[i] === 'skipped') skippedIndices.push(i);
+            if (skippedIndices.length === 0) finishQuiz(); else enterSkipReviewMode(skippedIndices);
+        };
+    }
+    function enterSkipReviewMode(skippedIndices) {
+        skipReviewMode = true; skipReviewList = [...skippedIndices]; currentSkipReviewIndex = 0;
+        let firstPos = order.indexOf(skipReviewList[0]);
+        if (firstPos !== -1) moveToQuestion(firstPos); else renderCurrent();
+        autoSave();
+    }
+    function endSkipReviewSession() { skipReviewMode = false; skipReviewList = []; promptFinishOrReview(); }
+
+    // --- Finish & Stats ---
+    function finishQuiz() {
+        if (timerInterval) stopTimer();
+        quizActive = false; quizInProgress = false;
+        const { score, attempted, displayScore } = computeStats();
+        addAttemptToLeaderboard(score, attempted, TOTAL_QS);
+        clearSavedState();
+        let finalElapsed = elapsedSeconds;
+        if (!timerPaused && startTime) finalElapsed = Math.floor((Date.now() - startTime) / 1000);
+        const stats = computeStats();
+        const finalHtml = `<div class="finish-stats"><h2>🎉 QUIZ COMPLETE! 🎉</h2><div class="score-big">⭐ ${stats.displayScore} / ${stats.attempted} ⭐</div><div class="stats-grid"><div class="stat-card"><span>✅ CORRECT</span><span>${stats.correct}</span></div><div class="stat-card"><span>❌ INCORRECT</span><span>${stats.incorrect}</span></div><div class="stat-card"><span>⏭️ SKIPPED</span><span>${stats.skipped}</span></div><div class="stat-card"><span>🎯 ATTEMPTED</span><span>${stats.attempted} / ${stats.total}</span></div></div><p style="margin:1rem 0;">⏱️ Time taken: <strong>${formatTime(finalElapsed)}</strong></p><button id="reviewBtn" style="background:#ff9040;">📖 Review Incorrect & Skipped</button><button id="restartQuizBtn" style="background:#3c6e8f;">🔄 Restart Quiz</button><div class="leaderboard-section"><h3>🏆 Leaderboard <button class="reset-logs-btn" id="resetLeaderboardBtn">🗑️ Reset Logs</button></h3><div id="leaderboardContainer"></div></div></div>`;
+        document.getElementById('quizMainContent').innerHTML = finalHtml;
+        document.getElementById('reviewBtn').onclick = () => enterPostReviewMode();
+        document.getElementById('restartQuizBtn').onclick = () => { clearSavedState(); location.reload(); };
+        renderLeaderboard();
+        document.getElementById('resetLeaderboardBtn').onclick = () => resetLeaderboard();
+    }
+
+    // --- Post-finish review ---
+    function enterPostReviewMode() {
+        const incorrectSkipped = [];
+        for (let i = 0; i < order.length; i++) {
+            const state = answersState[order[i]];
+            if (state === 'incorrect' || state === 'skipped') incorrectSkipped.push(order[i]);
+        }
+        if (incorrectSkipped.length === 0) return;
+        reviewItems = incorrectSkipped; reviewCurrentIdx = 0; showReviewItem(0);
+    }
+    function showReviewItem(idx) {
+        const orig = reviewItems[idx];
+        const q = FULL_QUIZ[orig];
+        const userChoice = userSelections[orig];
+        let optsHtml = '';
+        for (let i = 0; i < q.opts.length; i++) {
+            const optLetter = String.fromCharCode(65 + i);
+            let cls = '';
+            if (optLetter === q.ans) cls = 'correct-highlight';
+            else if (userChoice === optLetter && userChoice !== q.ans) cls = 'wrong-highlight';
+            optsHtml += `<div class="option ${cls}" style="pointer-events:none;">${q.opts[i]}</div>`;
+        }
+        const isSaved = savedQuestions.has(orig + 1);
+        const reviewHtml = `<div class="review-counter">📌 Review ${idx+1} of ${reviewItems.length}</div><div class="question-text">${q.text}</div><div class="options-list">${optsHtml}</div><div class="explanation-box">${formatExplanationRich(q.exp)}</div><div class="action-row" style="justify-content:center;"><button class="save-btn ${isSaved ? 'saved' : ''}" id="saveQuestionBtn">${isSaved ? '🔖 Saved' : '🔖 Save'}</button></div><div style="display:flex; gap:12px; justify-content:center; margin-top:20px;"><button id="reviewPrev" ${idx===0?'disabled':''}>Previous</button><button id="reviewNext" ${idx===reviewItems.length-1?'disabled':''}>Next</button><button id="reviewBackStats">Back to Stats</button></div>`;
+        document.getElementById('quizMainContent').innerHTML = reviewHtml;
+        document.getElementById('saveQuestionBtn').onclick = () => toggleSaveQuestion(orig);
+        document.getElementById('reviewPrev')?.addEventListener('click', () => showReviewItem(idx-1));
+        document.getElementById('reviewNext')?.addEventListener('click', () => showReviewItem(idx+1));
+        document.getElementById('reviewBackStats').onclick = () => finishQuiz();
+    }
+
+    // --- Render question ---
+    function renderCurrent() {
+        if (!quizActive) return;
+        const origIdx = order[currentPos];
+        const q = FULL_QUIZ[origIdx];
+        const state = answersState[origIdx];
+        const userChoice = userSelections[origIdx];
+        let optionsHtml = '';
+        for (let i = 0; i < q.opts.length; i++) {
+            const optLetter = String.fromCharCode(65 + i);
+            let addClass = '';
+            let isClickable = true;
+            if (state === 'correct' || state === 'incorrect') {
+                if (optLetter === q.ans) addClass = 'correct-highlight';
+                else if (userChoice === optLetter && userChoice !== q.ans) addClass = 'wrong-highlight';
+                isClickable = false;
+            }
+            optionsHtml += `<div class="option ${addClass}" ${isClickable ? `onclick="handleAnswer('${optLetter}')"` : ''} ${!isClickable ? 'style="pointer-events:none;"' : ''}>${q.opts[i]}</div>`;
+        }
+        let explanationBlock = '', actionRow = '';
+        if (state === 'correct' || state === 'incorrect') {
+            explanationBlock = `<div class="explanation-box">${formatExplanationRich(q.exp)}</div>`;
+            actionRow = `<div class="action-row"><button class="next-btn" id="nextAfterAnswerBtn">➡ Next Question</button><button class="save-btn ${savedQuestions.has(origIdx+1) ? 'saved' : ''}" id="saveQuestionBtn" title="Save this question for later review">${savedQuestions.has(origIdx+1) ? '🔖 Saved' : '🔖 Save'}</button></div>`;
+        }
+        let infoMsg = '';
+        if (state === 'unanswered') infoMsg = '<div class="info-message">⚡ Select an answer above. Use Skip if unsure.</div>';
+        else if (state === 'skipped') infoMsg = '<div class="info-message">⏭️ This question was skipped. You can answer now.</div>';
+        document.getElementById('quizMainContent').innerHTML = `<div class="question-text">${currentPos+1}. ${q.text}</div><div class="options-list">${optionsHtml}</div>${explanationBlock}${actionRow}${infoMsg}`;
+        if (state === 'correct' || state === 'incorrect') {
+            document.getElementById('nextAfterAnswerBtn').onclick = nextAfterAnswer;
+            document.getElementById('saveQuestionBtn').onclick = () => toggleSaveQuestion(origIdx);
+        }
+    }
+
+    // --- Font slider ---
+    function initFontSlider() {
+        const fontBtn = document.getElementById('fontToggleBtn');
+        if (!fontBtn) return;
+        const old = document.querySelector('.font-slider-panel');
+        if (old) old.remove();
+        let visible = false;
+        const panel = document.createElement('div');
+        panel.className = 'font-slider-panel';
+        panel.style.display = 'none';
+        panel.innerHTML = `<label>🔤 Font size:</label><input type="range" id="fontSlider" min="10" max="32" step="1" value="16"><span id="fontPercent">100%</span>`;
+        document.querySelector('.stats-bar').insertAdjacentElement('afterend', panel);
+        const slider = document.getElementById('fontSlider');
+        const pct = document.getElementById('fontPercent');
+        const current = parseInt(document.documentElement.style.fontSize) || 16;
+        slider.value = current;
+        pct.innerText = Math.round((current/16)*100) + '%';
+        slider.addEventListener('input', (e) => {
+            const px = parseInt(e.target.value);
+            document.documentElement.style.fontSize = px + 'px';
+            pct.innerText = Math.round((px/16)*100) + '%';
+            currentFontSize = px; autoSave();
+        });
+        fontBtn.addEventListener('click', () => { visible = !visible; panel.style.display = visible ? 'flex' : 'none'; });
+    }
+
+    // --- Dark mode toggle ---
+    function initDarkModeToggle() {
+        const btn = document.getElementById('darkModeToggle');
+        if (!btn) return;
+        const update = () => {
+            const dark = document.body.classList.contains('dark-theme');
+            btn.innerHTML = dark ? '☀️ Light' : '🌙 Dark';
+            isDarkMode = dark; autoSave();
+        };
+        btn.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); update(); });
+        update();
+    }
+
+    // --- Resume saved quiz ---
+    async function resumeSavedQuiz(savedState) {
+        mode = savedState.mode; order = savedState.order; currentPos = savedState.currentPos;
+        answersState = savedState.answersState; userSelections = savedState.userSelections;
+        elapsedSeconds = savedState.elapsedSeconds; timerPaused = savedState.timerPaused;
+        skipReviewMode = savedState.skipReviewMode || false;
+        skipReviewList = savedState.skipReviewList || [];
+        currentSkipReviewIndex = savedState.currentSkipReviewIndex || 0;
+        if (savedState.isDarkMode !== undefined) applyUIPreferences(savedState.isDarkMode, savedState.fontSize || 16);
+        quizActive = true; quizInProgress = true;
+        await loadSavedQuestions();
+        renderMainUI(); initDarkModeToggle(); initFontSlider();
+        startTime = Date.now() - (elapsedSeconds * 1000);
+        if (!timerPaused) {
+            timerInterval = setInterval(() => {
+                if (!quizActive || timerPaused) return;
+                document.getElementById('timerDisplay').innerText = formatTime(Math.floor((Date.now() - startTime) / 1000));
+            }, 1000);
+        } else {
+            const el = document.getElementById('timerContainer');
+            if (el) el.style.opacity = '0.7';
+        }
+        updateTopStats(); buildNavPane(); renderCurrent();
+        leaderboardLoggedForThisSession = false;
+    }
+
+    // --- Init quiz ---
+    async function initializeQuiz(selectedMode) {
+        mode = selectedMode;
+        let indices = [...Array(TOTAL_QS).keys()];
+        if (mode === 'random') {
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+        }
+        order = indices;
+        answersState = new Array(TOTAL_QS).fill('unanswered');
+        userSelections = new Array(TOTAL_QS).fill(null);
+        currentPos = 0; quizActive = true;
+        skipReviewMode = false; skipReviewList = [];
+        elapsedSeconds = 0; timerPaused = false;
+        quizInProgress = true; leaderboardLoggedForThisSession = false;
+        clearSavedState();
+        await loadSavedQuestions();
+        startTimer(); renderMainUI(); initDarkModeToggle(); initFontSlider();
+    }
+
+    // --- Render main quiz UI ---
+    function renderMainUI() {
+        const root = document.getElementById('root');
+        root.innerHTML = `<div class="quiz-container"><div class="stats-bar"><div class="stats-group"><div class="stat"><span>✅ Correct</span> <span id="statCorrect">0</span></div><div class="stat"><span>❌ Wrong</span> <span id="statWrong">0</span></div><div class="stat"><span>⏭️ Skip</span> <span id="statSkip">0</span></div></div><div class="timer" id="timerContainer">⏱️ <span id="timerDisplay">00:00</span></div><div class="action-buttons"><button class="action-btn" id="toggleNavBtn">☰ Questions</button><button class="action-btn" id="skipBtn">⏭️ Skip</button><button class="action-btn" id="finishQuizBtn">🏁 Finish</button><button class="action-btn dark-mode-btn" id="darkModeToggle">🌙 Dark</button><button class="action-btn" id="fontToggleBtn">🔤 A</button></div></div><div id="navPane" class="nav-pane"><div id="navGrid" class="nav-grid"></div></div><div id="quizMainContent" class="question-panel"></div></div>`;
+        document.getElementById('toggleNavBtn').onclick = toggleNavPane;
+        document.getElementById('skipBtn').onclick = skipCurrent;
+        document.getElementById('finishQuizBtn').onclick = () => { if (!skipReviewMode) promptFinishOrReview(); else endSkipReviewSession(); };
+        document.getElementById('timerContainer').addEventListener('click', toggleTimerPause);
+        buildNavPane(); renderCurrent(); updateTopStats();
+    }
+
+    // --- beforeunload exit warning ---
+    function setupBeforeUnload() {
+        window.addEventListener('beforeunload', (e) => {
+            if (quizInProgress) {
+                if (!timerPaused) pauseTimer();
+                e.preventDefault();
+                e.returnValue = 'You have unsaved quiz progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+        window.addEventListener('focus', () => {
+            if (timerPausedByBeforeUnload && timerPaused && quizInProgress) { resumeTimer(); timerPausedByBeforeUnload = false; }
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && timerPausedByBeforeUnload && timerPaused && quizInProgress) { resumeTimer(); timerPausedByBeforeUnload = false; }
+        });
+    }
+    setupBeforeUnload();
+
+    // --- Instructions modal ---
+    function showInstructions() {
+        const modal = document.createElement('div');
+        modal.className = 'instructions-modal';
+        modal.innerHTML = `<div class="instructions-card"><div class="instructions-header"><h3>📖 How to use this quiz</h3><button class="close-instructions" id="closeInstructionsBtn">✖</button></div><ul class="instructions-list"><li><strong>⏱️ Timer:</strong> Click the clock to pause/resume. Timer also resumes when you answer or skip.</li><li><strong>💾 Auto‑save:</strong> Your progress, dark mode, and font size are saved automatically. Close the page and resume later.</li><li><strong>⏭️ Skip button:</strong> Leave a question for later review – it will appear in the final review list.</li><li><strong>🔖 Save for review:</strong> Click the Save button after answering a question to bookmark it for later review.</li><li><strong>🌙 Dark mode:</strong> Toggle the moon/sun button to reduce eye strain in low light.</li><li><strong>🔤 Font size:</strong> Use the A button to increase or decrease text size – great for accessibility.</li><li><strong>🏆 Leaderboard:</strong> Only attempts where you answer more than 40% of total questions are recorded. Score = +1 per correct, -0.33 per wrong.</li><li><strong>📖 Review:</strong> After finishing, you can review all incorrect and skipped questions.</li></ul><p style="margin-top:1rem; font-size:0.8rem; text-align:center; color:#64748b;">✨ Good luck and have fun! ✨</p></div>`;
+        document.body.appendChild(modal);
+        document.getElementById('closeInstructionsBtn').onclick = () => modal.remove();
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    // --- Welcome screen ---
+    async function showWelcome() {
+        const root = document.getElementById('root');
+        root.innerHTML = `<div class="welcome-overlay"><div class="welcome-card" style="text-align:center;"><p style="font-size:1.2rem;">⏳ Loading...</p></div></div>`;
+        const saved = await loadQuizState();
+        if (saved) {
+            const overlay = document.createElement('div');
+            overlay.className = 'welcome-overlay';
+            overlay.innerHTML = `<div class="welcome-card"><h2>📀 Saved Progress Found</h2><p>You have an unfinished quiz. Do you want to resume where you left off?</p><div class="mode-buttons"><button class="mode-btn" id="resumeYesBtn" style="background:#2c9e4c;">✅ Yes, Resume</button><button class="mode-btn" id="resumeNoBtn" style="background:#c7362b;">❌ No, Start Fresh</button></div></div>`;
+            root.innerHTML = '';
+            document.body.appendChild(overlay);
+            document.getElementById('resumeYesBtn').onclick = () => { overlay.remove(); resumeSavedQuiz(saved); };
+            document.getElementById('resumeNoBtn').onclick = async () => { overlay.remove(); await clearSavedState(); showWelcome(); };
+            return;
+        }
+        root.innerHTML = `<div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card"><h1>${topicName}</h1><div class="quiz-stats-badge">🏺 ${TOTAL_QS} Questions · +1 / -0.33</div><p style="font-weight: 500; margin: 0.5rem 0 0; font-size: 1rem;">Please choose your mode</p><div class="mode-buttons"><button class="mode-btn" id="sysMode">📖 Systematic Mode</button><button class="mode-btn rand" id="randMode">🎲 Random Mode</button></div><div style="text-align: center; margin-top: 12px;"><button class="instructions-small" id="instructionsBtn">📋 Instructions</button></div></div></div>`;
+        document.getElementById('sysMode').onclick = () => { document.getElementById('welcomeOverlay').remove(); initializeQuiz('systematic'); };
+        document.getElementById('randMode').onclick = () => { document.getElementById('welcomeOverlay').remove(); initializeQuiz('random'); };
+        document.getElementById('instructionsBtn').onclick = () => showInstructions();
+    }
+    showWelcome();
+</script>
+</body>
+</html>
