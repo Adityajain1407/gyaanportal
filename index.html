@@ -992,9 +992,9 @@
   <div class="choice-container" style="background: var(--surface); padding: 30px; border-radius: var(--radius-card); max-width: 400px; width: 90%; position: relative;">
     <span class="close-choice" onclick="document.getElementById('weatherModal').classList.remove('active')" style="top: 15px; right: 20px; font-size: 1.5rem;">&times;</span>
     
-    <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 20px; width: 100%;">
+    <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 20px; margin-right: 36px; width: calc(100% - 36px);">
       <h3 id="weatherCityName" style="font-size: 1.2rem; font-weight: 600;">Tikamgarh, MP</h3>
-      <button class="toolbar-btn" onclick="fetchWeatherInteractive()" style="padding: 6px 12px; font-size: 0.8rem;" title="Refresh Data">↻</button>
+      <button class="toolbar-btn" onclick="fetchWeatherInteractive()" style="padding: 6px 12px; font-size: 0.8rem; position: relative; z-index: 5;" title="Refresh Data">↻</button>
     </div>
     
     <input type="text" id="citySearch" placeholder="Search another city..." style="width: 100%; padding: 12px 16px; margin-bottom: 20px; border-radius: 40px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); outline: none; transition: var(--transition);">
