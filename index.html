@@ -226,6 +226,27 @@
     box-sizing: border-box;
   }
 
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  img, svg, video, iframe {
+    max-width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .weather-btn, .theme-toggle, .view-toggle-btn, .nav-toggle-btn,
+    .saved-back-btn, .saved-delete-btn, .std-btn, button {
+      min-height: 40px;
+    }
+    .view-toggle-btn, .theme-toggle, .close-choice, .saved-nav-arrow {
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
+
   body {
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     background: var(--bg);
@@ -1783,6 +1804,11 @@
     document.getElementById('savedDetailBack').onclick = () => renderNavigationView();
     document.getElementById('savedNavPrev')?.addEventListener('click', () => renderSavedDetail(items, idx - 1));
     document.getElementById('savedNavNext')?.addEventListener('click', () => renderSavedDetail(items, idx + 1));
+    attachSwipeNav(document.querySelector('.saved-detail-wrap'), () => {
+      if (idx < items.length - 1) renderSavedDetail(items, idx + 1);
+    }, () => {
+      if (idx > 0) renderSavedDetail(items, idx - 1);
+    });
     document.getElementById('savedDetailDelete').onclick = async () => {
       if (!db) { showToast("Unavailable (Firebase not loaded)"); return; }
       if (!confirm("Remove this question from Saved? This will also un-mark the Save button next time you open that quiz.")) return;
@@ -2461,6 +2487,24 @@
     setTimeout(() => t.classList.remove("show"), 1500);
   }
   function escapeHtml(str) { return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  // Generic left/right swipe detection for touch navigation
+  function attachSwipeNav(el, onSwipeLeft, onSwipeRight) {
+    if (!el) return;
+    let startX = 0, startY = 0;
+    el.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) onSwipeLeft && onSwipeLeft();
+        else onSwipeRight && onSwipeRight();
+      }
+    }, { passive: true });
+  }
 
   async function init() {
     initTheme();
