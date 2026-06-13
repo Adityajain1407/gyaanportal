@@ -1039,36 +1039,72 @@
     gap: 8px;
     width: 100%;
   }
-  .weather-summary {
+  .weather-main-grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr);
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: stretch;
+  }
+  .weather-left-col, .weather-right-col {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .weather-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 32px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
+    text-align: center;
   }
   .weather-temp-big {
-    font-size: 4rem;
+    font-size: 3.2rem;
     font-weight: bold;
     color: var(--accent);
     text-align: center;
-    flex-shrink: 0;
   }
   .weather-extra-grid {
     display: grid;
     grid-template-columns: repeat(2, auto);
     grid-auto-rows: auto;
     gap: 8px 24px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-2);
     font-weight: 500;
   }
   .weather-extra-grid span { white-space: nowrap; }
-  @media (max-width: 480px) {
-    .weather-summary { gap: 16px; }
-    .weather-temp-big { font-size: 3rem; }
+  .forecast-tomorrow {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .forecast-tomorrow .ft-day { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+  .forecast-tomorrow .ft-main { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 600; color: var(--text); }
+  .forecast-tomorrow .ft-main .ft-emoji { font-size: 1.9rem; }
+  .forecast-tomorrow .ft-pop { font-size: 0.8rem; color: var(--text-3); }
+  .forecast-grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    flex: 1;
+  }
+  .forecast-grid-2x2 .forecast-card { flex: 1; }
+  @media (max-width: 600px) {
+    .weather-main-grid { grid-template-columns: 1fr; }
+    .weather-temp-big { font-size: 2.8rem; }
     .weather-extra-grid { font-size: 0.8rem; gap: 6px 14px; }
   }
+  .weather-scroll-row {
     display: flex;
     flex-direction: row;
     gap: 8px;
@@ -1339,16 +1375,23 @@
     <div class="hub-scroll">
       <input type="text" id="citySearch" placeholder="Search another city..." style="width: 100%; padding: 12px 16px; margin-bottom: 20px; border-radius: 40px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); outline: none; transition: var(--transition); box-sizing: border-box;">
 
-      <div class="weather-summary">
-        <div id="weatherDetails" class="weather-temp-big">--°C</div>
-        <div id="weatherExtra" class="weather-extra-grid"></div>
+      <div class="weather-main-grid">
+        <div class="weather-left-col">
+          <div class="weather-card weather-temp-card">
+            <div id="weatherDetails" class="weather-temp-big">--°C</div>
+          </div>
+          <div class="weather-card">
+            <div id="weatherExtra" class="weather-extra-grid"></div>
+          </div>
+        </div>
+        <div class="weather-right-col">
+          <div id="forecastTomorrow" class="weather-card forecast-tomorrow"></div>
+          <div id="forecastGrid" class="forecast-grid-2x2"></div>
+        </div>
       </div>
 
       <h4 style="margin-bottom: 12px; font-size: 0.85rem; color: var(--text-2); text-transform: uppercase; font-weight: 600; width: 100%;">Hourly Forecast</h4>
-      <div id="hourlyCards" class="weather-scroll-row" style="margin-bottom: 16px;"></div>
-
-      <h4 style="margin-bottom: 12px; font-size: 0.85rem; color: var(--text-2); text-transform: uppercase; font-weight: 600; width: 100%;">5-Day Forecast</h4>
-      <div id="forecastCards" class="weather-grid"></div>
+      <div id="hourlyCards" class="weather-scroll-row"></div>
     </div>
   </div>
 </div>
@@ -2216,23 +2259,36 @@
       }
       document.getElementById('hourlyCards').innerHTML = hourlyHtml;
 
-      // 5-day forecast
-      let forecastHtml = '';
-      for(let i=0; i<5; i++) {
+      // Tomorrow (featured) + next 4 days (2x2 grid)
+      const tIdx = 1;
+      const tDate = new Date(data.daily.time[tIdx]);
+      const tDayName = tDate.toLocaleDateString('en-US', {weekday: 'long'});
+      const tEmoji = weatherCodes[data.daily.weather_code[tIdx]] || '☀️';
+      const tMax = Math.round(data.daily.temperature_2m_max[tIdx]);
+      const tMin = Math.round(data.daily.temperature_2m_min[tIdx]);
+      const tPop = data.daily.precipitation_probability_max[tIdx];
+      document.getElementById('forecastTomorrow').innerHTML = `
+        <div class="ft-day">Tomorrow · ${tDayName}</div>
+        <div class="ft-main"><span class="ft-emoji">${tEmoji}</span><span>${tMax}° <span style="color:var(--text-3); font-weight:500;">${tMin}°</span></span></div>
+        <div class="ft-pop">💧 ${tPop}% chance of rain</div>
+      `;
+
+      let gridHtml = '';
+      for (let i = 2; i <= 5 && i < data.daily.time.length; i++) {
         const date = new Date(data.daily.time[i]);
         const dayName = date.toLocaleDateString('en-US', {weekday: 'short'});
         const dEmoji = weatherCodes[data.daily.weather_code[i]] || '☀️';
         const max = Math.round(data.daily.temperature_2m_max[i]);
         const min = Math.round(data.daily.temperature_2m_min[i]);
         const dPop = data.daily.precipitation_probability_max[i];
-        forecastHtml += `<div class="forecast-card">
+        gridHtml += `<div class="forecast-card">
           <div style="font-size:0.8rem; margin-bottom:4px; font-weight:600;">${dayName}</div>
           <div style="font-size:1.6rem; margin: 4px 0;">${dEmoji}</div>
           <div style="font-size:0.85rem; font-weight:500;">${max}° <span style="color:var(--text-3)">${min}°</span></div>
           <div style="font-size:0.7rem; color:var(--text-3); margin-top:2px;">💧${dPop}%</div>
         </div>`;
       }
-      document.getElementById('forecastCards').innerHTML = forecastHtml;
+      document.getElementById('forecastGrid').innerHTML = gridHtml;
     } catch(e) {
       console.error(e);
       document.getElementById('weatherBtn').textContent = '⚠️ Err';
