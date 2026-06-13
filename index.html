@@ -1703,7 +1703,10 @@
       const data = await res.json();
       return (data.tree || []).filter(f =>
         f.type === "blob" && (f.path.endsWith(".html") || f.path.endsWith(".md")) &&
-        f.path !== "index.html" && !f.path.endsWith("README.md")
+        f.path !== "index.html" && !f.path.endsWith("README.md") &&
+        !f.path.startsWith("icons/") &&
+        f.path !== "manifest.json" && f.path !== "service-worker.js" &&
+        !f.path.toLowerCase().includes("quiz_master_prompt")
       );
     } catch(e) { return null; }
   }
