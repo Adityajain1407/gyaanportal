@@ -311,6 +311,59 @@
     color: var(--accent);
   }
 
+  .breadcrumb-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .breadcrumb-bar .breadcrumb { margin-bottom: 0; flex: 1 1 auto; }
+  .view-toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 4px;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+  }
+  .view-toggle-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-3);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .view-toggle-btn:hover { color: var(--accent); }
+  .view-toggle-btn.active { background: var(--accent); color: #fff; }
+  /* List view */
+  .folders-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .folders-grid.list-view .folder-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    padding: 12px 18px;
+  }
+  .folders-grid.list-view .folder-icon { font-size: 1.6rem; margin-bottom: 0; }
+  .folders-grid.list-view .folder-name { margin-bottom: 0; flex: 1; }
+  .folders-grid.list-view .folder-count { flex-shrink: 0; }
+
   /* Folder grid */
   .folders-grid {
     display: grid;
@@ -1457,7 +1510,7 @@
     const savedItems = currentNode.__saved__ || [];
     let html = "";
     if (subfolders.length) {
-      html += `<div class="folders-grid">`;
+      html += `<div class="folders-grid${viewMode === 'list' ? ' list-view' : ''}">`;
       for (const [name, node] of subfolders) {
         const count = savedMode ? countSaved(node) : countQuizzes(node);
         const icon = savedMode && node.__saved__ ? "🔖" : "📁";
@@ -1535,15 +1588,29 @@
       } catch(e) { showToast("Could not delete — check connection"); }
     };
   }
+  let viewMode = localStorage.getItem('quiz_view_mode') || 'grid';
   function navigateToFolder(name) { currentPath.push(name); renderNavigationView(); }
+  function setViewMode(mode) {
+    viewMode = mode;
+    localStorage.setItem('quiz_view_mode', mode);
+    syncPortalSettings();
+    renderNavigationView();
+  }
   function updateBreadcrumb() {
     const homeLabel = savedMode ? "🔖 Saved" : "🏠 Home";
-    let html = `<div class="breadcrumb"><span class="breadcrumb-item breadcrumb-home" data-path="root">${homeLabel}</span>`;
+    let html = `<div class="breadcrumb-bar"><div class="breadcrumb"><span class="breadcrumb-item breadcrumb-home" data-path="root">${homeLabel}</span>`;
     for (let i=0; i<currentPath.length; i++) {
       html += `<span class="breadcrumb-sep">›</span><span class="breadcrumb-item" data-path-index="${i}">${escapeHtml(currentPath[i])}</span>`;
     }
-    html += `</div>`;
+    html += `</div>
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn${viewMode==='grid'?' active':''}" id="gridViewBtn" title="Grid view">▦</button>
+        <button class="view-toggle-btn${viewMode==='list'?' active':''}" id="listViewBtn" title="List view">☰</button>
+      </div>
+    </div>`;
     breadcrumbContainer.innerHTML = html;
+    document.getElementById('gridViewBtn').addEventListener('click', () => setViewMode('grid'));
+    document.getElementById('listViewBtn').addEventListener('click', () => setViewMode('list'));
     document.querySelectorAll(".breadcrumb-item").forEach(el=>{
       el.addEventListener("click",()=>{
         if(el.dataset.path==="root") currentPath=[];
@@ -1964,7 +2031,7 @@
     if (!db) return;
     const theme = document.body.getAttribute('data-theme') || 'default';
     const dark = document.body.classList.contains('dark');
-    db.ref(PORTAL_SETTINGS_KEY).set({ theme, dark }).catch(() => {});
+    db.ref(PORTAL_SETTINGS_KEY).set({ theme, dark, viewMode }).catch(() => {});
   }
   function setTheme(theme) {
     document.body.setAttribute('data-theme', theme);
@@ -1996,6 +2063,10 @@
           const remote = snap.val();
           if (remote.theme) theme = remote.theme;
           if (typeof remote.dark === 'boolean') dark = remote.dark;
+          if (remote.viewMode === 'grid' || remote.viewMode === 'list') {
+            viewMode = remote.viewMode;
+            localStorage.setItem('quiz_view_mode', viewMode);
+          }
           localStorage.setItem('quiz_theme', theme);
           localStorage.setItem('quiz_dark', dark);
         }
