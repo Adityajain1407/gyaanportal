@@ -1122,6 +1122,7 @@
     .weather-temp-big { font-size: 2.8rem; }
     .weather-extra-grid { font-size: 0.8rem; gap: 6px 14px; }
   }
+  #citySearch::placeholder { color: var(--text-2); opacity: 0.85; }
   .weather-scroll-row {
     display: flex;
     flex-direction: row;
@@ -2285,10 +2286,10 @@
         const hTemp = Math.round(data.hourly.temperature_2m[i]);
         const pop = data.hourly.precipitation_probability[i];
         hourlyHtml += `<div class="forecast-card">
-          <div style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">${i === startIdx ? 'Now' : hourLabel}</div>
+          <div style="font-size:0.75rem; margin-bottom:4px; font-weight:700; color:var(--text);">${i === startIdx ? 'Now' : hourLabel}</div>
           <div style="font-size:1.4rem; margin: 2px 0;">${hEmoji}</div>
-          <div style="font-size:0.85rem; font-weight:500;">${hTemp}°</div>
-          <div style="font-size:0.7rem; color:var(--text-3);">💧${pop}%</div>
+          <div style="font-size:0.85rem; font-weight:600; color:var(--text);">${hTemp}°</div>
+          <div style="font-size:0.75rem; color:var(--text-2); font-weight:600;">💧${pop}%</div>
         </div>`;
       }
       document.getElementById('hourlyCards').innerHTML = hourlyHtml;
