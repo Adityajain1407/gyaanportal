@@ -2269,8 +2269,8 @@
       const tPop = data.daily.precipitation_probability_max[tIdx];
       document.getElementById('forecastTomorrow').innerHTML = `
         <div class="ft-day">Tomorrow · ${tDayName}</div>
-        <div class="ft-main"><span class="ft-emoji">${tEmoji}</span><span>${tMax}° <span style="color:var(--text-3); font-weight:500;">${tMin}°</span></span></div>
-        <div class="ft-pop">💧 ${tPop}% chance of rain</div>
+        <div class="ft-main"><span class="ft-emoji">${tEmoji}</span><span>${tMax}° <span style="color:var(--text-2); font-weight:500;">${tMin}°</span></span></div>
+        <div class="ft-pop" style="color:var(--text-2); font-weight:600;">💧 ${tPop}% chance of rain</div>
       `;
 
       let gridHtml = '';
@@ -2282,10 +2282,10 @@
         const min = Math.round(data.daily.temperature_2m_min[i]);
         const dPop = data.daily.precipitation_probability_max[i];
         gridHtml += `<div class="forecast-card">
-          <div style="font-size:0.8rem; margin-bottom:4px; font-weight:600;">${dayName}</div>
+          <div style="font-size:0.8rem; margin-bottom:4px; font-weight:700; color:var(--text);">${dayName}</div>
           <div style="font-size:1.6rem; margin: 4px 0;">${dEmoji}</div>
-          <div style="font-size:0.85rem; font-weight:500;">${max}° <span style="color:var(--text-3)">${min}°</span></div>
-          <div style="font-size:0.7rem; color:var(--text-3); margin-top:2px;">💧${dPop}%</div>
+          <div style="font-size:0.85rem; font-weight:500;">${max}° <span style="color:var(--text-2)">${min}°</span></div>
+          <div style="font-size:0.75rem; color:var(--text-2); margin-top:2px; font-weight:600;">💧${dPop}%</div>
         </div>`;
       }
       document.getElementById('forecastGrid').innerHTML = gridHtml;
