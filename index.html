@@ -532,7 +532,21 @@
   }
   .folders-grid.list-view .folder-icon { font-size: 1.6rem; margin-bottom: 0; }
   .folders-grid.list-view .folder-name { margin-bottom: 0; flex: 1; }
-  .folders-grid.list-view .folder-count { flex-shrink: 0; }
+  .folders-grid.list-view .folder-count { flex-shrink: 0; margin-right: 4px; }
+
+  /* In list view: checkbox and star are inline, not absolute */
+  .folders-grid.list-view .folder-card .item-checkbox {
+    position: static;
+    flex-shrink: 0;
+    margin-right: 0;
+  }
+  .folders-grid.list-view .folder-card .item-star-btn {
+    position: static;
+    flex-shrink: 0;
+    opacity: 0;
+  }
+  .folders-grid.list-view .folder-card:hover .item-star-btn,
+  .folders-grid.list-view .folder-card .item-star-btn.starred { opacity: 1; }
 
   /* Folder grid */
   .folders-grid {
@@ -587,7 +601,38 @@
     overflow: hidden;
     margin-top: 20px;
   }
-  .quiz-item {
+  /* Grid view for quizzes */
+  .quizzes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .quizzes-grid .quiz-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-folder);
+    padding: 20px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .quizzes-grid .quiz-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: var(--surface-2); }
+  .quizzes-grid .quiz-dot { display: none; }
+  .quizzes-grid .quiz-info { flex-direction: column; gap: 4px; align-items: center; }
+  .quizzes-grid .quiz-name { font-size: 0.88rem; font-weight: 600; white-space: normal; text-align: center; word-break: break-word; }
+  .quizzes-grid .quiz-item::before { content: "📖"; font-size: 2rem; }
+  .quizzes-grid .item-checkbox { position: absolute; top: 8px; left: 8px; margin-right: 0; }
+  .quizzes-grid .item-star-btn { position: absolute; bottom: 8px; right: 8px; }
+  /* Quiz items — list view */
+  .quizzes-list .quiz-item {
     display: flex;
     align-items: center;
     padding: 14px 20px;
@@ -596,8 +641,12 @@
     transition: var(--transition);
     gap: 10px;
   }
-  .quiz-item:last-child {
-    border-bottom: none;
+  .quizzes-list .quiz-item:last-child { border-bottom: none; }
+  .quizzes-list .quiz-item:hover { background: var(--surface-2); }
+  /* quiz-item shared */
+  .quiz-item {
+    text-decoration: none;
+    color: var(--text);
   }
   .fav-quiz-card {
     justify-content: flex-start !important;
@@ -619,7 +668,7 @@
     flex-shrink: 0;
     pointer-events: all;
   }
-  .quiz-item:hover {
+  .quizzes-list .quiz-item:hover {
     background: var(--surface-2);
     padding-left: 26px;
   }
@@ -2226,16 +2275,16 @@
         const starred = isFavourited(itemPath);
         html += `<div class="folder-card" data-folder="${name.replace(/"/g,'&quot;')}" data-path="${escapeHtml(itemPath)}" data-type="folder">
           <div class="item-checkbox" data-path="${escapeHtml(itemPath)}"></div>
-          <button class="item-star-btn ${starred?'starred':''}" data-path="${escapeHtml(itemPath)}" data-name="${escapeHtml(name)}" data-type="folder">${starred?'⭐':'☆'}</button>
           <div class="folder-icon">${icon}</div>
           <div class="folder-name">${escapeHtml(name)}</div>
           <div class="folder-count">${label}</div>
+          <button class="item-star-btn ${starred?'starred':''}" data-path="${escapeHtml(itemPath)}" data-name="${escapeHtml(name)}" data-type="folder">${starred?'⭐':'☆'}</button>
         </div>`;
       }
       html += `</div>`;
     }
     if (quizzes.length) {
-      html += `<div class="quizzes-list">`;
+      html += `<div class="${viewMode === 'grid' ? 'quizzes-grid' : 'quizzes-list'}">`;
       for (const f of quizzes) {
         const name = cleanName(f.path.split("/").pop());
         const url = BASE_URL + "/" + f.path.split("/").map(p=>encodeURIComponent(p)).join("/");
