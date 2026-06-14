@@ -2558,7 +2558,7 @@
       const html = await response.text();
       
       // Inject script to convert touch events into Spacebar presses for mobile
-      const touchFix = `<script>
+      const touchFix = `\x3Cscript>
         window.addEventListener('touchstart', (e) => {
           const ev = new KeyboardEvent('keydown', { keyCode: 32, which: 32 });
           document.dispatchEvent(ev);
