@@ -599,6 +599,24 @@
   .quiz-item:last-child {
     border-bottom: none;
   }
+  .fav-quiz-card {
+    justify-content: flex-start !important;
+    gap: 0 !important;
+  }
+  .fav-quiz-card .quiz-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .fav-quiz-card .fav-folder-label {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+  .fav-quiz-card .fav-unstar-btn {
+    flex-shrink: 0;
+  }
   .quiz-item:hover {
     background: var(--surface-2);
     padding-left: 26px;
@@ -3521,11 +3539,10 @@
         const displayName = cleanName(fname);
         const url = BASE_URL + '/' + fav.path.split('/').map(p=>encodeURIComponent(p)).join('/');
         const folderPath = fav.path.split('/').slice(0,-1).join(' › ') || 'Root';
-        html += `<div class="quiz-item fav-quiz-card" style="position:relative;cursor:pointer;user-select:none;display:flex;align-items:center;gap:12px;" data-favquizurl="${escapeHtml(url)}" data-favpath="${escapeHtml(fav.path)}">
-          <div class="quiz-info" style="flex:1;min-width:0;"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(displayName)}</span></div>
-          <span style="font-size:0.75rem;color:var(--text-3);white-space:nowrap;flex-shrink:0;">${escapeHtml(folderPath)}</span>
-          <button class="fav-unstar-btn" data-path="${escapeHtml(fav.path)}" data-name="${escapeHtml(fname)}" data-type="quiz" title="Remove from Favourites" style="flex-shrink:0;background:transparent;border:none;font-size:1.25rem;cursor:pointer;color:#f59e0b;padding:4px;line-height:1;transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
-          <span class="quiz-arrow" style="flex-shrink:0;">→</span>
+        html += `<div class="quiz-item fav-quiz-card" data-favquizurl="${escapeHtml(url)}" data-favpath="${escapeHtml(fav.path)}">
+          <div class="quiz-info"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(displayName)}</span></div>
+          <span class="fav-folder-label">${escapeHtml(folderPath)}</span>
+          <button class="fav-unstar-btn" data-path="${escapeHtml(fav.path)}" data-name="${escapeHtml(fname)}" data-type="quiz" title="Remove from Favourites" style="background:transparent;border:none;font-size:1.25rem;cursor:pointer;color:#f59e0b;padding:4px 8px;line-height:1;">⭐</button>
         </div>`;
       }
       html += `</div>`;
