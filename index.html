@@ -2679,7 +2679,7 @@
     document.querySelectorAll(".search-result-item[data-type='folder']").forEach(el => {
       el.addEventListener("click", () => {
         const pathArr = JSON.parse(decodeURIComponent(el.dataset.path));
-        if (savedMode) { detachSavedListeners(); savedMode = false; const b=document.getElementById('savedBtn'); b.innerHTML='🔖 <span class="saved-btn-text">Saved</span>'; b.classList.remove('active'); }
+        if (savedMode) { detachSavedListeners(); savedMode = false; }
         currentPath = pathArr;
         renderNavigationView();
         closeOverlayFunc();
@@ -2699,9 +2699,6 @@
         if (!savedMode) {
           attachSavedListeners();
           savedMode = true;
-          const b = document.getElementById('savedBtn');
-          b.innerHTML = '📚 <span class="saved-btn-text">All Quizzes</span>';
-          b.classList.add('active');
         }
         currentPath = pathArr;
         renderNavigationView();
@@ -3312,27 +3309,6 @@
 
   document.getElementById('weatherBtn').addEventListener('click', () => {
     document.getElementById('weatherModal').classList.add('active');
-  });
-
-  document.getElementById('savedBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('savedBtn');
-    if (!db) { showToast("Saved Questions unavailable (Firebase not loaded)"); return; }
-    if (!savedMode) {
-      btn.textContent = '⏳ Loading...';
-      savedTree = await buildSavedTree();
-      attachSavedListeners();
-      savedMode = true;
-      currentPath = [];
-      btn.innerHTML = '📚 <span class="saved-btn-text">All Quizzes</span>';
-      btn.classList.add('active');
-    } else {
-      detachSavedListeners();
-      savedMode = false;
-      currentPath = [];
-      btn.innerHTML = '🔖 <span class="saved-btn-text">Saved</span>';
-      btn.classList.remove('active');
-    }
-    renderNavigationView();
   });
 
   document.getElementById('citySearch').addEventListener('change', async (e) => {
