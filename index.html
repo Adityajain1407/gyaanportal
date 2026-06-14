@@ -1475,21 +1475,41 @@
 
   /* Checkbox that appears on hover/long-press */
   .folder-card, .quiz-item { position: relative; }
-  /* === CHECKBOX: only visible in selection mode, never on hover === */
+  /* === CHECKBOX: zero-width when hidden, expands on hover/selection === */
   .item-checkbox {
-    width: 20px; height: 20px; min-width: 20px;
+    width: 0; height: 20px; min-width: 0;
     border-radius: 6px;
-    border: 2px solid var(--border-2);
+    border: 0px solid var(--border-2);
     background: var(--surface);
     cursor: pointer;
-    display: none;
+    display: flex;
     align-items: center; justify-content: center;
     font-size: 0.75rem; color: #fff;
     flex-shrink: 0;
-    transition: background 0.15s, border-color 0.15s;
+    overflow: hidden;
+    transition: width 0.15s ease, min-width 0.15s ease, border-width 0.15s, margin 0.15s, background 0.15s;
     z-index: 5;
+    margin-right: 0;
+    opacity: 0;
   }
-  .selection-active .item-checkbox { display: flex; }
+  /* Show on hover */
+  .folder-card:hover .item-checkbox,
+  .quizzes-list .quiz-item:hover .item-checkbox,
+  .quizzes-grid .quiz-item:hover .item-checkbox {
+    width: 20px; min-width: 20px;
+    border-width: 2px;
+    margin-right: 10px;
+    opacity: 1;
+    pointer-events: all;
+  }
+  /* Always show in selection mode */
+  .selection-active .item-checkbox {
+    width: 20px; min-width: 20px;
+    border-width: 2px;
+    margin-right: 10px;
+    opacity: 1;
+    pointer-events: all;
+  }
   .item-checkbox.checked { background: var(--accent); border-color: var(--accent); }
   .item-checkbox.checked::after { content: "✓"; }
 
@@ -1516,7 +1536,15 @@
 
   /* === FOLDER CARD positions === */
   .folder-card { position: relative; }
-  .folder-card .item-checkbox { position: absolute; top: 8px; left: 8px; }
+  .folder-card .item-checkbox {
+    position: absolute; top: 8px; left: 8px;
+    width: 20px !important; min-width: 20px !important;
+    border-width: 2px !important;
+    margin-right: 0 !important;
+    opacity: 0;
+  }
+  .folder-card:hover .item-checkbox,
+  .selection-active .folder-card .item-checkbox { opacity: 1; pointer-events: all; }
   .folder-card .item-star-btn { position: absolute; bottom: 8px; right: 8px; }
 
   /* Context dropdown menu */
