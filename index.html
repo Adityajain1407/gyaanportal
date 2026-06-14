@@ -656,9 +656,18 @@
   .quiz-row .item-checkbox {
     margin-right: 12px;
     flex-shrink: 0;
+    width: 20px !important;
+    min-width: 20px !important;
+    border-width: 2px !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
   }
   .quiz-row:hover .item-checkbox,
-  .selection-active .quiz-row .item-checkbox { opacity: 1; pointer-events: all; }
+  .selection-active .quiz-row .item-checkbox {
+    opacity: 1 !important;
+    pointer-events: all !important;
+  }
   .fav-quiz-card {
     justify-content: flex-start !important;
     gap: 0 !important;
