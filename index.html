@@ -614,8 +614,10 @@
     flex-shrink: 0;
     margin-right: 8px;
   }
+  .fav-quiz-card .quiz-arrow { display: none !important; }
   .fav-quiz-card .fav-unstar-btn {
     flex-shrink: 0;
+    pointer-events: all;
   }
   .quiz-item:hover {
     background: var(--surface-2);
@@ -3543,6 +3545,7 @@
           <div class="quiz-info"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(displayName)}</span></div>
           <span class="fav-folder-label">${escapeHtml(folderPath)}</span>
           <button class="fav-unstar-btn" data-path="${escapeHtml(fav.path)}" data-name="${escapeHtml(fname)}" data-type="quiz" title="Remove from Favourites" style="background:transparent;border:none;font-size:1.25rem;cursor:pointer;color:#f59e0b;padding:4px 8px;line-height:1;">⭐</button>
+          <span class="quiz-arrow" style="display:none!important;"></span>
         </div>`;
       }
       html += `</div>`;
