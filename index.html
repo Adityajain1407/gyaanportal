@@ -632,8 +632,14 @@
   .quizzes-grid .quiz-info { flex-direction: column; gap: 4px; align-items: center; width: 100%; }
   .quizzes-grid .quiz-name { font-size: 0.88rem; font-weight: 600; white-space: normal; text-align: center; word-break: break-word; }
   .quizzes-grid .quiz-item::before { content: "📖"; font-size: 2rem; }
-  .quizzes-grid .item-checkbox { position: absolute; top: 8px; left: 8px; margin-right: 0; }
-  .quizzes-grid .item-star-btn { position: absolute; bottom: 8px; right: 8px; }
+  .quizzes-grid .item-checkbox { position: absolute !important; top: 8px; left: 8px; margin-right: 0; }
+  .quizzes-grid .item-star-btn { position: absolute !important; bottom: 8px; right: 8px; }
+  .quizzes-grid .quiz-number {
+    position: absolute !important; top: 8px; right: 10px;
+    font-size: 0.72rem;
+    min-width: auto;
+    text-align: right;
+  }
   /* Quiz items — shared */
   .quiz-item {
     text-decoration: none;
@@ -708,10 +714,6 @@
     text-align: right;
     flex-shrink: 0;
     opacity: 0.8;
-  }
-  .quizzes-grid .quiz-number {
-    position: absolute; top: 8px; left: 10px;
-    font-size: 0.72rem;
   }
   .quiz-name {
     font-weight: 500;
