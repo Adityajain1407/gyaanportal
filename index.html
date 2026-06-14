@@ -638,17 +638,27 @@
     align-items: center;
     gap: 10px;
   }
-  /* List view */
-  .quizzes-list .quiz-item {
-    padding: 14px 20px;
+  /* List view quiz row — checkbox outside the <a> tag */
+  .quiz-row {
+    display: flex;
+    align-items: center;
     border-bottom: 1px solid var(--border);
+    padding: 0 20px;
     transition: var(--transition);
   }
-  .quizzes-list .quiz-item:last-child { border-bottom: none; }
-  .quizzes-list .quiz-item:hover { background: var(--surface-2); }
-  /* List view - checkbox left, star right, no gap shift */
-  .quizzes-list .quiz-item .item-checkbox { flex-shrink: 0; }
-  .quizzes-list .quiz-item .item-star-btn { flex-shrink: 0; }
+  .quiz-row:last-child { border-bottom: none; }
+  .quiz-row:hover { background: var(--surface-2); }
+  .quiz-row .quiz-item {
+    flex: 1;
+    border-bottom: none !important;
+    padding: 14px 0 14px 0;
+  }
+  .quiz-row .item-checkbox {
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .quiz-row:hover .item-checkbox,
+  .selection-active .quiz-row .item-checkbox { opacity: 1; pointer-events: all; }
   .fav-quiz-card {
     justify-content: flex-start !important;
     gap: 0 !important;
@@ -2298,11 +2308,22 @@
       for (const f of quizzes) {
         const name = cleanName(f.path.split("/").pop());
         const url = BASE_URL + "/" + f.path.split("/").map(p=>encodeURIComponent(p)).join("/");
-        html += `<a class="quiz-item quiz-link" href="${url}" target="_blank" data-path="${escapeHtml(f.path)}" data-type="quiz">
-          <div class="item-checkbox" data-path="${escapeHtml(f.path)}"></div>
-          <div class="quiz-info"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(name)}</span></div>
-          <button class="item-star-btn ${isFavourited(f.path)?'starred':''}" data-path="${escapeHtml(f.path)}" data-name="${escapeHtml(f.path.split('/').pop())}" data-type="quiz">${isFavourited(f.path)?'⭐':'☆'}</button>
-        </a>`;
+        if (viewMode === 'grid') {
+          html += `<a class="quiz-item quiz-link" href="${url}" target="_blank" data-path="${escapeHtml(f.path)}" data-type="quiz">
+            <div class="item-checkbox" data-path="${escapeHtml(f.path)}"></div>
+            <div class="quiz-info"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(name)}</span></div>
+            <button class="item-star-btn ${isFavourited(f.path)?'starred':''}" data-path="${escapeHtml(f.path)}" data-name="${escapeHtml(f.path.split('/').pop())}" data-type="quiz">${isFavourited(f.path)?'⭐':'☆'}</button>
+          </a>`;
+        } else {
+          // List view: checkbox OUTSIDE the <a> tag to avoid accidental navigation
+          html += `<div class="quiz-row" data-path="${escapeHtml(f.path)}">
+            <div class="item-checkbox quiz-checkbox" data-path="${escapeHtml(f.path)}"></div>
+            <a class="quiz-item quiz-link" href="${url}" target="_blank" data-path="${escapeHtml(f.path)}" data-type="quiz">
+              <div class="quiz-info"><span class="quiz-dot"></span><span class="quiz-name">${escapeHtml(name)}</span></div>
+              <button class="item-star-btn ${isFavourited(f.path)?'starred':''}" data-path="${escapeHtml(f.path)}" data-name="${escapeHtml(f.path.split('/').pop())}" data-type="quiz">${isFavourited(f.path)?'⭐':'☆'}</button>
+            </a>
+          </div>`;
+        }
       }
       html += `</div>`;
     }
@@ -2335,10 +2356,15 @@
       if (selectionActive) { e.preventDefault(); toggleItemSelect(link.dataset.path); }
     }));
 
-    // Checkboxes — only active in selection mode
-    document.querySelectorAll(".item-checkbox").forEach(cb => cb.addEventListener("click", (e) => {
+    // Checkboxes — only active in selection mode (folders + grid quiz)
+    document.querySelectorAll(".item-checkbox:not(.quiz-checkbox)").forEach(cb => cb.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();
+      toggleItemSelect(cb.dataset.path);
+    }));
+
+    // Quiz checkboxes in list view (outside <a> tag — no stopPropagation needed)
+    document.querySelectorAll(".quiz-checkbox").forEach(cb => cb.addEventListener("click", (e) => {
       toggleItemSelect(cb.dataset.path);
     }));
 
@@ -2347,6 +2373,12 @@
       e.stopPropagation();
       e.preventDefault();
       toggleFavourite(btn.dataset.path, btn.dataset.name, btn.dataset.type);
+    }));
+
+    // Quiz links in selection mode: clicking the <a> selects instead of navigates
+    document.querySelectorAll(".quiz-row .quiz-link").forEach(link => link.addEventListener("click", (e) => {
+      if (e.target.closest('.item-star-btn')) { e.preventDefault(); return; }
+      if (selectionActive) { e.preventDefault(); toggleItemSelect(link.dataset.path); }
     }));
 
     // Long-press to enter selection mode (touch) — does NOT open item
@@ -3139,7 +3171,7 @@
     }
     if (selRenameBtn) selRenameBtn.style.display = single ? '' : 'none';
 
-    document.querySelectorAll('.item-checkbox').forEach(cb => {
+    document.querySelectorAll('.item-checkbox, .quiz-checkbox').forEach(cb => {
       cb.classList.toggle('checked', selectedPaths.has(cb.dataset.path));
     });
     // Hide stars during selection so they don't conflict
