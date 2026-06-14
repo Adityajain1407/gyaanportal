@@ -2210,9 +2210,10 @@
   function cleanName(filename) {
     return filename.replace(/\.html$/i, "").replace(/^\d+[.\-\s]+/, "").trim();
   }
-  async function loadFiles() {
+  async function loadFiles(bustCache = false) {
     try {
-      const res = await fetch(API_URL);
+      const url = API_URL + (bustCache ? `&_=${Date.now()}` : '');
+      const res = await fetch(url, bustCache ? { cache: 'no-store' } : {});
       if (!res.ok) throw new Error();
       const data = await res.json();
       const allFiles = data.tree || [];
@@ -3654,7 +3655,14 @@
       );
       if (res.ok) {
         showToast(`✅ Folder "${folderName}" created!`);
-        await refreshFilesAndSync(null);
+        // Optimistically add to local tree immediately for instant UI update
+        const parentNode = currentPath.length ? getNodeFromPath(rootTree, currentPath) : rootTree;
+        if (parentNode && !parentNode.__folders__[folderName]) {
+          parentNode.__folders__[folderName] = { __files__: [], __folders__: {} };
+          renderNavigationView();
+        }
+        // Then sync with GitHub in background (cache-busted)
+        refreshFilesAndSync(null);
       } else {
         const err = await res.json().catch(() => ({}));
         showToast(`❌ Error ${res.status}: ${err.message || 'Could not create folder'}`);
@@ -3848,7 +3856,7 @@
 
   // --- Refresh + Firebase broadcast ---
   async function refreshFilesAndSync(changeInfo) {
-    const files = await loadFiles();
+    const files = await loadFiles(true); // bust cache after any mutation
     if (files) {
       rootTree = buildTree(files);
     }
