@@ -3769,8 +3769,14 @@
     showToast('⏳ Deleting...');
     try {
       const isFolder = !path.split('/').pop().includes('.');
-      const files = isFolder ? getAllFilesUnder(rootTree, path) : [path];
-      if (!files.length) { showToast('❌ No files found at: ' + path); return; }
+      let files;
+      if (isFolder) {
+        // Get all files recursively from GitHub directly (includes .gitkeep, catches empty folders)
+        files = await ghGetAllFilesRecursive(path);
+      } else {
+        files = [path];
+      }
+      if (!files.length) { showToast('❌ Nothing found to delete at: ' + path); return; }
       let deleted = 0;
       for (const filePath of files) {
         const data = await ghApiGet(filePath);
@@ -3779,8 +3785,8 @@
         const ok = await ghDeleteFile(filePath, data.sha);
         if (!ok) { showToast(`❌ GitHub rejected delete for: ${filePath}`); return; }
         deleted++;
-        // Cascade: delete Firebase logs for this quiz
-        if (db) {
+        // Cascade: delete Firebase logs for quiz files
+        if (db && (filePath.endsWith('.html') || filePath.endsWith('.md'))) {
           const safe = cleanName(filePath.split('/').pop()).toLowerCase().replace(/[^a-z0-9]+/g,'_');
           try { await db.ref(`quiz_saved_state_${safe}`).remove(); } catch(e) {}
           try { await db.ref(`quiz_leaderboard_${safe}`).remove(); } catch(e) {}
@@ -3796,6 +3802,27 @@
         displayName: cleanName(path.split('/').pop())
       });
     } catch(e) { showToast('❌ Error: ' + e.message); console.error('ghDelete error:', e); }
+  }
+
+  // Recursively fetch all file paths under a folder from GitHub API
+  async function ghGetAllFilesRecursive(folderPath) {
+    const token = getPAT();
+    const results = [];
+    async function fetchFolder(fp) {
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghEncodePath(fp)}?ref=${GITHUB_BRANCH}`,
+        { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github+json' } }
+      );
+      if (!res.ok) return;
+      const items = await res.json();
+      if (!Array.isArray(items)) return;
+      for (const item of items) {
+        if (item.type === 'file') results.push(item.path);
+        else if (item.type === 'dir') await fetchFolder(item.path);
+      }
+    }
+    await fetchFolder(folderPath);
+    return results;
   }
 
   // --- Refresh + Firebase broadcast ---
