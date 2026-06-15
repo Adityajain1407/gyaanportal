@@ -4789,37 +4789,35 @@
     // Skip if user is typing in an input/textarea
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
     const key = e.key;
-    const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(key);
-    if (!isArrow) return;
+    if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
 
-    // Saved popup navigation — must check libOpen so arrows don't leak to main nav
+    // Saved popup navigation — Left/Right only; Up/Down scroll naturally
     if (libOpen) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      const sqPrev = document.getElementById('sqPrev');
-      const sqNext = document.getElementById('sqNext');
-      if (sqPrev || sqNext) {
-        // Use dispatchEvent with a plain click that won't bubble to backdrop
-        if ((key === 'ArrowLeft' || key === 'ArrowUp') && sqPrev && !sqPrev.disabled) {
-          sqPrev.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+      if (key === 'ArrowLeft' || key === 'ArrowRight') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const sqPrev = document.getElementById('sqPrev');
+        const sqNext = document.getElementById('sqNext');
+        if (sqPrev || sqNext) {
+          if (key === 'ArrowLeft' && sqPrev && !sqPrev.disabled)
+            sqPrev.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+          if (key === 'ArrowRight' && sqNext && !sqNext.disabled)
+            sqNext.dispatchEvent(new MouseEvent('click', { bubbles: false }));
         }
-        if ((key === 'ArrowRight' || key === 'ArrowDown') && sqNext && !sqNext.disabled) {
-          sqNext.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+        const navPrev = document.getElementById('savedNavPrev');
+        const navNext = document.getElementById('savedNavNext');
+        if (navPrev || navNext) {
+          if (key === 'ArrowLeft') navPrev?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+          if (key === 'ArrowRight') navNext?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
         }
       }
-      // Old saved detail arrows (legacy)
-      const navPrev = document.getElementById('savedNavPrev');
-      const navNext = document.getElementById('savedNavNext');
-      if (navPrev || navNext) {
-        if (key === 'ArrowLeft' || key === 'ArrowUp') navPrev?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
-        if (key === 'ArrowRight' || key === 'ArrowDown') navNext?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
-      }
-      return; // never fall through to main nav when popup is open
+      // Up/Down: fall through so browser scrolls the panel normally
+      return;
     }
 
-    // Main quiz: next after answer
+    // Main quiz: next after answer (Right only; Up/Down free to scroll)
     const nextBtn = document.getElementById('nextAfterAnswerBtn');
-    if (nextBtn && (key === 'ArrowRight' || key === 'ArrowDown')) {
+    if (nextBtn && key === 'ArrowRight') {
       e.preventDefault(); nextBtn.click(); return;
     }
 
@@ -4827,9 +4825,8 @@
     const reviewNext = document.getElementById('reviewNext');
     const reviewPrev = document.getElementById('reviewPrev');
     if (reviewNext || reviewPrev) {
-      e.preventDefault();
-      if ((key === 'ArrowRight' || key === 'ArrowDown') && reviewNext && !reviewNext.disabled) reviewNext.click();
-      if ((key === 'ArrowLeft' || key === 'ArrowUp') && reviewPrev && !reviewPrev.disabled) reviewPrev.click();
+      if (key === 'ArrowRight' && reviewNext && !reviewNext.disabled) { e.preventDefault(); reviewNext.click(); }
+      if (key === 'ArrowLeft' && reviewPrev && !reviewPrev.disabled) { e.preventDefault(); reviewPrev.click(); }
     }
   });
 
