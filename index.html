@@ -1201,6 +1201,14 @@
   #searchResultsPanel .kb-focus {
     background: var(--surface-2) !important;
   }
+  /* Library/modal item focus */
+  .kb-lib-focus {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px;
+    background: var(--surface-2) !important;
+    position: relative;
+    z-index: 2;
+  }
   .clock-cal-layout {
     display: flex;
     align-items: center;
@@ -3107,12 +3115,16 @@
   }
   function closeLibrary() {
     libOpen = false;
+    libFocusIdx = -1;
+    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
     document.getElementById('libraryBackdrop').classList.remove('open');
     currentPath = pathBeforeFav;
     renderNavigationView();
   }
   function switchLibTab(tab) {
     libTab = tab;
+    libFocusIdx = -1;
+    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
     document.querySelectorAll('.library-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('libTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
     renderLibTab();
@@ -5065,6 +5077,21 @@
     );
   }
 
+  // Library/modal list navigation helper
+  let libFocusIdx = -1;
+  function libNavItems(items, goDown, key) {
+    if (!items.length) return;
+    // clear previous
+    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
+    if (libFocusIdx === -1 && goDown) libFocusIdx = 0;
+    else if (libFocusIdx === -1 && !goDown) libFocusIdx = items.length - 1;
+    else libFocusIdx = goDown
+      ? Math.min(libFocusIdx + 1, items.length - 1)
+      : Math.max(libFocusIdx - 1, 0);
+    items[libFocusIdx].classList.add('kb-lib-focus');
+    items[libFocusIdx].scrollIntoView({ block: 'nearest' });
+  }
+
   document.addEventListener('keydown', (e) => {
     const key = e.key;
     const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
@@ -5080,6 +5107,14 @@
       if (document.getElementById('searchOverlay')?.classList.contains('active')) { document.getElementById('closeOverlayBtn')?.click(); return; }
       if (libOpen) { closeLibrary(); return; }
       if (selectionActive) { clearSelection(); return; }
+      if (kbFocused) { clearKbFocus(); return; }
+      // Navigate up one folder level
+      if (currentPath.length > 0) {
+        currentPath.pop();
+        history.pushState({ portalPath: [...currentPath] }, '');
+        renderNavigationView();
+        return;
+      }
       return;
     }
 
@@ -5106,8 +5141,9 @@
           if (isRight && sqNext && !sqNext.disabled) fireNoBubble(sqNext);
         }
         if (isUp || isDown) {
-          const scroller = document.getElementById('libraryBody');
-          if (scroller) { e.preventDefault(); scroller.scrollBy({ top: isDown ? 80 : -80, behavior: 'smooth' }); }
+          e.preventDefault();
+          const items = [...document.querySelectorAll('#libraryBody .recent-item, #libraryBody .lib-saved-item, #libraryBody .saved-hub-back')];
+          libNavItems(items, isDown, key);
         }
         return;
       }
@@ -5117,12 +5153,18 @@
       if (isLeft || isRight) {
         e.preventDefault();
         const newTab = tabs[activeTabIdx + (isRight ? 1 : -1)];
-        if (newTab) switchLibTab(newTab);
+        if (newTab) { switchLibTab(newTab); libFocusIdx = -1; }
       }
-      // Up/Down: scroll the library body
+      // Up/Down: focus items in the list
       if (isUp || isDown) {
-        const scroller = document.getElementById('libraryBody');
-        if (scroller) { e.preventDefault(); scroller.scrollBy({ top: isDown ? 80 : -80, behavior: 'smooth' }); }
+        e.preventDefault();
+        const items = [...document.querySelectorAll('#libraryBody .recent-item, #libraryBody .lib-saved-item, #libraryBody .saved-hub-back, #libraryBody .fav-section-title + .recent-item, #libraryBody .lib-fav-folder, #libraryBody .lib-fav-quiz, #libraryBody .lib-recent-item')];
+        libNavItems(items, isDown, key);
+      }
+      // Enter: click focused item
+      if (key === 'Enter') {
+        const focused = document.querySelector('#libraryBody .kb-lib-focus');
+        if (focused) { e.preventDefault(); focused.click(); }
       }
       return;
     }
@@ -5139,8 +5181,13 @@
     // ── Choice modal (⚙️ Quick Access hub) ──
     if (document.getElementById('choiceModal')?.classList.contains('active')) {
       if (isUp || isDown) {
-        const scroller = document.querySelector('#choiceModal .hub-scroll');
-        if (scroller) { e.preventDefault(); scroller.scrollBy({ top: isDown ? 80 : -80, behavior: 'smooth' }); }
+        e.preventDefault();
+        const items = [...document.querySelectorAll('#choiceModal .choice-card, #choiceModal .settings-pill, #choiceModal .theme-swatch')];
+        libNavItems(items, isDown, key);
+      }
+      if (key === 'Enter') {
+        const focused = document.querySelector('#choiceModal .kb-lib-focus');
+        if (focused) { e.preventDefault(); focused.click(); }
       }
       return;
     }
