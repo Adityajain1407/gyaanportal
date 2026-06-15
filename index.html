@@ -3629,9 +3629,11 @@
     const now = new Date();
     let h = now.getHours(), m = now.getMinutes().toString().padStart(2,'0'), s = now.getSeconds(), ap = h>=12?'PM':'AM';
     h = h%12||12;
-    const isMobile = window.innerWidth <= 600;
-    const day = now.toLocaleDateString(undefined, { weekday: isMobile ? 'short' : 'long' });
-    document.getElementById("liveClockText").textContent = `${h}:${m} ${ap} • ${day}`;
+    const timeStr = `${h}:${m} ${ap}`;
+    // On narrow screens show time only; on wider screens add day name
+    const showDay = window.innerWidth > 600;
+    const day = showDay ? now.toLocaleDateString(undefined, { weekday: 'long' }) : '';
+    document.getElementById("liveClockText").textContent = showDay ? `${timeStr} • ${day}` : timeStr;
     updateAnalogClock(now, h, parseInt(m), s);
   }
   function setHand(id, deg) {
