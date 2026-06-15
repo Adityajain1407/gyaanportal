@@ -2205,6 +2205,70 @@
     .saved-nav-next { right: -8px; width: 36px; height: 36px; font-size: 1.1rem; }
   }
   #savedBtn.active { background: var(--accent); color: white; }
+
+  /* ── ADMIN-ONLY UI HIDING ── */
+  body.non-admin .sel-admin-only { display: none !important; }
+  body.non-admin #newFolderBtn   { display: none !important; }
+  body.non-admin .view-toggle-divider { display: none !important; }
+
+  /* ── AUTH SCREEN ── */
+  .auth-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    padding: 36px 32px 28px;
+    width: 100%; max-width: 380px;
+    position: relative; overflow: hidden;
+    animation: cardFloat 0.4s cubic-bezier(.2,.9,.4,1.1);
+  }
+  .auth-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  }
+  .auth-logo { text-align: center; font-size: 2.8rem; margin-bottom: 6px; }
+  .auth-title { text-align: center; font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  .auth-sub { text-align: center; font-size: 0.82rem; color: var(--text-3); margin-bottom: 24px; }
+  .auth-tabs {
+    display: flex; border-radius: 40px; background: var(--surface-2);
+    border: 1px solid var(--border-2); padding: 3px; margin-bottom: 22px; gap: 2px;
+  }
+  .auth-tab {
+    flex: 1; padding: 8px; border: none; background: transparent;
+    border-radius: 40px; font-weight: 600; font-size: 0.88rem;
+    color: var(--text-3); cursor: pointer; transition: all 0.15s;
+  }
+  .auth-tab.active { background: var(--accent); color: #fff; }
+  .auth-field { margin-bottom: 14px; }
+  .auth-field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+  .auth-field input {
+    width: 100%; padding: 11px 16px; border-radius: 12px;
+    border: 1.5px solid var(--border-2); background: var(--surface-2);
+    color: var(--text); font-size: 0.95rem; outline: none; box-sizing: border-box;
+    transition: border-color 0.15s;
+  }
+  .auth-field input:focus { border-color: var(--accent); }
+  .auth-submit {
+    width: 100%; padding: 13px; border: none; border-radius: 40px;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 1rem;
+    cursor: pointer; margin-top: 6px; transition: opacity 0.15s;
+  }
+  .auth-submit:hover { opacity: 0.88; }
+  .auth-error { color: #d9453d; font-size: 0.82rem; text-align: center; margin-top: 10px; font-weight: 600; min-height: 18px; }
+  .auth-note { font-size: 0.75rem; color: var(--text-3); text-align: center; margin-top: 14px; line-height: 1.5; }
+  .pin-pad button:hover { background: var(--surface-3) !important; }
+  @media (max-width: 400px) {
+    .auth-card { padding: 28px 18px 20px; }
+    .auth-title { font-size: 1.3rem; }
+    .pin-pad { max-width: 200px !important; }
+  }
 </style>
 </head>
 <body data-theme="default">
@@ -2258,9 +2322,9 @@
   <span class="selection-bar-count" id="selCountLabel">0 selected</span>
   <div class="sel-bar-divider"></div>
   <button class="sel-bar-btn" id="selFavBtn" onclick="selFavAction()">☆ Add to Favourites</button>
-  <button class="sel-bar-btn" id="selRenameBtn" onclick="openRenameModal()">✏️ Rename</button>
-  <button class="sel-bar-btn" onclick="openMoveModal()">📂 Move</button>
-  <button class="sel-bar-btn danger" onclick="openDeleteModal()">🗑️ Delete</button>
+  <button class="sel-bar-btn sel-admin-only" id="selRenameBtn" onclick="openRenameModal()">✏️ Rename</button>
+  <button class="sel-bar-btn sel-admin-only" onclick="openMoveModal()">📂 Move</button>
+  <button class="sel-bar-btn danger sel-admin-only" onclick="openDeleteModal()">🗑️ Delete</button>
   <div class="sel-bar-divider"></div>
   <button class="sel-bar-btn" onclick="clearSelection()">✕</button>
 </div>
@@ -2580,7 +2644,7 @@
     const items = getAllSearchableItems().filter(i => i.type === "quiz");
     for (const item of items) {
       const safe = getSafeTopicName(item.fullPath);
-      const ref = db.ref(`quiz_saved_questions_${safe}`);
+      const ref = db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`);
       const cb = async () => {
         savedTree = await buildSavedTree();
         if (savedMode) renderNavigationView();
@@ -2632,7 +2696,7 @@
     for (const item of items) {
       const safe = getSafeTopicName(item.fullPath);
       try {
-        const snap = await db.ref(`quiz_saved_questions_${safe}`).get();
+        const snap = await db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).get();
         if (!snap.exists()) continue;
         const data = snap.val();
         let node = tree;
@@ -2867,7 +2931,7 @@
       if (!db) { showToast("Unavailable (Firebase not loaded)"); return; }
       if (!confirm("Remove this question from Saved? This will also un-mark the Save button next time you open that quiz.")) return;
       try {
-        await db.ref(`quiz_saved_questions_${item.safeTopicName}/${item.id}`).remove();
+        await db.ref(`quiz_saved_questions_${getUserPrefix()}${item.safeTopicName}/${item.id}`).remove();
         savedTree = await buildSavedTree();
         renderNavigationView();
         showToast("Removed from Saved");
@@ -2904,7 +2968,7 @@
       </div>
     </div>`;
     breadcrumbContainer.innerHTML = html;
-    document.getElementById('newFolderBtn').addEventListener('click', openNewFolderModal);
+    document.getElementById('newFolderBtn')?.addEventListener('click', openNewFolderModal);
     document.getElementById('gridViewBtn').addEventListener('click', () => setViewMode('grid'));
     document.getElementById('listViewBtn').addEventListener('click', () => setViewMode('list'));
     document.querySelectorAll(".breadcrumb-item").forEach(el=>{
@@ -3224,7 +3288,7 @@
       e.stopPropagation();
       const key = btn.dataset.key;
       delete recents[key];
-      if (db) db.ref(`${RECENTS_KEY}/${key}`).remove().catch(()=>{});
+      if (db) db.ref(`${getRecKey()}/${key}`).remove().catch(()=>{});
       renderLibRecents(body);
     }));
   }
@@ -3266,7 +3330,7 @@
       const safe = el.dataset.safename;
       const name = el.dataset.name;
       // Load the actual saved questions for this quiz
-      db.ref(`quiz_saved_questions_${safe}`).get().then(snap => {
+      db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).get().then(snap => {
         if (!snap.exists()) { showToast('No saved questions found'); return; }
         const data = snap.val();
         const questions = Object.entries(data)
@@ -3280,7 +3344,7 @@
       const safe = btn.dataset.safename;
       if (!safe) return;
       try {
-        if (db) await db.ref(`quiz_saved_questions_${safe}`).remove();
+        if (db) await db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).remove();
         showToast('🗑️ Saved questions deleted');
         renderLibSaved(body);
       } catch(err) { showToast('❌ Error: ' + err.message); }
@@ -3359,7 +3423,7 @@
     detail.querySelector('#sqDelete').onclick = async () => {
       if (!db) return;
       try {
-        await db.ref(`quiz_saved_questions_${q.safeTopicName}/${q.id}`).remove();
+        await db.ref(`quiz_saved_questions_${getUserPrefix()}${q.safeTopicName}/${q.id}`).remove();
         showToast('🗑️ Removed from Saved');
         questions.splice(idx, 1);
         if (!questions.length) {
@@ -3662,22 +3726,34 @@
     document.getElementById('themePanel')?.classList.remove('open');
     document.getElementById('themePillBtn')?.classList.remove('open');
     updateThemeColorMeta();
+    onThemeChanged();
   }
 
   function setDarkMode(isDark) {
-    if (isDark) document.body.classList.add('dark');
-    else document.body.classList.remove('dark');
+    if (isDark) document.body.classList.add('dark-theme');
+    else document.body.classList.remove('dark-theme');
     localStorage.setItem('quiz_dark', isDark);
     document.getElementById('appearancePanel')?.classList.remove('open');
     document.getElementById('appearancePillBtn')?.classList.remove('open');
     updateThemeColorMeta();
+    onThemeChanged();
   }
 
   function initTheme() {
-    const theme = localStorage.getItem('quiz_theme') || 'default';
-    const dark = localStorage.getItem('quiz_dark') === 'true';
+    // Load user-specific theme if logged in, else device theme
+    const u = localStorage.getItem('portal_current_user');
+    let theme, dark;
+    if (u) {
+      const t = JSON.parse(localStorage.getItem(`portal_theme_${u}`) || 'null');
+      theme = t?.theme || localStorage.getItem('quiz_theme') || 'default';
+      dark  = t ? !!t.dark : (localStorage.getItem('quiz_dark') === 'true');
+    } else {
+      theme = localStorage.getItem('quiz_theme') || 'default';
+      dark  = localStorage.getItem('quiz_dark') === 'true';
+    }
     document.body.setAttribute('data-theme', theme);
-    setDarkMode(dark);
+    document.body.classList.toggle('dark-theme', dark);
+    updateThemeColorMeta?.();
   }
 
   // ----- INTERACTIVE WEATHER (Open-Meteo High Res) -----
@@ -4317,7 +4393,7 @@
           const safe = cleanName(filePath.split('/').pop()).toLowerCase().replace(/[^a-z0-9]+/g,'_');
           try { await db.ref(`quiz_saved_state_${safe}`).remove(); } catch(e) {}
           try { await db.ref(`quiz_leaderboard_${safe}`).remove(); } catch(e) {}
-          try { await db.ref(`quiz_saved_questions_${safe}`).remove(); } catch(e) {}
+          try { await db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).remove(); } catch(e) {}
         }
       }
 
@@ -4488,12 +4564,477 @@
   // =====================================================================
   // FAVOURITES SYSTEM (Firebase, cross-device)
   // =====================================================================
-  const FAV_KEY = 'quiz_portal_favourites';
+  // ═══════════════════════════════════════════════════════
+  // ── FULL USER AUTH + APPROVAL + PIN SYSTEM ──
+  // ═══════════════════════════════════════════════════════
+  const USERS_FB_KEY   = 'portal_users';
+  const DENIED_FB_KEY  = 'portal_denied_usernames';
+  const PENDING_FB_KEY = 'portal_pending_requests';
+  const INACTIVITY_MS  = 5 * 60 * 1000; // 5 min → lock with PIN
+
+  let currentUser  = null;
+  let currentTheme = { theme: 'default', dark: false };
+  let inactivityTimer = null;
+
+  // ── Helpers ──
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  function cleanUsername(u) { return (u||'').trim().toLowerCase().replace(/[^a-z0-9_]/g,''); }
+  function getUserPrefix() { return currentUser ? `u_${currentUser}__` : 'u_guest__'; }
+  function isAdmin() { return !!getPAT(); }
+
+  function getSavedUser()   { return localStorage.getItem('portal_current_user') || null; }
+  function setSavedUser(u)  { u ? localStorage.setItem('portal_current_user', u) : localStorage.removeItem('portal_current_user'); }
+  function getSessionToken(){ return localStorage.getItem('portal_session_token') || null; }
+  function setSessionToken(t){ t ? localStorage.setItem('portal_session_token', t) : localStorage.removeItem('portal_session_token'); }
+  function getUserTheme(u)  { return JSON.parse(localStorage.getItem(`portal_theme_${u}`) || 'null') || { theme:'default', dark:false }; }
+  function saveUserTheme(u, t, d) { localStorage.setItem(`portal_theme_${u}`, JSON.stringify({ theme:t, dark:d })); }
+
+  // ── Apply theme immediately (for auth screens) ──
+  function applyThemeObj({ theme, dark }) {
+    document.body.setAttribute('data-theme', theme || 'default');
+    document.body.classList.toggle('dark-theme', !!dark);
+  }
+
+  // ── Inactivity lock ──
+  function resetInactivity() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      if (currentUser) showPinScreen(currentUser, true);
+    }, INACTIVITY_MS);
+  }
+  function startInactivityWatch() {
+    ['click','keydown','touchstart','mousemove'].forEach(ev =>
+      document.addEventListener(ev, resetInactivity, { passive: true }));
+    resetInactivity();
+  }
+  function stopInactivityWatch() {
+    clearTimeout(inactivityTimer);
+    ['click','keydown','touchstart','mousemove'].forEach(ev =>
+      document.removeEventListener(ev, resetInactivity));
+  }
+
+  // ── Auth overlay helpers ──
+  function removeAuthOverlay() { document.getElementById('authOverlay')?.remove(); }
+  function showAuthOverlay(html, onReady) {
+    removeAuthOverlay();
+    const el = document.createElement('div');
+    el.id = 'authOverlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;';
+    el.innerHTML = html;
+    document.body.appendChild(el);
+    onReady?.(el);
+  }
+
+  function authCard(title, sub, body) {
+    return `<div class="auth-card">
+      <div class="auth-logo">🥷</div>
+      <div class="auth-title">${title}</div>
+      ${sub ? `<div class="auth-sub">${sub}</div>` : ''}
+      ${body}
+    </div>`;
+  }
+
+  // ── SCREEN 1: Login / Create Account ──
+  function showLoginScreen(onSuccess) {
+    let mode = 'login', busy = false;
+    const render = () => {
+      const html = authCard('Aditya\'s Portal', 'Sign in to access quizzes and track your progress',
+        `<div class="auth-tabs">
+          <button class="auth-tab ${mode==='login'?'active':''}" id="atLogin">Login</button>
+          <button class="auth-tab ${mode==='register'?'active':''}" id="atRegister">Create Account</button>
+        </div>
+        <div class="auth-field"><label>Username</label>
+          <input id="auUser" type="text" placeholder="letters, numbers, underscores" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="text"></div>
+        <div class="auth-field"><label>Password</label>
+          <input id="auPass" type="password" placeholder="any characters, any length" autocomplete="${mode==='login'?'current-password':'new-password'}"></div>
+        <button class="auth-submit" id="auSubmit">${mode==='login'?'Login':'Create Account'}</button>
+        <div class="auth-error" id="auErr"></div>
+        <div class="auth-note">⚠️ No password recovery — store it safely.<br>Username: lowercase letters, numbers, underscores only.</div>`);
+      showAuthOverlay(html, el => {
+        el.querySelector('#atLogin').onclick    = () => { mode='login';    render(); };
+        el.querySelector('#atRegister').onclick = () => { mode='register'; render(); };
+        const submit = async () => {
+          if (busy) return; busy = true;
+          const u = cleanUsername(el.querySelector('#auUser').value);
+          const p = el.querySelector('#auPass').value;
+          const errEl = el.querySelector('#auErr');
+          const btn   = el.querySelector('#auSubmit');
+          errEl.textContent = ''; btn.disabled=true; btn.textContent='…';
+          try {
+            if (mode === 'login') {
+              await doLogin(u, p, onSuccess);
+            } else {
+              await doRegister(u, p, onSuccess);
+            }
+          } catch(err) {
+            errEl.textContent = err.message;
+            btn.disabled = false; btn.textContent = mode==='login'?'Login':'Create Account';
+            busy = false;
+          }
+        };
+        el.querySelector('#auSubmit').onclick = submit;
+        el.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if(e.key==='Enter') submit(); }));
+        setTimeout(() => el.querySelector('#auUser')?.focus(), 80);
+      });
+    };
+    render();
+  }
+
+  async function doLogin(u, p, onSuccess) {
+    if (!db) throw new Error('Firebase not connected — check your internet connection');
+    if (!u) throw new Error('Enter a username');
+    if (!p) throw new Error('Enter a password');
+
+    // Check denied list first
+    const deniedSnap = await db.ref(`${DENIED_FB_KEY}/${u}`).get();
+    if (deniedSnap.exists()) throw new Error('This username has been denied by admins. Choose a different username.');
+
+    const snap = await db.ref(`${USERS_FB_KEY}/${u}`).get();
+    if (!snap.exists()) throw new Error('Username not found');
+    const data = snap.val();
+    const hash = await sha256(p + u);
+    if (data.passwordHash !== hash) throw new Error('Incorrect password');
+
+    // Check approval status
+    if (data.status === 'denied') throw new Error('This account has been revoked by admins.');
+    if (data.status !== 'approved' && !getPAT()) {
+      // Pending — show holding screen
+      currentUser = u;
+      applyThemeObj(getUserTheme(u));
+      showPendingScreen(u, onSuccess);
+      return;
+    }
+
+    // Approved — check if PIN set
+    currentUser = u;
+    applyThemeObj(getUserTheme(u));
+    if (data.pin) {
+      // PIN already set — go straight to PIN entry (tab was closed and reopened)
+      showPinScreen(u, false, onSuccess);
+    } else if (data.status === 'approved' && !data.pin) {
+      // First login after approval — must set PIN
+      showSetPinScreen(u, onSuccess);
+    } else {
+      // Admin or approved
+      finishLogin(u, onSuccess);
+    }
+  }
+
+  async function doRegister(u, p, onSuccess) {
+    if (!db) throw new Error('Firebase not connected');
+    if (u.length < 2) throw new Error('Username must be at least 2 characters');
+    if (!p) throw new Error('Enter a password');
+
+    // Check denied list
+    const deniedSnap = await db.ref(`${DENIED_FB_KEY}/${u}`).get();
+    if (deniedSnap.exists()) throw new Error('This username has been denied by admins and cannot be reused.');
+
+    const snap = await db.ref(`${USERS_FB_KEY}/${u}`).get();
+    if (snap.exists()) throw new Error('Username already taken — try another');
+
+    const hash = await sha256(p + u);
+    // Admins (PAT set) are auto-approved
+    const status = getPAT() ? 'approved' : 'pending';
+    await db.ref(`${USERS_FB_KEY}/${u}`).set({ passwordHash: hash, status, created: Date.now() });
+
+    if (status === 'pending') {
+      // Add to pending requests
+      await db.ref(`${PENDING_FB_KEY}/${u}`).set({ username: u, created: Date.now() });
+      currentUser = u;
+      applyThemeObj(getUserTheme(u));
+      showPendingScreen(u, onSuccess);
+    } else {
+      // Admin account — still needs PIN setup after approval
+      currentUser = u;
+      applyThemeObj(getUserTheme(u));
+      showSetPinScreen(u, onSuccess);
+    }
+  }
+
+  // ── SCREEN 2: Pending Approval ──
+  function showPendingScreen(u, onSuccess) {
+    const html = authCard('Account Pending', null,
+      `<div style="text-align:center;padding:20px 0;">
+        <div style="font-size:3rem;margin-bottom:12px;">⏳</div>
+        <div style="font-weight:700;font-size:1.05rem;color:var(--text);margin-bottom:8px;">Your account is pending approval</div>
+        <div style="color:var(--text-3);font-size:0.85rem;line-height:1.6;margin-bottom:24px;">
+          Contact <strong style="color:var(--accent);">Aditya</strong> to get your account approved.<br>
+          Username: <strong style="color:var(--text);">${u}</strong>
+        </div>
+        <button class="auth-submit" id="pendingRefresh" style="max-width:220px;margin:0 auto;">Check Status</button>
+        <button id="pendingLogout" style="background:transparent;border:none;color:var(--text-3);font-size:0.82rem;cursor:pointer;margin-top:12px;display:block;width:100%;text-align:center;">Use a different account</button>
+      </div>`);
+    showAuthOverlay(html, el => {
+      el.querySelector('#pendingRefresh').onclick = async () => {
+        const btn = el.querySelector('#pendingRefresh');
+        btn.textContent = 'Checking…'; btn.disabled = true;
+        try {
+          const snap = await db.ref(`${USERS_FB_KEY}/${u}`).get();
+          const data = snap.val();
+          if (data?.status === 'approved') {
+            if (!data.pin) showSetPinScreen(u, onSuccess);
+            else showPinScreen(u, false, onSuccess);
+          } else if (data?.status === 'denied') {
+            setSavedUser(null); setSessionToken(null); currentUser = null;
+            showLoginScreen(onSuccess);
+          } else {
+            btn.textContent = 'Still pending…'; btn.disabled = false;
+            setTimeout(() => { btn.textContent='Check Status'; }, 2000);
+          }
+        } catch(e) { btn.textContent='Error — retry'; btn.disabled=false; }
+      };
+      el.querySelector('#pendingLogout').onclick = () => {
+        setSavedUser(null); setSessionToken(null); currentUser = null;
+        showLoginScreen(onSuccess);
+      };
+    });
+  }
+
+  // ── SCREEN 3: Set PIN (after first approval) ──
+  function showSetPinScreen(u, onSuccess) {
+    const html = authCard('Set Your PIN', 'Create a 4-digit PIN for quick login',
+      `<div style="text-align:center;">
+        <div class="pin-dots" id="pinDots" style="display:flex;justify-content:center;gap:12px;margin:20px 0 24px;">
+          ${[0,1,2,3].map(i=>`<div class="pin-dot" data-i="${i}" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border-2);background:var(--surface-2);transition:all 0.15s;"></div>`).join('')}
+        </div>
+        <div class="pin-pad" id="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:220px;margin:0 auto 16px;"></div>
+        <div class="auth-error" id="pinErr" style="min-height:18px;"></div>
+        <div class="auth-note" style="margin-top:8px;">This PIN will be used for quick access instead of your full password.</div>
+      </div>`);
+    showAuthOverlay(html, el => {
+      let digits = '';
+      const errEl = el.querySelector('#pinErr');
+      buildPinPad(el, async (d) => {
+        if (d === 'del') { digits = digits.slice(0,-1); }
+        else if (digits.length < 4) { digits += d; }
+        updatePinDots(el, digits);
+        if (digits.length === 4) {
+          errEl.textContent = '';
+          // First entry — ask to confirm
+          const first = digits; digits = '';
+          updatePinDots(el, digits);
+          el.querySelector('.auth-title').textContent = 'Confirm PIN';
+          el.querySelector('.auth-sub').textContent = 'Enter your PIN again to confirm';
+          buildPinPad(el, async (d2) => {
+            if (d2 === 'del') { digits = digits.slice(0,-1); }
+            else if (digits.length < 4) { digits += d2; }
+            updatePinDots(el, digits);
+            if (digits.length === 4) {
+              if (digits !== first) { errEl.textContent = 'PINs do not match — try again'; digits=''; updatePinDots(el,digits); return; }
+              const pinHash = await sha256(digits + u);
+              await db.ref(`${USERS_FB_KEY}/${u}/pin`).set(pinHash);
+              finishLogin(u, onSuccess);
+            }
+          });
+        }
+      });
+    });
+  }
+
+  // ── SCREEN 4: PIN Entry ──
+  function showPinScreen(u, isLock = false, onSuccess) {
+    stopInactivityWatch();
+    const sub = isLock ? 'Session locked due to inactivity' : 'Enter your 4-digit PIN';
+    const html = authCard(`Welcome back, ${u}`, sub,
+      `<div style="text-align:center;">
+        <div class="pin-dots" id="pinDots" style="display:flex;justify-content:center;gap:12px;margin:20px 0 24px;">
+          ${[0,1,2,3].map(i=>`<div class="pin-dot" data-i="${i}" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border-2);background:var(--surface-2);transition:all 0.15s;"></div>`).join('')}
+        </div>
+        <div class="pin-pad" id="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:220px;margin:0 auto 16px;"></div>
+        <div class="auth-error" id="pinErr" style="min-height:18px;"></div>
+        <button id="pinForgot" style="background:transparent;border:none;color:var(--text-3);font-size:0.8rem;cursor:pointer;margin-top:8px;">Use password instead</button>
+      </div>`);
+    showAuthOverlay(html, el => {
+      let digits = '', attempts = 0;
+      const errEl = el.querySelector('#pinErr');
+      buildPinPad(el, async (d) => {
+        if (d === 'del') { digits = digits.slice(0,-1); }
+        else if (digits.length < 4) { digits += d; }
+        updatePinDots(el, digits);
+        errEl.textContent = '';
+        if (digits.length === 4) {
+          const pinHash = await sha256(digits + u);
+          const snap = await db.ref(`${USERS_FB_KEY}/${u}/pin`).get();
+          if (snap.val() === pinHash) {
+            finishLogin(u, onSuccess);
+          } else {
+            attempts++;
+            errEl.textContent = `Incorrect PIN${attempts >= 3 ? ' — use password instead' : ''}`;
+            digits = ''; updatePinDots(el, digits);
+          }
+        }
+      });
+      el.querySelector('#pinForgot').onclick = () => {
+        setSavedUser(null); setSessionToken(null); currentUser = null;
+        showLoginScreen(onSuccess);
+      };
+    });
+  }
+
+  // ── PIN pad builder ──
+  function buildPinPad(el, onDigit) {
+    const pad = el.querySelector('#pinPad');
+    if (!pad) return;
+    pad.innerHTML = '';
+    const btnStyle = 'width:100%;aspect-ratio:1;border:1.5px solid var(--border-2);background:var(--surface-2);border-radius:14px;font-size:1.4rem;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.1s;';
+    [1,2,3,4,5,6,7,8,9,'',0,'del'].forEach(k => {
+      const b = document.createElement('button');
+      b.style.cssText = btnStyle;
+      b.innerHTML = k === 'del' ? '⌫' : k === '' ? '' : k;
+      if (k === '') { b.style.visibility='hidden'; pad.appendChild(b); return; }
+      b.addEventListener('click', () => { b.style.transform='scale(0.9)'; setTimeout(()=>b.style.transform='',100); onDigit(String(k)); });
+      b.addEventListener('touchstart', () => b.style.background='var(--surface-3)', {passive:true});
+      b.addEventListener('touchend',   () => b.style.background='var(--surface-2)', {passive:true});
+      pad.appendChild(b);
+    });
+    // keyboard support
+    el._pinKeyHandler = (e) => {
+      if (e.key >= '0' && e.key <= '9') onDigit(e.key);
+      if (e.key === 'Backspace') onDigit('del');
+    };
+    document.removeEventListener('keydown', el._pinKeyHandler);
+    document.addEventListener('keydown', el._pinKeyHandler);
+  }
+
+  function updatePinDots(el, digits) {
+    el.querySelectorAll('.pin-dot').forEach((d,i) => {
+      d.style.background   = i < digits.length ? 'var(--accent)' : 'var(--surface-2)';
+      d.style.borderColor  = i < digits.length ? 'var(--accent)' : 'var(--border-2)';
+      d.style.transform    = i < digits.length ? 'scale(1.2)' : 'scale(1)';
+    });
+  }
+
+  // ── Finish login: set session, start portal ──
+  function finishLogin(u, onSuccess) {
+    currentUser = u;
+    setSavedUser(u);
+    const token = Math.random().toString(36).slice(2) + Date.now();
+    setSessionToken(token);
+    applyThemeObj(getUserTheme(u));
+    removeAuthOverlay();
+    startInactivityWatch();
+    showUserPill();
+    onSuccess?.();
+  }
+
+  // ── User pill in header ──
+  function showUserPill() {
+    const actions = document.querySelector('.header-actions');
+    if (!actions || document.getElementById('userPill')) return;
+    const pill = document.createElement('div');
+    pill.id = 'userPill';
+    pill.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:40px;padding:4px 12px 4px 8px;font-size:0.8rem;font-weight:600;color:var(--text-2);cursor:pointer;transition:background 0.15s;flex-shrink:0;';
+    pill.title = `Logged in as ${currentUser}${isAdmin()?' (Admin)':''}`;
+    pill.innerHTML = `<span>${isAdmin()?'🛡️':'👤'}</span><span>${currentUser}</span>`;
+    pill.onclick = () => {
+      showFMModal({ title: `👤 ${currentUser}`, body:
+        `<p style="color:var(--text-3);font-size:0.88rem;">${isAdmin()?'🛡️ Admin account':'Standard account'}</p>`,
+        buttons: [
+          { label: 'Log Out', cls: 'fm-btn-danger', action: () => {
+            setSavedUser(null); setSessionToken(null); currentUser = null;
+            stopInactivityWatch(); location.reload();
+          }},
+          { label: 'Cancel', cls: 'fm-btn-cancel' }
+        ]});
+    };
+    actions.insertBefore(pill, actions.firstChild);
+  }
+
+  // ── Admin: Pending Requests panel ──
+  async function showPendingRequests() {
+    if (!db) return;
+    const snap = await db.ref(PENDING_FB_KEY).get();
+    const items = snap.exists() ? Object.values(snap.val()).sort((a,b)=>a.created-b.created) : [];
+    let rows = items.length ? items.map((r,i) =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border-2);margin-bottom:8px;">
+        <span style="font-weight:700;color:var(--text-3);font-size:0.8rem;min-width:20px;">${i+1}.</span>
+        <span style="flex:1;font-weight:600;color:var(--text);">${r.username}</span>
+        <span style="font-size:0.75rem;color:var(--text-3);">${new Date(r.created).toLocaleDateString()}</span>
+        <button class="pr-approve" data-u="${r.username}" title="Approve" style="background:#1f9d55;border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">✓</button>
+        <button class="pr-deny"   data-u="${r.username}" title="Deny"    style="background:#d9453d;border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>`).join('')
+      : '<div style="color:var(--text-3);text-align:center;padding:20px;font-size:0.9rem;">No pending requests 🎉</div>';
+
+    showFMModal({ title: '🕐 Pending Requests', body: `<div>${rows}</div>`, buttons: [{ label:'Close', cls:'fm-btn-cancel' }] });
+
+    document.querySelectorAll('.pr-approve').forEach(btn => btn.addEventListener('click', async () => {
+      const u = btn.dataset.u;
+      await db.ref(`${USERS_FB_KEY}/${u}/status`).set('approved');
+      await db.ref(`${USERS_FB_KEY}/${u}/approvedAt`).set(Date.now());
+      await db.ref(`${PENDING_FB_KEY}/${u}`).remove();
+      showToast(`✅ ${u} approved`); closeFMModal(); showPendingRequests();
+    }));
+    document.querySelectorAll('.pr-deny').forEach(btn => btn.addEventListener('click', async () => {
+      const u = btn.dataset.u;
+      await db.ref(`${USERS_FB_KEY}/${u}/status`).set('denied');
+      await db.ref(`${PENDING_FB_KEY}/${u}`).remove();
+      await db.ref(`${DENIED_FB_KEY}/${u}`).set(true);
+      showToast(`🚫 ${u} denied`); closeFMModal(); showPendingRequests();
+    }));
+  }
+
+  // ── Admin: Approved Accounts panel ──
+  async function showApprovedAccounts() {
+    if (!db) return;
+    const snap = await db.ref(USERS_FB_KEY).get();
+    if (!snap.exists()) { showFMModal({ title:'✅ Approved Accounts', body:'<div style="color:var(--text-3);text-align:center;padding:20px;">No accounts yet.</div>', buttons:[{label:'Close',cls:'fm-btn-cancel'}] }); return; }
+    const all = Object.entries(snap.val())
+      .filter(([u,d]) => d.status === 'approved' && u !== currentUser)
+      .sort(([,a],[,b]) => (a.approvedAt||a.created) - (b.approvedAt||b.created));
+    const rows = all.length ? all.map(([u,d]) =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border-2);margin-bottom:8px;">
+        <span style="flex:1;font-weight:600;color:var(--text);">👤 ${u}</span>
+        <span style="font-size:0.75rem;color:var(--text-3);">${d.approvedAt ? new Date(d.approvedAt).toLocaleDateString() : '—'}</span>
+        <button class="aa-revoke" data-u="${u}" title="Revoke access" style="background:transparent;border:1.5px solid #d9453d;color:#d9453d;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">🗑️</button>
+      </div>`).join('')
+      : '<div style="color:var(--text-3);text-align:center;padding:20px;font-size:0.9rem;">No other approved accounts.</div>';
+    showFMModal({ title:'✅ Approved Accounts', body:`<div>${rows}</div>`, buttons:[{label:'Close',cls:'fm-btn-cancel'}] });
+    document.querySelectorAll('.aa-revoke').forEach(btn => btn.addEventListener('click', async () => {
+      const u = btn.dataset.u;
+      if (!confirm(`Revoke access for "${u}"? All their data will be deleted and username permanently blocked.`)) return;
+      // Delete all user data
+      await db.ref(`${USERS_FB_KEY}/${u}`).remove();
+      await db.ref(`${DENIED_FB_KEY}/${u}`).set(true);
+      // Delete namespaced data
+      const prefix = `u_${u}__`;
+      const fbRoot = await db.ref('/').get();
+      if (fbRoot.exists()) {
+        const allKeys = Object.keys(fbRoot.val());
+        for (const k of allKeys) {
+          if (k.startsWith(`quiz_portal_favourites_${prefix}`) ||
+              k.startsWith(`quiz_portal_recents_${prefix}`) ||
+              k.startsWith(`quiz_saved_questions_${prefix}`) ||
+              k.startsWith(`quiz_saved_state_${prefix}`) ||
+              k.startsWith(`quiz_leaderboard_${prefix}`)) {
+            await db.ref(k).remove().catch(()=>{});
+          }
+        }
+      }
+      showToast(`🚫 ${u} revoked and data deleted`);
+      closeFMModal(); showApprovedAccounts();
+    }));
+  }
+
+  // ── Theme change hook: save per-user theme ──
+  function onThemeChanged() {
+    if (currentUser) {
+      const theme = document.body.getAttribute('data-theme') || 'default';
+      const dark  = document.body.classList.contains('dark-theme');
+      saveUserTheme(currentUser, theme, dark);
+      currentTheme = { theme, dark };
+    }
+  }
+
+  const _FAV_KEY_BASE  const _FAV_KEY_BASE = 'quiz_portal_favourites';
+  const getFavKey = () => `${_FAV_KEY_BASE}_${getUserPrefix()}`;
 
   async function loadFavourites() {
     if (!db) return;
     try {
-      const snap = await db.ref(FAV_KEY).get();
+      const snap = await db.ref(getFavKey()).get();
       favourites = snap.exists() ? (snap.val() || {}) : {};
     } catch(e) {}
   }
@@ -4508,11 +5049,11 @@
     const wasStarred = !!favourites[key];
     if (wasStarred) {
       delete favourites[key];
-      if (db) db.ref(`${FAV_KEY}/${key}`).remove().catch(()=>{});
+      if (db) db.ref(`${getFavKey()}/${key}`).remove().catch(()=>{});
       showToast('☆ Removed from Favourites');
     } else {
       favourites[key] = { path, name, type, ts: Date.now() };
-      if (db) db.ref(`${FAV_KEY}/${key}`).set(favourites[key]).catch(()=>{});
+      if (db) db.ref(`${getFavKey()}/${key}`).set(favourites[key]).catch(()=>{});
       showToast('⭐ Added to Favourites');
     }
     renderNavigationView();
@@ -4557,7 +5098,7 @@
       const oldKey = btoa(fav.path).replace(/=/g,'');
       if (type === 'delete') {
         delete favourites[oldKey];
-        if (db) db.ref(`${FAV_KEY}/${oldKey}`).remove().catch(()=>{});
+        if (db) db.ref(`${getFavKey()}/${oldKey}`).remove().catch(()=>{});
       } else {
         // rename/move: update path
         const updatedPath = newPath + fav.path.substring(oldPath.length);
@@ -4567,8 +5108,8 @@
         delete favourites[oldKey];
         favourites[newKey] = updated;
         if (db) {
-          db.ref(`${FAV_KEY}/${oldKey}`).remove().catch(()=>{});
-          db.ref(`${FAV_KEY}/${newKey}`).set(updated).catch(()=>{});
+          db.ref(`${getFavKey()}/${oldKey}`).remove().catch(()=>{});
+          db.ref(`${getFavKey()}/${newKey}`).set(updated).catch(()=>{});
         }
       }
     }
@@ -4577,12 +5118,13 @@
   // =====================================================================
   // RECENTS SYSTEM (Firebase, cross-device)
   // =====================================================================
-  const RECENTS_KEY = 'quiz_portal_recents';
+  const _REC_KEY_BASE = 'quiz_portal_recents';
+  const getRecKey = () => `${_REC_KEY_BASE}_${getUserPrefix()}`;
 
   async function loadRecents() {
     if (!db) return;
     try {
-      const snap = await db.ref(RECENTS_KEY).get();
+      const snap = await db.ref(getRecKey()).get();
       recents = snap.exists() ? (snap.val() || {}) : {};
     } catch(e) {}
   }
@@ -4593,7 +5135,7 @@
     const folder = path.split('/').slice(0,-1).join(' › ') || 'Root';
     const entry = { path, name, folder, ts: Date.now() };
     recents[key] = entry;
-    if (db) db.ref(`${RECENTS_KEY}/${key}`).set(entry).catch(()=>{});
+    if (db) db.ref(`${getRecKey()}/${key}`).set(entry).catch(()=>{});
   }
 
   function formatRecentTime(ts) {
@@ -4632,7 +5174,7 @@
   async function removeRecentEntry(key) {
     closeCtxMenu();
     delete recents[key];
-    if (db) db.ref(`${RECENTS_KEY}/${key}`).remove().catch(()=>{});
+    if (db) db.ref(`${getRecKey()}/${key}`).remove().catch(()=>{});
     openRecentsView();
   }
 
@@ -4643,7 +5185,7 @@
     );
     for (const [key] of toRemove) {
       delete recents[key];
-      if (db) db.ref(`${RECENTS_KEY}/${key}`).remove().catch(()=>{});
+      if (db) db.ref(`${getRecKey()}/${key}`).remove().catch(()=>{});
     }
   }
 
@@ -4660,23 +5202,33 @@
   // =====================================================================
   function openDataMgmtModal() {
     const row = 'display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border-2);background:var(--surface-2);font-size:0.95rem;cursor:pointer;transition:opacity 0.15s;';
-    showFMModal({
-      title: '🗂️ Data Management',
-      body: `
-        <p style="margin-bottom:14px;">Manage quiz data stored in Firebase.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <button style="${row}" onclick="closeFMModal();dmAction('recents')">
+    const adminRows = isAdmin() ? `
+          <button style="${row}" onclick="closeFMModal();showPendingRequests()">
             <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
-            <span><strong style="color:var(--text);">Clear Recents</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all recent quiz history</span></span>
+            <span><strong style="color:var(--text);">Pending Requests</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Review & approve new accounts</span></span>
           </button>
-          <button style="${row}" onclick="closeFMModal();dmAction('saved')">
-            <span style="font-size:1.4rem;flex-shrink:0;">🔖</span>
-            <span><strong style="color:var(--text);">Clear Saved Questions</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all bookmarked questions</span></span>
+          <button style="${row}" onclick="closeFMModal();showApprovedAccounts()">
+            <span style="font-size:1.4rem;flex-shrink:0;">✅</span>
+            <span><strong style="color:var(--text);">Approved Accounts</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Manage approved users</span></span>
           </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="closeFMModal();dmAction('master')">
             <span style="font-size:1.4rem;flex-shrink:0;">💥</span>
             <span><strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Wipes ALL data from Firebase</span></span>
+          </button>` : '';
+    showFMModal({
+      title: '🗂️ Data Management',
+      body: `
+        <p style="margin-bottom:14px;">Manage your data stored in Firebase.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button style="${row}" onclick="closeFMModal();dmAction('recents')">
+            <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
+            <span><strong style="color:var(--text);">Clear My Recents</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes your recent quiz history</span></span>
           </button>
+          <button style="${row}" onclick="closeFMModal();dmAction('saved')">
+            <span style="font-size:1.4rem;flex-shrink:0;">🔖</span>
+            <span><strong style="color:var(--text);">Clear My Saved Questions</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes your bookmarked questions</span></span>
+          </button>
+          ${adminRows}
           <button style="${row}justify-content:center;margin-top:4px;border-color:var(--border-2);" onclick="closeFMModal()">
             <span style="color:var(--text-3);font-weight:600;">Cancel</span>
           </button>
@@ -4742,7 +5294,7 @@
     showToast('⏳ Processing...');
     try {
       if (type === 'recents') {
-        await db.ref(RECENTS_KEY).remove();
+        await db.ref(getRecKey()).remove();
         recents = {};
         showToast('✅ Recents cleared');
       } else if (type === 'saved') {
@@ -4750,7 +5302,7 @@
         const snap = await db.ref('/').get();
         if (snap.exists()) {
           const data = snap.val();
-          const toDelete = Object.keys(data).filter(k => k.startsWith('quiz_saved_questions_'));
+          const toDelete = Object.keys(data).filter(k => k.startsWith(`quiz_saved_questions_${getUserPrefix()}`));
           for (const k of toDelete) await db.ref(k).remove();
         }
         showToast('✅ Saved questions cleared');
@@ -4776,7 +5328,7 @@
           try {
             await db.ref(`quiz_saved_state_${safe}`).remove();
             await db.ref(`quiz_leaderboard_${safe}`).remove();
-            await db.ref(`quiz_saved_questions_${safe}`).remove();
+            await db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).remove();
             showToast('✅ Quiz logs reset');
           } catch(e) { showToast('❌ Error: ' + e.message); }
         }},
@@ -4854,27 +5406,61 @@
   }
 
   async function init() {
+    initTheme();
+
+    // ── AUTH GATE — always required ──
+    const savedUser = getSavedUser();
+    const savedToken = getSessionToken();
+
+    if (savedUser && savedToken) {
+      // Session exists — apply user theme, then show PIN screen
+      currentUser = savedUser;
+      applyThemeObj(getUserTheme(savedUser));
+      document.getElementById('splashScreen')?.classList.add('hide');
+      // Verify account still approved in Firebase
+      try {
+        const snap = await db?.ref(`${USERS_FB_KEY}/${savedUser}`).get();
+        if (!snap?.exists() || snap.val()?.status === 'denied') {
+          setSavedUser(null); setSessionToken(null); currentUser = null;
+          showLoginScreen(() => initPortal());
+          return;
+        }
+        const data = snap.val();
+        if (!getPAT() && data?.status !== 'approved') {
+          showPendingScreen(savedUser, () => initPortal());
+          return;
+        }
+      } catch(e) { /* firebase error — allow cached session */ }
+
+      // Check if user has PIN set
+      try {
+        const psnap = await db?.ref(`${USERS_FB_KEY}/${savedUser}/pin`).get();
+        if (psnap?.exists()) {
+          showPinScreen(savedUser, false, () => initPortal());
+          return;
+        }
+      } catch(e) {}
+      // No PIN yet (admin fresh account) — go straight in
+      finishLogin(savedUser, () => initPortal());
+      return;
+    }
+
+    // No session — show login
+    document.getElementById('splashScreen')?.classList.add('hide');
+    showLoginScreen(() => initPortal());
+  }
+
+  async function initPortal() {
     try {
-      initTheme();
+      updateAdminUI();
       fetchWeatherInteractive();
       await Promise.all([loadFavourites(), loadRecents()]);
-
-      // Show loading hint — if no token, unauthenticated limit is 60 req/hr
-      const hasToken = !!getPAT();
-      contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);font-size:0.88rem;">${hasToken ? 'Loading quizzes…' : 'Loading… (tip: add a GitHub Token in ⚙️ for better reliability)'}</div></div>`;
-
+      contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);font-size:0.88rem;">Loading quizzes…</div></div>`;
       const files = await loadFiles();
-      if (files === null) {
-        showLoadError();
-        document.getElementById('splashScreen')?.classList.add('hide');
-        return;
-      }
+      if (files === null) { showLoadError(); return; }
       rootTree = buildTree(files);
       let restoredPath = [];
-      try {
-        const saved = sessionStorage.getItem('quiz_current_path');
-        if (saved) restoredPath = JSON.parse(saved);
-      } catch(e) {}
+      try { const s = sessionStorage.getItem('quiz_current_path'); if (s) restoredPath = JSON.parse(s); } catch(e) {}
       currentPath = (Array.isArray(restoredPath) && getNodeFromPath(rootTree, restoredPath)) ? restoredPath : [];
       renderNavigationView();
       loadHistory();
@@ -4883,9 +5469,12 @@
     } catch(e) {
       console.error('Portal init error:', e);
       showLoadError(e.message);
-    } finally {
-      setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide'), 300);
     }
+  }
+
+  // ── Show/hide admin-only UI elements ──
+  function updateAdminUI() {
+    document.body.classList.toggle('non-admin', !isAdmin());
   }
   
   // ----- Pull-to-refresh (mobile) -----
