@@ -428,14 +428,20 @@
     font-size: 0.85rem;
     font-weight: 600;
     background: var(--surface-2);
+    border: 1px solid var(--border-2);
     padding: 6px 14px;
     border-radius: 40px;
-    color: var(--text-2);
+    color: var(--text);
     white-space: nowrap;
-    font-family: monospace;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: var(--transition);
   }
+  .live-clock:hover { background: var(--surface-3); border-color: var(--accent); }
 
   .main {
     max-width: 1200px;
@@ -487,9 +493,26 @@
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 32px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
-  .breadcrumb-bar .breadcrumb { margin-bottom: 0; flex: 1 1 auto; }
+  .breadcrumb {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    align-items: center;
+  }
+  .breadcrumb::-webkit-scrollbar { display: none; }
+  .breadcrumb-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
   .view-toggle-group {
     display: flex;
     align-items: center;
@@ -521,35 +544,49 @@
   .folders-grid.list-view {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
-  /* In list view: checkbox is inline (not absolute), same quiz-row approach */
   .folders-grid.list-view .folder-card {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     text-align: left;
-    padding: 12px 18px;
+    padding: 12px 12px 12px 20px;
   }
-  .folders-grid.list-view .folder-icon { font-size: 1.6rem; margin-bottom: 0; }
-  .folders-grid.list-view .folder-name { margin-bottom: 0; flex: 1; }
-  .folders-grid.list-view .folder-count { flex-shrink: 0; margin-right: 4px; }
+  .folders-grid.list-view .folder-icon { font-size: 1.5rem; margin-bottom: 0; flex-shrink: 0; }
+  .folders-grid.list-view .folder-name { margin-bottom: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .folders-grid.list-view .folder-count { flex-shrink: 0; font-size: 0.78rem; }
 
-  .folders-grid.list-view .folder-card .item-checkbox {
-    position: static !important;
-    flex-shrink: 0;
-    width: 20px !important; min-width: 20px !important;
-    border-width: 2px !important;
-    margin-right: 0;
-  }
+  /* List-view folder star: right side, hover-only */
   .folders-grid.list-view .folder-card .item-star-btn {
     position: static !important;
     flex-shrink: 0;
     opacity: 0;
     width: 30px !important; min-width: 30px !important;
+    order: 8;
+    transition: opacity 0.15s;
   }
   .folders-grid.list-view .folder-card:hover .item-star-btn,
   .folders-grid.list-view .folder-card .item-star-btn.starred { opacity: 1; }
+
+  /* List-view folder checkbox: rightmost, width-0 until hover/selection */
+  .folders-grid.list-view .folder-card .item-checkbox {
+    position: static !important;
+    flex-shrink: 0;
+    order: 9;
+    width: 0 !important; min-width: 0 !important;
+    border-width: 0 !important;
+    opacity: 0;
+    margin: 0;
+    transition: width 0.15s, min-width 0.15s, border-width 0.15s, opacity 0.15s, margin 0.15s;
+  }
+  .folders-grid.list-view .folder-card:hover .item-checkbox,
+  .selection-active .folders-grid.list-view .folder-card .item-checkbox {
+    width: 20px !important; min-width: 20px !important;
+    border-width: 2px !important;
+    opacity: 1 !important; pointer-events: all !important;
+    margin-left: 2px;
+  }
 
   /* Folder grid */
   .folders-grid {
@@ -646,38 +683,56 @@
     color: var(--text);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    min-width: 0;
   }
-  /* List view quiz row — checkbox outside the <a> tag */
+  /* List view quiz row — text first, actions appear on right on hover */
   .quiz-row {
     display: flex;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    padding: 0 20px;
+    padding: 0 12px 0 20px;
     transition: var(--transition);
+    position: relative;
   }
   .quiz-row:last-child { border-bottom: none; }
   .quiz-row:hover { background: var(--surface-2); }
   .quiz-row .quiz-item {
     flex: 1;
     border-bottom: none !important;
-    padding: 14px 0 14px 0;
+    padding: 14px 0;
+    min-width: 0;
+  }
+  /* Right-side actions — hidden until hover/selection */
+  .quiz-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    min-width: 0;
   }
   .quiz-row .item-checkbox {
-    margin-right: 12px;
-    flex-shrink: 0;
-    width: 20px !important;
-    min-width: 20px !important;
-    border-width: 2px !important;
+    width: 0 !important; min-width: 0 !important;
+    border-width: 0 !important;
     opacity: 0;
+    margin: 0;
     pointer-events: none;
-    transition: opacity 0.15s;
+    transition: width 0.15s, min-width 0.15s, border-width 0.15s, opacity 0.15s, margin 0.15s;
   }
   .quiz-row:hover .item-checkbox,
   .selection-active .quiz-row .item-checkbox {
+    width: 20px !important; min-width: 20px !important;
+    border-width: 2px !important;
     opacity: 1 !important;
     pointer-events: all !important;
+    margin-left: 4px;
   }
+  .quiz-row .item-star-btn {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .quiz-row:hover .item-star-btn,
+  .quiz-row .item-star-btn.starred { opacity: 1; }
   .fav-quiz-card {
     justify-content: flex-start !important;
     gap: 0 !important;
@@ -1470,7 +1525,8 @@
     .header-inner { gap: 8px; }
     .header-actions { gap: 8px; }
     .logo-text { display: none; }
-    .search-compact, .weather-btn, .live-clock {
+    /* All header icons collapse to consistent 40px circles */
+    .search-compact, .weather-btn, .live-clock, .theme-toggle {
       width: 40px; height: 40px;
       min-width: 40px;
       padding: 0;
@@ -1479,28 +1535,42 @@
       border-radius: 50%;
       gap: 0;
     }
-    .search-compact-text, .saved-btn-text, .wx-text, .clock-text {
-      display: none;
-    }
+    .search-compact-text, .saved-btn-text, .wx-text, .clock-text { display: none; }
     .live-clock { display: flex; align-items: center; }
     .wbtn-icon { font-size: 1.1rem; }
+    /* Grid: max 2 columns on tablets */
+    .folders-grid { grid-template-columns: repeat(2, 1fr); }
+    .quizzes-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Breadcrumb: single scrollable line, toggles stay right */
+    .breadcrumb-bar { flex-wrap: nowrap; overflow: hidden; }
+    .breadcrumb { overflow-x: auto; white-space: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .breadcrumb::-webkit-scrollbar { display: none; }
+    /* Selection bar: scrollable on mobile */
+    .selection-bar { max-width: calc(100vw - 32px); overflow-x: auto; border-radius: 20px; }
+    .selection-bar::-webkit-scrollbar { display: none; }
+    .sel-bar-btn { padding: 7px 10px; font-size: 0.78rem; white-space: nowrap; }
   }
   @media (max-width: 680px) {
     .header-inner { gap: 6px; }
-    .folders-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .folders-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .quizzes-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .weather-grid { grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; }
     .choice-container { gap: 20px; }
     .choice-card { width: 220px; padding: 20px; }
     .breathing-text { font-size: 1.5rem; }
     .timer-text { font-size: 1.2rem; }
     .dino-card { padding: 15px; }
+    /* Selection bar more compact */
+    .selection-bar { padding: 6px 10px; gap: 4px; }
+    .selection-bar-count { padding: 0 4px; font-size: 0.82rem; }
+    .sel-bar-divider { display: none; }
   }
   @media (max-width: 430px) {
     .header-inner { gap: 5px; }
     .header-actions { gap: 5px; }
-    .theme-toggle { width: 32px; height: 32px; font-size: 1rem; }
+    .search-compact, .weather-btn, .live-clock, .theme-toggle { width: 36px; height: 36px; min-width: 36px; }
     .logo-icon { font-size: 1.4rem; }
-    .search-compact, .weather-btn, .live-clock { width: 36px; height: 36px; min-width: 36px; }
+    .folders-grid, .quizzes-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   }
   /* ----- FILE MANAGER: selection, action bar, menus, modals ----- */
 
@@ -2401,11 +2471,11 @@
         const itemPath = [...currentPath, name].join('/');
         const starred = isFavourited(itemPath);
         html += `<div class="folder-card" data-folder="${name.replace(/"/g,'&quot;')}" data-path="${escapeHtml(itemPath)}" data-type="folder">
-          <div class="item-checkbox" data-path="${escapeHtml(itemPath)}"></div>
           <div class="folder-icon">${icon}</div>
           <div class="folder-name">${escapeHtml(name)}</div>
           <div class="folder-count">${label}</div>
           <button class="item-star-btn ${starred?'starred':''}" data-path="${escapeHtml(itemPath)}" data-name="${escapeHtml(name)}" data-type="folder">${starred?'⭐':'☆'}</button>
+          <div class="item-checkbox" data-path="${escapeHtml(itemPath)}"></div>
         </div>`;
       }
       html += `</div>`;
@@ -2434,12 +2504,14 @@
           </a>`;
         } else {
           html += `<div class="quiz-row" data-path="${escapeHtml(f.path)}">
-            <div class="item-checkbox quiz-checkbox" data-path="${escapeHtml(f.path)}"></div>
             <a class="quiz-item quiz-link" href="${url}" target="_blank" data-path="${escapeHtml(f.path)}" data-type="quiz">
               <span class="quiz-number">${num}</span>
               <div class="quiz-info"><span class="quiz-name">${escapeHtml(name)}</span></div>
-              <button class="item-star-btn ${starClass}" data-path="${escapeHtml(f.path)}" data-name="${escapeHtml(f.path.split('/').pop())}" data-type="quiz">${starIcon}</button>
             </a>
+            <div class="quiz-row-actions">
+              <button class="item-star-btn ${starClass}" data-path="${escapeHtml(f.path)}" data-name="${escapeHtml(f.path.split('/').pop())}" data-type="quiz">${starIcon}</button>
+              <div class="item-checkbox quiz-checkbox" data-path="${escapeHtml(f.path)}"></div>
+            </div>
           </div>`;
         }
       }
@@ -2569,15 +2641,21 @@
   }
   function updateBreadcrumb() {
     const homeLabel = savedMode ? "🔖 Saved" : "🏠 Home";
-    let html = `<div class="breadcrumb-bar"><div class="breadcrumb"><span class="breadcrumb-item breadcrumb-home" data-path="root">${homeLabel}</span>`;
+    let html = `<div class="breadcrumb-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item breadcrumb-home" data-path="root">${homeLabel}</span>`;
     for (let i=0; i<currentPath.length; i++) {
       html += `<span class="breadcrumb-sep">›</span><span class="breadcrumb-item" data-path-index="${i}">${escapeHtml(currentPath[i])}</span>`;
     }
     html += `</div>
-      <div class="view-toggle-group">
-        <button class="view-toggle-btn" id="newFolderBtn" title="New Folder">📁+</button>
-        <button class="view-toggle-btn${viewMode==='grid'?' active':''}" id="gridViewBtn" title="Grid view">▦</button>
-        <button class="view-toggle-btn${viewMode==='list'?' active':''}" id="listViewBtn" title="List view">☰</button>
+      <div class="breadcrumb-controls">
+        <div class="view-toggle-group">
+          <button class="view-toggle-btn${viewMode==='grid'?' active':''}" id="gridViewBtn" title="Grid view">▦</button>
+          <button class="view-toggle-btn${viewMode==='list'?' active':''}" id="listViewBtn" title="List view">☰</button>
+        </div>
+        <div class="view-toggle-group" style="padding:4px 6px;">
+          <button class="view-toggle-btn" id="newFolderBtn" title="New Folder" style="width:auto;padding:0 6px;font-size:0.85rem;font-weight:600;">📁+</button>
+        </div>
       </div>
     </div>`;
     breadcrumbContainer.innerHTML = html;
@@ -4208,19 +4286,20 @@
   // DATA MANAGEMENT
   // =====================================================================
   function openDataMgmtModal() {
+    const btnStyle = 'text-align:left;border-radius:14px;border:1px solid var(--border-2);';
     showFMModal({
       title: '🗂️ Data Management',
       body: `
         <p>Manage quiz data stored in Firebase.</p>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:0;">
-          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('recents')" style="text-align:left;border-radius:14px;">
+          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('recents')" style="${btnStyle}">
             🕐 <strong>Clear Recents</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all recent quiz history</span>
           </button>
-          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('saved')" style="text-align:left;border-radius:14px;">
+          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('saved')" style="${btnStyle}">
             🔖 <strong>Clear Saved Questions</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all bookmarked questions</span>
           </button>
-          <button class="fm-btn fm-btn-danger" onclick="closeFMModal();dmAction('master')" style="text-align:left;border-radius:14px;">
-            💥 <strong>Master Reset</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Wipes ALL data from Firebase</span>
+          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('master')" style="${btnStyle}border-color:#d9453d;">
+            💥 <strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Wipes ALL data from Firebase</span>
           </button>
         </div>`,
       buttons: [{ label: 'Cancel', cls: 'fm-btn-cancel' }]
