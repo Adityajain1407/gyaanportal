@@ -2452,28 +2452,44 @@
   function cleanName(filename) {
     return filename.replace(/\.html$/i, "").replace(/^\d+(__|\.|-|\s)+/, "").trim();
   }
+  // Cache the last successful file list in memory so rate-limit retries can fall back to it
+  let _cachedFiles = null;
+  let _cachedFilesTs = 0;
+
   async function loadFiles(bustCache = false, retries = 5) {
+    const token = getPAT();
+    const headers = { Accept: 'application/vnd.github+json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        const url = API_URL + `&_=${Date.now()}`;
-        console.log(`[Portal] loadFiles attempt ${attempt + 1}: ${url}`);
-        const res = await fetch(url, { cache: 'no-store' });
-        console.log(`[Portal] response status: ${res.status}`);
+        // Only add cache-buster when explicitly requested (after mutations)
+        const url = bustCache
+          ? API_URL + `&_=${Date.now()}`
+          : API_URL;
+        const res = await fetch(url, { headers, cache: bustCache ? 'no-store' : 'default' });
+
         if (!res.ok) {
-          const errText = await res.text().catch(() => '');
-          console.warn(`[Portal] API error ${res.status}:`, errText);
-          if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); continue; }
-          return null;
+          // On rate limit (403/429), fall back to in-memory cache immediately
+          if ((res.status === 403 || res.status === 429) && _cachedFiles) {
+            console.warn(`[Portal] Rate limited (${res.status}), using cached file list`);
+            return _cachedFiles;
+          }
+          if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 1200 * (attempt + 1))); continue; }
+          // Final failure — return cache if available, else null
+          return _cachedFiles || null;
         }
+
         const data = await res.json();
-        console.log(`[Portal] tree items: ${data.tree?.length ?? 0}, truncated: ${data.truncated}`);
-        // If truncated, GitHub only returned partial tree — fetch each folder individually
         let allFiles = data.tree || [];
+
+        // Handle truncated tree (too many files)
         if (data.truncated) {
-          console.warn('[Portal] Tree truncated — falling back to flat contents API');
-          allFiles = await fetchAllFilesFlat('');
-          if (!allFiles) { if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); continue; } return null; }
+          console.warn('[Portal] Tree truncated, using contents API fallback');
+          const flat = await fetchAllFilesFlat('', headers);
+          if (flat) allFiles = flat;
         }
+
         const quizFiles = allFiles.filter(f =>
           (f.type === 'blob' || f.type === 'file') &&
           (f.path.endsWith('.html') || f.path.endsWith('.md')) &&
@@ -2485,41 +2501,39 @@
         const folderMarkers = allFiles.filter(f =>
           (f.type === 'blob' || f.type === 'file') && f.path.endsWith('.gitkeep')
         );
-        return [...quizFiles, ...folderMarkers];
+        const result = [...quizFiles, ...folderMarkers];
+        // Save to memory cache
+        _cachedFiles = result;
+        _cachedFilesTs = Date.now();
+        return result;
+
       } catch(e) {
-        console.error(`[Portal] loadFiles attempt ${attempt + 1} threw:`, e);
-        if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); continue; }
-        return null;
+        console.error(`[Portal] loadFiles attempt ${attempt + 1}:`, e);
+        if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 1200 * (attempt + 1))); continue; }
+        return _cachedFiles || null;
       }
     }
-    return null;
+    return _cachedFiles || null;
   }
 
-  // Fallback: recursively fetch contents when tree API is truncated
-  async function fetchAllFilesFlat(path) {
+  // Fallback for truncated trees: walk contents API recursively
+  async function fetchAllFilesFlat(path, headers) {
     try {
-      const token = getPAT();
-      const headers = { Accept: 'application/vnd.github+json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}?ref=${GITHUB_BRANCH}&_=${Date.now()}`;
-      const res = await fetch(url, { headers, cache: 'no-store' });
+      const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path || ''}?ref=${GITHUB_BRANCH}`;
+      const res = await fetch(url, { headers: headers || {}, cache: 'no-store' });
       if (!res.ok) return null;
       const items = await res.json();
       if (!Array.isArray(items)) return null;
       let results = [];
       for (const item of items) {
-        if (item.type === 'file') {
-          results.push({ type: 'file', path: item.path });
-        } else if (item.type === 'dir') {
-          const sub = await fetchAllFilesFlat(item.path);
+        if (item.type === 'file') results.push({ type: 'file', path: item.path });
+        else if (item.type === 'dir') {
+          const sub = await fetchAllFilesFlat(item.path, headers);
           if (sub) results = results.concat(sub);
         }
       }
       return results;
-    } catch(e) {
-      console.error('[Portal] fetchAllFilesFlat error:', e);
-      return null;
-    }
+    } catch(e) { return null; }
   }
   function buildTree(files) {
     const root = { __files__: [], __folders__: {} };
@@ -4825,7 +4839,11 @@
       initTheme();
       fetchWeatherInteractive();
       await Promise.all([loadFavourites(), loadRecents()]);
-      
+
+      // Show loading hint — if no token, unauthenticated limit is 60 req/hr
+      const hasToken = !!getPAT();
+      contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);font-size:0.88rem;">${hasToken ? 'Loading quizzes…' : 'Loading… (tip: add a GitHub Token in ⚙️ for better reliability)'}</div></div>`;
+
       const files = await loadFiles();
       if (files === null) {
         showLoadError();
