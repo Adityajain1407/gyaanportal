@@ -2296,26 +2296,35 @@
   function cleanName(filename) {
     return filename.replace(/\.html$/i, "").replace(/^\d+[.\-\s]+/, "").trim();
   }
-  async function loadFiles(bustCache = false) {
-    try {
-      const url = API_URL + (bustCache ? `&_=${Date.now()}` : '');
-      const res = await fetch(url, bustCache ? { cache: 'no-store' } : {});
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      const allFiles = data.tree || [];
-      const quizFiles = allFiles.filter(f =>
-        f.type === "blob" && (f.path.endsWith(".html") || f.path.endsWith(".md")) &&
-        f.path !== "index.html" && !f.path.endsWith("README.md") &&
-        !f.path.startsWith("icons/") &&
-        f.path !== "manifest.json" && f.path !== "service-worker.js" &&
-        !f.path.toLowerCase().includes("quiz_master_prompt")
-      );
-      // Also include .gitkeep files so newly-created empty folders appear in the tree
-      const folderMarkers = allFiles.filter(f =>
-        f.type === "blob" && f.path.endsWith(".gitkeep")
-      );
-      return [...quizFiles, ...folderMarkers];
-    } catch(e) { return null; }
+  async function loadFiles(bustCache = false, retries = 3) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const url = API_URL + (bustCache ? `&_=${Date.now()}` : '');
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 800 * (attempt + 1))); continue; }
+          return null;
+        }
+        const data = await res.json();
+        const allFiles = data.tree || [];
+        const quizFiles = allFiles.filter(f =>
+          f.type === "blob" && (f.path.endsWith(".html") || f.path.endsWith(".md")) &&
+          f.path !== "index.html" && !f.path.endsWith("README.md") &&
+          !f.path.startsWith("icons/") &&
+          f.path !== "manifest.json" && f.path !== "service-worker.js" &&
+          !f.path.toLowerCase().includes("quiz_master_prompt")
+        );
+        // Also include .gitkeep files so newly-created empty folders appear in the tree
+        const folderMarkers = allFiles.filter(f =>
+          f.type === "blob" && f.path.endsWith(".gitkeep")
+        );
+        return [...quizFiles, ...folderMarkers]; // may be empty array — that's valid
+      } catch(e) {
+        if (attempt < retries - 1) { await new Promise(r => setTimeout(r, 800 * (attempt + 1))); continue; }
+        return null;
+      }
+    }
+    return null;
   }
   function buildTree(files) {
     const root = { __files__: [], __folders__: {} };
@@ -4471,7 +4480,7 @@
       await Promise.all([loadFavourites(), loadRecents()]);
       
       const files = await loadFiles();
-      if (!files || !files.length) {
+      if (files === null) {
         contentDiv.innerHTML = `<div class="state-msg"><div class="icon">⚠️</div>Could not load quizzes from GitHub.<br>Make sure the repository is public.</div>`;
         document.getElementById('splashScreen')?.classList.add('hide');
         return;
