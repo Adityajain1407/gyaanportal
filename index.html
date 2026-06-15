@@ -1420,13 +1420,13 @@
   .dino-game-container {
     display: flex;
     justify-content: center;
-    background: #f7f7f7;
+    background: var(--surface-2);
     border-radius: var(--radius-folder);
     padding: 10px;
     min-height: 400px;
   }
   body.dark .dino-game-container {
-    background: #2a2a2a;
+    background: var(--surface-2);
   }
   .dino-iframe {
     width: 100%;
@@ -1769,11 +1769,12 @@
   }
   .fm-modal {
     background: var(--surface);
+    border: 1px solid var(--border-2);
     border-radius: 20px;
     padding: 1.5rem;
     width: 100%;
     max-width: 420px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
     animation: fadeInDown 0.2s ease;
   }
   .fm-modal h3 { color: var(--text); margin-bottom: 0.4rem; font-size: 1.1rem; }
@@ -1804,7 +1805,7 @@
   }
   .fm-btn:hover { opacity: 0.85; }
   .fm-btn-primary { background: var(--accent); color: var(--button-text); }
-  .fm-btn-cancel { background: var(--surface-2); color: var(--text); }
+  .fm-btn-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-2); }
   .fm-btn-danger { background: #d9453d; color: #fff; }
 
   /* PAT status indicator */
@@ -1816,7 +1817,7 @@
     margin-top: 4px;
     display: inline-block;
   }
-  .pat-status.set { background: #d3f0d9; color: #145c23; }
+  .pat-status.set { background: var(--exp-correct-bg); color: var(--exp-correct-text); }
   .pat-status.unset { background: var(--surface-2); color: var(--text-3); }
 
   /* ----- STAR / FAVOURITE button on cards ----- */
@@ -2222,11 +2223,12 @@
     background: var(--surface);
     border: 1px solid var(--border-2);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
     padding: 36px 32px 28px;
     width: 100%; max-width: 380px;
     position: relative; overflow: hidden;
     animation: cardFloat 0.4s cubic-bezier(.2,.9,.4,1.1);
+    color: var(--text);
   }
   .auth-card::before {
     content: '';
@@ -2253,6 +2255,7 @@
     border: 1.5px solid var(--border-2); background: var(--surface-2);
     color: var(--text); font-size: 0.95rem; outline: none; box-sizing: border-box;
     transition: border-color 0.15s;
+    -webkit-text-fill-color: var(--text);
   }
   .auth-field input:focus { border-color: var(--accent); }
   .auth-submit {
@@ -4701,26 +4704,32 @@
 
     // Check approval status
     if (data.status === 'denied') throw new Error('This account has been revoked by admins.');
-    if (data.status !== 'approved' && !getPAT()) {
-      // Pending — show holding screen
-      currentUser = u;
-      applyThemeObj(getUserTheme(u));
+
+    currentUser = u;
+    applyThemeObj(getUserTheme(u));
+
+    // Admin (PAT set) → auto-approve pending account and go straight in, no PIN required
+    if (getPAT()) {
+      if (data.status !== 'approved') {
+        await db.ref(`${USERS_FB_KEY}/${u}/status`).set('approved').catch(() => {});
+        await db.ref(`${USERS_FB_KEY}/${u}/approvedAt`).set(Date.now()).catch(() => {});
+        await db.ref(`${PENDING_FB_KEY}/${u}`).remove().catch(() => {});
+      }
+      finishLogin(u, onSuccess);
+      return;
+    }
+
+    // Non-admin: must be approved
+    if (data.status !== 'approved') {
       showPendingScreen(u, onSuccess);
       return;
     }
 
-    // Approved — check if PIN set
-    currentUser = u;
-    applyThemeObj(getUserTheme(u));
+    // Approved non-admin: check PIN
     if (data.pin) {
-      // PIN already set — go straight to PIN entry (tab was closed and reopened)
       showPinScreen(u, false, onSuccess);
-    } else if (data.status === 'approved' && !data.pin) {
-      // First login after approval — must set PIN
-      showSetPinScreen(u, onSuccess);
     } else {
-      // Admin or approved
-      finishLogin(u, onSuccess);
+      showSetPinScreen(u, onSuccess);
     }
   }
 
@@ -5202,7 +5211,7 @@
   // DATA MANAGEMENT
   // =====================================================================
   function openDataMgmtModal() {
-    const row = 'display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border-2);background:var(--surface-2);font-size:0.95rem;cursor:pointer;transition:opacity 0.15s;';
+    const row = 'display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border-2);background:var(--surface-2);color:var(--text);font-size:0.95rem;cursor:pointer;transition:background 0.15s;';
     const adminRows = isAdmin() ? `
           <button style="${row}" onclick="closeFMModal();showPendingRequests()">
             <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
@@ -5414,7 +5423,21 @@
 
     const hideSplash = () => document.getElementById('splashScreen')?.classList.add('hide');
 
-    // ── AUTH GATE — always required ──
+    // ── AUTH GATE ──
+    // PAT = admin bypass: if token stored, use saved username or show login once
+    if (getPAT()) {
+      const adminUser = getSavedUser();
+      if (adminUser) {
+        currentUser = adminUser;
+        hideSplash();
+        finishLogin(adminUser, () => initPortal());
+        return;
+      }
+      hideSplash();
+      showLoginScreen(() => initPortal());
+      return;
+    }
+
     const savedUser = getSavedUser();
     const savedToken = getSessionToken();
 
