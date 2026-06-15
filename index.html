@@ -1905,6 +1905,124 @@
     text-align: center;
   }
 
+  /* ----- SAVED PANEL (inside Library Hub popup) ----- */
+  .saved-hub-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+  .saved-hub-back {
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    color: var(--text);
+    border-radius: 40px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .saved-hub-back:hover { background: var(--surface-3); }
+  .saved-hub-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .saved-q-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .saved-q-chip {
+    background: var(--surface-2);
+    border: 1.5px solid var(--border-2);
+    border-radius: 12px;
+    padding: 12px 4px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+  }
+  .saved-q-chip:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.06); }
+  .saved-q-chip.active { background: var(--accent); color: #fff; border-color: var(--accent-dark); }
+  .saved-q-detail {
+    border-top: 1px solid var(--border-2);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .saved-q-detail .question-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.4;
+    border-left: 4px solid var(--accent);
+    padding-left: 10px;
+  }
+  .saved-q-detail .options-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .saved-q-detail .option {
+    background: var(--option-bg);
+    border: 1.5px solid var(--option-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--option-text);
+    pointer-events: none;
+  }
+  .saved-q-detail .option.correct-highlight {
+    background: var(--correct-bg);
+    border-color: var(--correct-border);
+    color: var(--correct-text);
+    font-weight: 700;
+  }
+  .saved-q-detail .explanation-box {
+    background: var(--exp-bg);
+    border-left: 5px solid var(--exp-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .saved-q-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .saved-q-nav-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    color: var(--text);
+    border-radius: 40px;
+    padding: 7px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .saved-q-nav-btn:hover { background: var(--surface-3); }
+  .saved-q-nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .saved-q-nav-btn.danger { color: #d9453d; border-color: rgba(217,69,61,0.3); }
+  .saved-q-nav-btn.danger:hover { background: rgba(217,69,61,0.08); }
+  .saved-q-counter {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    font-weight: 600;
+  }
+
   /* ----- RECENTS VIEW ----- */
   .recent-item {
     display: flex;
@@ -3012,46 +3130,141 @@
         body.innerHTML = `<div class="library-empty"><div class="lib-empty-icon">🔖</div>No saved questions yet.<br>Double-tap or tap 🔖 Save on a question while in a quiz.</div>`;
         return;
       }
-      let html = '';
-      for (const s of allSaved) {
-        // s.path is an array like ['Muskan Quiz', 'History', 'Prehistory...']
-        const pathStr = s.path.join('/');
-        const folder = s.path.slice(0,-1).join(' › ') || 'Root';
-        html += `<div class="recent-item lib-saved-item" style="cursor:pointer;" data-savedpath="${escapeHtml(pathStr)}" data-safename="${escapeHtml(getSafeTopicName(s.path.join('/')))}">
-          <div class="recent-icon">🔖</div>
-          <div class="recent-info">
-            <div class="recent-name">${escapeHtml(s.name)}</div>
-            <div class="recent-folder">📁 ${escapeHtml(folder)}</div>
-            <div class="recent-time">${s.count} saved question${s.count!==1?'s':''}</div>
-          </div>
-          <button class="lib-saved-delete" data-safename="${escapeHtml(getSafeTopicName(s.path.join('/')))}" title="Delete saved questions" style="background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-3);padding:6px;border-radius:50%;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#d9453d'" onmouseout="this.style.color='var(--text-3)'">🗑️</button>
-        </div>`;
-      }
-      body.innerHTML = html;
-      body.querySelectorAll('.lib-saved-item').forEach(el => el.addEventListener('click', (e) => {
-        if (e.target.closest('.lib-saved-delete')) return;
-        const pathArr = el.dataset.savedpath.split('/');
-        if (savedMode) { detachSavedListeners(); savedMode = false; }
-        savedTree = tree;
-        attachSavedListeners();
-        savedMode = true;
-        currentPath = pathArr;
-        closeLibrary();
-        renderNavigationView();
-      }));
-      body.querySelectorAll('.lib-saved-delete').forEach(btn => btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const safe = btn.dataset.safename;
-        if (!safe) return;
-        try {
-          if (db) await db.ref(`quiz_saved_questions_${safe}`).remove();
-          showToast('🗑️ Saved questions deleted');
-          renderLibSaved(body); // refresh the list
-        } catch(err) { showToast('❌ Error: ' + err.message); }
-      }));
+      showSavedQuizList(body, allSaved);
     }).catch(e => {
       body.innerHTML = `<div class="library-empty"><div class="lib-empty-icon">⚠️</div>Error loading saved questions.</div>`;
       console.error('renderLibSaved error:', e);
+    });
+  }
+
+  function showSavedQuizList(body, allSaved) {
+    let html = '';
+    for (const s of allSaved) {
+      const folder = s.path.slice(0,-1).join(' › ') || 'Root';
+      const safe = getSafeTopicName(s.path.join('/'));
+      html += `<div class="recent-item lib-saved-item" style="cursor:pointer;" data-safename="${escapeHtml(safe)}" data-name="${escapeHtml(s.name)}">
+        <div class="recent-icon">🔖</div>
+        <div class="recent-info">
+          <div class="recent-name">${escapeHtml(s.name)}</div>
+          <div class="recent-folder">📁 ${escapeHtml(folder)}</div>
+          <div class="recent-time">${s.count} saved question${s.count!==1?'s':''}</div>
+        </div>
+        <button class="lib-saved-delete" data-safename="${escapeHtml(safe)}" title="Delete all saved for this quiz" style="background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-3);padding:6px;border-radius:50%;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#d9453d'" onmouseout="this.style.color='var(--text-3)'">🗑️</button>
+      </div>`;
+    }
+    body.innerHTML = html;
+    body.querySelectorAll('.lib-saved-item').forEach(el => el.addEventListener('click', (e) => {
+      if (e.target.closest('.lib-saved-delete')) return;
+      const safe = el.dataset.safename;
+      const name = el.dataset.name;
+      // Load the actual saved questions for this quiz
+      db.ref(`quiz_saved_questions_${safe}`).get().then(snap => {
+        if (!snap.exists()) { showToast('No saved questions found'); return; }
+        const data = snap.val();
+        const questions = Object.entries(data)
+          .map(([id, q]) => ({ id: Number(id), ...q, safeTopicName: safe }))
+          .sort((a, b) => a.id - b.id);
+        showSavedQuestionGrid(body, questions, name, allSaved);
+      }).catch(() => showToast('Could not load questions'));
+    }));
+    body.querySelectorAll('.lib-saved-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const safe = btn.dataset.safename;
+      if (!safe) return;
+      try {
+        if (db) await db.ref(`quiz_saved_questions_${safe}`).remove();
+        showToast('🗑️ Saved questions deleted');
+        renderLibSaved(body);
+      } catch(err) { showToast('❌ Error: ' + err.message); }
+    }));
+  }
+
+  function showSavedQuestionGrid(body, questions, quizName, allSaved) {
+    let chips = questions.map((q, i) =>
+      `<div class="saved-q-chip" data-idx="${i}">Q${q.id}</div>`
+    ).join('');
+    body.innerHTML = `
+      <div class="saved-hub-header">
+        <button class="saved-hub-back" id="savedBackToList">← Back</button>
+        <div class="saved-hub-title">${escapeHtml(quizName)}</div>
+      </div>
+      <div class="saved-q-grid">${chips}</div>
+      <div class="saved-q-detail" id="savedQDetail"></div>`;
+    document.getElementById('savedBackToList').onclick = () => showSavedQuizList(body, allSaved);
+    const detail = document.getElementById('savedQDetail');
+    body.querySelectorAll('.saved-q-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const idx = parseInt(chip.dataset.idx);
+        body.querySelectorAll('.saved-q-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        showSavedQuestionDetail(detail, questions, idx, body, allSaved);
+      });
+    });
+    // Auto-open first question
+    if (questions.length) {
+      body.querySelector('.saved-q-chip').classList.add('active');
+      showSavedQuestionDetail(detail, questions, 0, body, allSaved);
+    }
+  }
+
+  function showSavedQuestionDetail(detail, questions, idx, body, allSaved) {
+    const q = questions[idx];
+    let optsHtml = q.opts.map(opt => {
+      const letter = opt.charAt(0);
+      const cls = letter === q.ans ? 'correct-highlight' : '';
+      return `<div class="option ${cls}">${escapeHtml(opt)}</div>`;
+    }).join('');
+    detail.innerHTML = `
+      <div class="saved-q-detail">
+        <div class="question-text">${escapeHtml(q.text)}</div>
+        <div class="options-list">${optsHtml}</div>
+        <div class="explanation-box">${formatExplanationRich(q.exp)}</div>
+        <div class="saved-q-nav">
+          <button class="saved-q-nav-btn" id="sqPrev" ${idx===0?'disabled':''}>← Prev</button>
+          <span class="saved-q-counter">${idx+1} / ${questions.length}</span>
+          <button class="saved-q-nav-btn danger" id="sqDelete">🗑️ Remove</button>
+          <button class="saved-q-nav-btn" id="sqNext" ${idx===questions.length-1?'disabled':''}>Next →</button>
+        </div>
+      </div>`;
+    // Sync active chip
+    body.querySelectorAll('.saved-q-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
+    // Scroll active chip into view
+    const activeChip = body.querySelector('.saved-q-chip.active');
+    if (activeChip) activeChip.scrollIntoView({ block: 'nearest', inline: 'center' });
+    detail.querySelector('#sqPrev').onclick = () => {
+      if (idx > 0) showSavedQuestionDetail(detail, questions, idx - 1, body, allSaved);
+    };
+    detail.querySelector('#sqNext').onclick = () => {
+      if (idx < questions.length - 1) showSavedQuestionDetail(detail, questions, idx + 1, body, allSaved);
+    };
+    detail.querySelector('#sqDelete').onclick = async () => {
+      if (!db) return;
+      try {
+        await db.ref(`quiz_saved_questions_${q.safeTopicName}/${q.id}`).remove();
+        showToast('🗑️ Removed from Saved');
+        questions.splice(idx, 1);
+        if (!questions.length) {
+          // No more questions — go back to quiz list
+          renderLibSaved(body);
+          return;
+        }
+        // Rebuild chips and show adjacent question
+        const newIdx = Math.min(idx, questions.length - 1);
+        const quizName = body.querySelector('.saved-hub-title')?.textContent || '';
+        showSavedQuestionGrid(body, questions, quizName, allSaved);
+        // Re-trigger the chip at newIdx
+        const chips = body.querySelectorAll('.saved-q-chip');
+        if (chips[newIdx]) {
+          chips[newIdx].classList.add('active');
+          showSavedQuestionDetail(document.getElementById('savedQDetail'), questions, newIdx, body, allSaved);
+        }
+      } catch(e) { showToast('Could not remove — check connection'); }
+    };
+    // Swipe support
+    attachSwipeNav(detail, () => {
+      if (idx < questions.length - 1) showSavedQuestionDetail(detail, questions, idx + 1, body, allSaved);
+    }, () => {
+      if (idx > 0) showSavedQuestionDetail(detail, questions, idx - 1, body, allSaved);
     });
   }
 
