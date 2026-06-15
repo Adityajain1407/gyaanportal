@@ -455,19 +455,7 @@
     padding: 32px 24px 80px;
   }
 
-  /* Breadcrumb */
-  .breadcrumb {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 32px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border-radius: 60px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
-  }
+  /* Breadcrumb styles in .breadcrumb-bar section below */
   .breadcrumb-item {
     display: inline-flex;
     align-items: center;
@@ -495,29 +483,31 @@
 
   .breadcrumb-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 32px;
-    flex-wrap: nowrap;
-    overflow: hidden;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
   }
   .breadcrumb {
-    flex: 1 1 0;
-    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     display: flex;
     align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 10px 20px;
+    box-shadow: var(--shadow-sm);
   }
   .breadcrumb::-webkit-scrollbar { display: none; }
   .breadcrumb-controls {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
-    flex-shrink: 0;
   }
   .view-toggle-group {
     display: inline-flex;
@@ -1569,7 +1559,6 @@
     .folders-grid { grid-template-columns: repeat(2, 1fr); }
     .quizzes-grid { grid-template-columns: repeat(2, 1fr); }
     /* Breadcrumb: single scrollable line, toggles stay right */
-    .breadcrumb-bar { flex-wrap: nowrap; overflow: hidden; }
     .breadcrumb { overflow-x: auto; white-space: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .breadcrumb::-webkit-scrollbar { display: none; }
     /* Selection bar: scrollable on mobile */
