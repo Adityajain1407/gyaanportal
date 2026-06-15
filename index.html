@@ -520,7 +520,7 @@
     flex-shrink: 0;
   }
   .view-toggle-group {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0;
     background: var(--surface);
@@ -530,7 +530,9 @@
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
     height: 36px;
-    box-sizing: border-box;
+    box-sizing: content-box;
+    overflow: visible;
+    width: max-content;
   }
   .view-toggle-btn {
     border: none;
