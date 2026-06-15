@@ -279,11 +279,11 @@
   }
 
   @media (max-width: 768px) {
-    .weather-btn, .theme-toggle, .view-toggle-btn, .nav-toggle-btn,
+    .weather-btn, .theme-toggle, .nav-toggle-btn,
     .saved-back-btn, .saved-delete-btn, .std-btn, button {
       min-height: 40px;
     }
-    .view-toggle-btn, .theme-toggle, .close-choice, .saved-nav-arrow {
+    .theme-toggle, .close-choice, .saved-nav-arrow {
       min-width: 40px;
       min-height: 40px;
     }
@@ -513,28 +513,27 @@
     gap: 8px;
     flex-shrink: 0;
   }
-  .breadcrumb-controls .view-toggle-group {
-    height: 44px;
-    display: flex;
-    align-items: center;
-  }
   .view-toggle-group {
     display: flex;
     align-items: center;
-    gap: 4px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 40px;
     padding: 4px;
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
+    height: 44px;
+    box-sizing: border-box;
+    gap: 0;
   }
   .view-toggle-btn {
     border: none;
     background: transparent;
     color: var(--text-3);
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px !important;
+    min-height: 36px !important;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -542,6 +541,9 @@
     font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
   }
   .view-toggle-btn:hover { color: var(--accent); }
   .view-toggle-btn.active { background: var(--accent); color: #fff; }
@@ -2657,7 +2659,7 @@
         <div class="view-toggle-group">
           <button class="view-toggle-btn${viewMode==='grid'?' active':''}" id="gridViewBtn" title="Grid view">▦</button>
           <button class="view-toggle-btn${viewMode==='list'?' active':''}" id="listViewBtn" title="List view">☰</button>
-          <div style="width:1px;height:18px;background:var(--border-2);margin:0 2px;opacity:0.5;flex-shrink:0;"></div>
+          <div style="width:1px;height:18px;background:var(--border-2);margin:0 4px;opacity:0.6;flex-shrink:0;align-self:center;"></div>
           <button class="view-toggle-btn" id="newFolderBtn" title="New Folder">+</button>
         </div>
       </div>
