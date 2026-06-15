@@ -3730,14 +3730,14 @@
   }
 
   function setDarkMode(isDark) {
-    if (isDark) document.body.classList.add('dark-theme');
-    else document.body.classList.remove('dark-theme');
+    if (isDark) document.body.classList.add('dark');
+    else document.body.classList.remove('dark');
     localStorage.setItem('quiz_dark', isDark);
     document.getElementById('appearancePanel')?.classList.remove('open');
     document.getElementById('appearancePillBtn')?.classList.remove('open');
     updateThemeColorMeta();
     onThemeChanged();
-  }
+}
 
   function initTheme() {
     // Load user-specific theme if logged in, else device theme
@@ -3752,7 +3752,7 @@
       dark  = localStorage.getItem('quiz_dark') === 'true';
     }
     document.body.setAttribute('data-theme', theme);
-    document.body.classList.toggle('dark-theme', dark);
+    document.body.classList.toggle('dark', dark);
     updateThemeColorMeta?.();
   }
 
@@ -3801,7 +3801,7 @@
       let startIdx = data.hourly.time.findIndex(t => new Date(t) >= nowIso);
       if (startIdx === -1) startIdx = 0;
       let hourlyHtml = '';
-      for (let i = startIdx; i < startIdx + 24 && i < data.hourly.time.length; i += 2) {
+      for (let i = startIdx; i < startIdx + 24 && i < data.hourly.time.length; i++) {
         const date = new Date(data.hourly.time[i]);
         const hourLabel = date.toLocaleTimeString('en-US', {hour: 'numeric'});
         const hEmoji = weatherCodes[data.hourly.weather_code[i]] || '☀️';
