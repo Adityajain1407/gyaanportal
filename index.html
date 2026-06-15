@@ -2001,11 +2001,20 @@
     background: var(--exp-bg);
     border-left: 5px solid var(--exp-border);
     border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.82rem;
-    line-height: 1.5;
+    padding: 12px 14px;
+    font-size: 0.83rem;
+    line-height: 1.6;
     margin-bottom: 12px;
   }
+  .saved-q-detail .explanation-line {
+    margin-bottom: 0.6rem;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .saved-q-detail .explanation-line:last-child { margin-bottom: 0; }
   .saved-q-nav {
     display: flex;
     align-items: center;
@@ -2134,6 +2143,12 @@
   .saved-detail .exp-correct { color: var(--exp-correct-text); font-weight: bold; background: var(--exp-correct-bg); padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; margin-right: 6px; }
   .saved-detail .exp-incorrect { color: var(--exp-incorrect-text); font-weight: bold; background: var(--exp-incorrect-bg); padding: 0.2rem 0.6rem; border-radius: 24px; display: inline-block; font-size: 0.9rem; margin-right: 6px; }
   .saved-detail .exp-text { color: var(--text); font-weight: 600; }
+  /* Global explanation pill styles — used by formatExplanationRich everywhere in the portal */
+  .explanation-line { margin-bottom: 0.7rem; line-height: 1.5; }
+  .explanation-line:last-child { margin-bottom: 0; }
+  .exp-correct { color: var(--exp-correct-text); font-weight: 700; background: var(--exp-correct-bg); padding: 0.15rem 0.55rem; border-radius: 24px; display: inline-block; font-size: 0.82rem; margin-right: 6px; white-space: nowrap; }
+  .exp-incorrect { color: var(--exp-incorrect-text); font-weight: 700; background: var(--exp-incorrect-bg); padding: 0.15rem 0.55rem; border-radius: 24px; display: inline-block; font-size: 0.82rem; margin-right: 6px; white-space: nowrap; }
+  .exp-text { color: var(--text); font-weight: 500; font-size: 0.85rem; }
   .saved-detail-actions { display: flex; gap: 12px; margin-top: 1.2rem; flex-wrap: wrap; }
   .saved-back-btn, .saved-delete-btn {
     border: none; border-radius: 40px; padding: 10px 20px; font-weight: bold; cursor: pointer; transition: var(--transition);
