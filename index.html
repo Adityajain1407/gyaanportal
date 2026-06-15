@@ -2814,7 +2814,11 @@
     };
   }
   let viewMode = localStorage.getItem('quiz_view_mode') || 'grid';
-  function navigateToFolder(name) { currentPath.push(name); renderNavigationView(); }
+  function navigateToFolder(name) {
+    currentPath.push(name);
+    history.pushState({ portalPath: [...currentPath] }, '');
+    renderNavigationView();
+  }
   function setViewMode(mode) {
     viewMode = mode;
     localStorage.setItem('quiz_view_mode', mode);
@@ -2846,6 +2850,7 @@
       el.addEventListener("click",()=>{
         if(el.dataset.path==="root") currentPath=[];
         else if(el.dataset.pathIndex!==undefined) currentPath = currentPath.slice(0, parseInt(el.dataset.pathIndex)+1);
+        history.pushState({ portalPath: [...currentPath] }, '');
         renderNavigationView();
       });
     });
@@ -4809,6 +4814,82 @@
   })();
 
   init();
+  // Push initial state so first popstate has something to catch
+  history.replaceState({ portalPath: [] }, '');
+
+  // ----- Android/mobile back button handler -----
+  window.addEventListener('popstate', (e) => {
+    // Priority order: close modals first, then library, then selection, then go up a folder
+
+    // FM modals (rename, delete, token, new folder, data mgmt)
+    if (document.getElementById('fmModalBackdrop')) {
+      closeFMModal();
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Choice modal (⚙️ hub)
+    if (document.getElementById('choiceModal')?.classList.contains('active')) {
+      document.getElementById('choiceModal').classList.remove('active');
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Clock / Weather / other choice modals
+    if (document.getElementById('clockModal')?.classList.contains('active')) {
+      document.getElementById('clockModal').classList.remove('active');
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    if (document.getElementById('weatherModal')?.classList.contains('active')) {
+      document.getElementById('weatherModal').classList.remove('active');
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    if (document.getElementById('dinoModal')?.classList.contains('active')) {
+      document.getElementById('dinoModal').classList.remove('active');
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    if (document.getElementById('breathingModal')?.classList.contains('active')) {
+      document.getElementById('breathingModal').classList.remove('active');
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Search overlay
+    if (document.getElementById('searchOverlay')?.classList.contains('active')) {
+      document.getElementById('closeOverlayBtn')?.click();
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Library Hub (🥷)
+    if (libOpen) {
+      closeLibrary();
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Selection mode
+    if (selectionActive) {
+      clearSelection();
+      history.pushState({ portalPath: [...currentPath] }, '');
+      return;
+    }
+    // Saved mode — exit back to normal view
+    if (savedMode) {
+      detachSavedListeners();
+      savedMode = false;
+      currentPath = [];
+      history.pushState({ portalPath: [] }, '');
+      renderNavigationView();
+      return;
+    }
+    // Navigate up one folder level
+    if (currentPath.length > 0) {
+      currentPath.pop();
+      history.pushState({ portalPath: [...currentPath] }, '');
+      renderNavigationView();
+      return;
+    }
+    // Already at root — let browser handle it (minimise app / exit)
+  });
 
   // ----- Global keyboard navigation -----
   // Tracks which folder/quiz is focused on the homepage for arrow-key navigation
