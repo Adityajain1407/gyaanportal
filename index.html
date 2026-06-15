@@ -4017,14 +4017,23 @@
   async function refreshFilesAndSync(changeInfo) {
     const files = await loadFiles(true); // bust cache after any mutation
     if (files) {
+      // Only update tree + re-render if GitHub returned valid data
       rootTree = buildTree(files);
+      if (changeInfo) {
+        const { type, oldPath, newPath } = changeInfo;
+        await updateFavouritesOnChange(type, oldPath, newPath || '');
+        if (type === 'delete') await updateRecentsOnChange(type, oldPath);
+      }
+      renderNavigationView();
+    } else {
+      // loadFiles failed (GitHub API hiccup) — optimistic UI is already showing,
+      // just fire Firebase broadcast and silently skip the re-render
+      if (changeInfo) {
+        const { type, oldPath, newPath } = changeInfo;
+        await updateFavouritesOnChange(type, oldPath, newPath || '');
+        if (type === 'delete') await updateRecentsOnChange(type, oldPath);
+      }
     }
-    if (changeInfo) {
-      const { type, oldPath, newPath } = changeInfo;
-      await updateFavouritesOnChange(type, oldPath, newPath || '');
-      if (type === 'delete') await updateRecentsOnChange(type, oldPath);
-    }
-    renderNavigationView();
     if (db && changeInfo) {
       db.ref(FM_SYNC_KEY).set({ ...changeInfo, ts: Date.now() }).catch(() => {});
     }
