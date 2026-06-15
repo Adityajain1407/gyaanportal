@@ -3240,9 +3240,20 @@
       </div>`;
     // Sync active chip
     body.querySelectorAll('.saved-q-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
-    // Scroll active chip into view
+    // Scroll active chip into view — scroll within the grid only, never the page
     const activeChip = body.querySelector('.saved-q-chip.active');
-    if (activeChip) activeChip.scrollIntoView({ block: 'nearest', inline: 'center' });
+    const chipGrid = body.querySelector('.saved-q-grid');
+    if (activeChip && chipGrid) {
+      const chipLeft = activeChip.offsetLeft;
+      const chipRight = chipLeft + activeChip.offsetWidth;
+      const gridScrollLeft = chipGrid.scrollLeft;
+      const gridWidth = chipGrid.clientWidth;
+      if (chipLeft < gridScrollLeft) {
+        chipGrid.scrollLeft = chipLeft - 8;
+      } else if (chipRight > gridScrollLeft + gridWidth) {
+        chipGrid.scrollLeft = chipRight - gridWidth + 8;
+      }
+    }
     detail.querySelector('#sqPrev').onclick = () => {
       if (idx > 0) showSavedQuestionDetail(detail, questions, idx - 1, body, allSaved);
     };
@@ -4783,22 +4794,25 @@
 
     // Saved popup navigation — must check libOpen so arrows don't leak to main nav
     if (libOpen) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       const sqPrev = document.getElementById('sqPrev');
       const sqNext = document.getElementById('sqNext');
       if (sqPrev || sqNext) {
-        e.preventDefault();
-        e.stopPropagation();
-        if ((key === 'ArrowLeft' || key === 'ArrowUp') && sqPrev && !sqPrev.disabled) sqPrev.click();
-        if ((key === 'ArrowRight' || key === 'ArrowDown') && sqNext && !sqNext.disabled) sqNext.click();
+        // Use dispatchEvent with a plain click that won't bubble to backdrop
+        if ((key === 'ArrowLeft' || key === 'ArrowUp') && sqPrev && !sqPrev.disabled) {
+          sqPrev.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+        }
+        if ((key === 'ArrowRight' || key === 'ArrowDown') && sqNext && !sqNext.disabled) {
+          sqNext.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+        }
       }
       // Old saved detail arrows (legacy)
       const navPrev = document.getElementById('savedNavPrev');
       const navNext = document.getElementById('savedNavNext');
       if (navPrev || navNext) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (key === 'ArrowLeft' || key === 'ArrowUp') navPrev?.click();
-        if (key === 'ArrowRight' || key === 'ArrowDown') navNext?.click();
+        if (key === 'ArrowLeft' || key === 'ArrowUp') navPrev?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
+        if (key === 'ArrowRight' || key === 'ArrowDown') navNext?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
       }
       return; // never fall through to main nav when popup is open
     }
