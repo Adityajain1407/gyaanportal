@@ -4033,7 +4033,8 @@
     const btnsHtml = buttons.map((b, i) =>
       `<button class="fm-btn ${b.cls}" id="fmBtn${i}">${b.label}</button>`
     ).join('');
-    backdrop.innerHTML = `<div class="fm-modal"><h3>${title}</h3>${body}<div class="fm-modal-btns">${btnsHtml}</div></div>`;
+    const btnsRow = buttons.length ? `<div class="fm-modal-btns">${btnsHtml}</div>` : '';
+    backdrop.innerHTML = `<div class="fm-modal"><h3>${title}</h3>${body}${btnsRow}</div>`;
     document.body.appendChild(backdrop);
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeFMModal(); });
     buttons.forEach((b, i) => {
@@ -4658,23 +4659,29 @@
   // DATA MANAGEMENT
   // =====================================================================
   function openDataMgmtModal() {
-    const btnStyle = 'text-align:left;border-radius:14px;border:1px solid var(--border-2);';
+    const row = 'display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border-2);background:var(--surface-2);font-size:0.95rem;cursor:pointer;transition:opacity 0.15s;';
     showFMModal({
       title: '🗂️ Data Management',
       body: `
-        <p>Manage quiz data stored in Firebase.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:0;">
-          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('recents')" style="${btnStyle}">
-            🕐 <strong>Clear Recents</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all recent quiz history</span>
+        <p style="margin-bottom:14px;">Manage quiz data stored in Firebase.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button style="${row}" onclick="closeFMModal();dmAction('recents')">
+            <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
+            <span><strong style="color:var(--text);">Clear Recents</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all recent quiz history</span></span>
           </button>
-          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('saved')" style="${btnStyle}">
-            🔖 <strong>Clear Saved Questions</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all bookmarked questions</span>
+          <button style="${row}" onclick="closeFMModal();dmAction('saved')">
+            <span style="font-size:1.4rem;flex-shrink:0;">🔖</span>
+            <span><strong style="color:var(--text);">Clear Saved Questions</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Removes all bookmarked questions</span></span>
           </button>
-          <button class="fm-btn fm-btn-cancel" onclick="closeFMModal();dmAction('master')" style="${btnStyle}border-color:#d9453d;">
-            💥 <strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Wipes ALL data from Firebase</span>
+          <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="closeFMModal();dmAction('master')">
+            <span style="font-size:1.4rem;flex-shrink:0;">💥</span>
+            <span><strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;color:var(--text-3);">Wipes ALL data from Firebase</span></span>
+          </button>
+          <button style="${row}justify-content:center;margin-top:4px;border-color:var(--border-2);" onclick="closeFMModal()">
+            <span style="color:var(--text-3);font-weight:600;">Cancel</span>
           </button>
         </div>`,
-      buttons: [{ label: 'Cancel', cls: 'fm-btn-cancel' }]
+      buttons: []
     });
   }
 
