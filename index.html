@@ -1589,12 +1589,19 @@
   @media (max-width: 600px) {
     .header-inner { gap: 6px; }
     .header-actions { gap: 6px; }
-    .weather-btn, .live-clock {
+    /* Clock: icon-only circle on narrow/portrait mobile */
+    .live-clock {
+      width: 36px; height: 36px; min-width: 36px;
+      padding: 0; border-radius: 50%;
+      justify-content: center; gap: 0;
+    }
+    .clock-text { display: none !important; }
+    /* Weather: keep temperature text visible, just tighter */
+    .weather-btn {
       padding: 0 7px; height: 36px;
       width: auto !important;
     }
     .wx-text { display: inline !important; font-size: 0.72rem; }
-    .clock-text { display: inline !important; font-size: 0.72rem; }
     .wbtn-icon { font-size: 0.95rem; }
     .search-compact { width: 36px; height: 36px; min-width: 36px; }
     .theme-toggle { width: 36px; height: 36px; min-width: 36px; padding: 0; border-radius: 50%; }
