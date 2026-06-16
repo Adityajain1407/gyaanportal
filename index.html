@@ -4727,10 +4727,11 @@
   function removeAuthOverlay() { document.getElementById('authOverlay')?.remove(); }
   function showAuthOverlay(html, onReady) {
     removeAuthOverlay();
+    document.getElementById('splashScreen')?.classList.add('hide');
     const el = document.createElement('div');
     el.id = 'authOverlay';
-    el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:var(--bg,#f4f6fa);display:flex;align-items:center;justify-content:center;padding:20px;min-height:100dvh;';
-    el.innerHTML = html;
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:9999;background:var(--bg,#f4f6fa);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;overflow-y:auto;';
+    el.innerHTML = `<div style="margin:auto;">${html}</div>`;
     document.body.appendChild(el);
     onReady?.(el);
   }
