@@ -3113,6 +3113,13 @@
       renderSavedDetail(savedItems, idx);
     }));
     updateBreadcrumb();
+
+    // Auto-focus the first folder/quiz so arrow keys work immediately without
+    // requiring a "wasted" first press just to activate keyboard navigation.
+    // Touch/click interactions clear this automatically via the pointerdown
+    // listener, so it never visually interferes on mobile.
+    const firstItem = contentDiv.querySelector('.folder-card, .quiz-item');
+    if (firstItem) setKbFocus(firstItem);
   }
   function renderSavedDetail(items, idx) {
     const item = items[idx];
@@ -6115,6 +6122,40 @@
     return best;
   }
 
+  // Predictable row-based up/down navigation: groups all focusable items into
+  // rows by Y-position (items within ROW_TOLERANCE px of each other share a row),
+  // then moving up/down always lands on the LEFTMOST item of the adjacent row —
+  // never a geometrically-"closest" item that could be unpredictable depending
+  // on exact pixel offsets. Left/right still use the spatial findNeighbour.
+  const ROW_TOLERANCE = 12;
+  function getRows(all) {
+    const withRects = all.map(el => ({ el, r: el.getBoundingClientRect() }))
+                          .sort((a, b) => a.r.top - b.r.top);
+    const rows = [];
+    for (const item of withRects) {
+      let row = rows.find(r => Math.abs(r.top - item.r.top) <= ROW_TOLERANCE);
+      if (!row) { row = { top: item.r.top, items: [] }; rows.push(row); }
+      row.items.push(item);
+    }
+    // Sort each row left-to-right, and rows top-to-bottom
+    rows.forEach(r => r.items.sort((a, b) => a.r.left - b.r.left));
+    rows.sort((a, b) => a.top - b.top);
+    return rows;
+  }
+  function findRowNeighbour(from, dir) {
+    const all = getAllFocusable();
+    const rows = getRows(all);
+    const fromRect = from.getBoundingClientRect();
+    const curRowIdx = rows.findIndex(r => Math.abs(r.top - fromRect.top) <= ROW_TOLERANCE);
+    if (curRowIdx === -1) return null;
+    const targetRowIdx = dir === 'down' ? curRowIdx + 1 : curRowIdx - 1;
+    const targetRow = rows[targetRowIdx];
+    if (!targetRow || !targetRow.items.length) return null;
+    // Always land on the leftmost item of the target row — predictable, not
+    // "closest to current column", per the requested behavior.
+    return targetRow.items[0].el;
+  }
+
   function isAnyModalOpen() {
     return (
       document.getElementById('fmModalBackdrop') ||
@@ -6309,7 +6350,9 @@
 
       if (kbFocused && isArrow) {
         e.preventDefault();
-        const next = findNeighbour(kbFocused, dir);
+        const next = (dir === 'up' || dir === 'down')
+          ? (findRowNeighbour(kbFocused, dir) || findNeighbour(kbFocused, dir))
+          : findNeighbour(kbFocused, dir);
         if (next) setKbFocus(next);
         return;
       }
