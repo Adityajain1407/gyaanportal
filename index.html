@@ -891,6 +891,16 @@
     flex: 1;
     min-width: 250px;
   }
+  @media (max-width: 700px) {
+    .results-area { flex-direction: column; gap: 20px; }
+    .results-column { min-width: 100%; width: 100%; flex: none; }
+  }
+  @media (max-width: 480px) {
+    .search-overlay { padding: 16px 14px; }
+    .search-overlay-header { gap: 10px; margin-bottom: 16px; }
+    .search-overlay-input { padding: 11px 14px; font-size: 1rem; }
+    .search-toolbar { gap: 8px; margin-bottom: 14px; }
+  }
   .results-header {
     font-weight: 600;
     margin-bottom: 12px;
