@@ -3173,16 +3173,26 @@
       });
     });
     document.querySelectorAll(".search-result-item[data-type='saved']").forEach(el => {
-      el.addEventListener("click", () => {
+      el.addEventListener("click", async () => {
         const pathArr = JSON.parse(decodeURIComponent(el.dataset.path));
-        if (!savedMode) {
-          attachSavedListeners();
-          savedMode = true;
-        }
-        currentPath = pathArr;
-        renderNavigationView();
+        const quizName = pathArr[pathArr.length - 1];
+        const safe = getSafeTopicName(pathArr.join('/'));
         closeOverlayFunc();
-        showToast(`Opened saved questions: ${pathArr.join(" / ")}`);
+        // Open the same Library Hub popup used everywhere else for saved questions
+        openLibrary('saved');
+        try {
+          const snap = await db.ref(`quiz_saved_questions_${getUserPrefix()}${safe}`).get();
+          const body = document.getElementById('libraryBody');
+          if (!snap.exists() || !body) { showToast('No saved questions found'); return; }
+          const data = snap.val();
+          const questions = Object.entries(data)
+            .map(([id, q]) => ({ id: Number(id), ...q, safeTopicName: safe }))
+            .sort((a, b) => a.id - b.id);
+          // Build the same allSaved list so the "← Back" button works correctly
+          if (!savedTree) savedTree = await buildSavedTree();
+          const allSaved = flattenSavedQuizzes(savedTree);
+          showSavedQuestionGrid(body, questions, quizName, allSaved);
+        } catch(e) { showToast('Could not load saved questions'); }
       });
     });
   }
