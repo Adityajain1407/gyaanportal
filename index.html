@@ -2056,39 +2056,42 @@
     border-left: 4px solid var(--accent);
     padding-left: 10px;
   }
-  .saved-q-detail .options-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-  .saved-q-detail .option {
+  .saved-q-detail .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .option-capsule {
     background: var(--option-bg);
     border: 1.5px solid var(--option-border);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--option-text);
+    border-radius: 14px;
+    padding: 10px 14px 12px;
     pointer-events: none;
   }
-  .saved-q-detail .option.correct-highlight {
+  .option-capsule.correct-highlight {
     background: var(--correct-bg);
     border-color: var(--correct-border);
-    color: var(--correct-text);
-    font-weight: 700;
   }
-  .saved-q-detail .option.incorrect-highlight {
+  .option-capsule.incorrect-highlight {
     background: var(--wrong-bg);
     border-color: var(--wrong-border);
-    color: var(--wrong-text);
   }
-  .option-block { margin-bottom: 4px; }
+  .option-text {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--option-text);
+    margin-bottom: 4px;
+  }
+  .option-capsule.correct-highlight .option-text { color: var(--correct-text); }
+  .option-capsule.incorrect-highlight .option-text { color: var(--wrong-text); }
   .option-explanation {
     font-size: 0.8rem;
     line-height: 1.5;
-    padding: 6px 12px 2px;
-    color: var(--text-2);
+    color: var(--option-text);
+    opacity: 0.85;
   }
-  .option-explanation.exp-is-correct { color: var(--exp-correct-text); }
-  .option-explanation.exp-is-incorrect { color: var(--exp-incorrect-text); }
+  .option-capsule.correct-highlight .option-explanation { color: var(--correct-text); opacity: 0.9; }
+  .option-capsule.incorrect-highlight .option-explanation { color: var(--wrong-text); opacity: 0.85; }
   @media (min-width: 900px) {
-    .option-explanation { font-size: 0.9rem; padding: 8px 16px 2px; }
+    .option-text { font-size: 1.02rem; }
+    .option-capsule { padding: 14px 18px 16px; border-radius: 16px; }
+    .option-explanation { font-size: 0.9rem; }
   }
   .saved-q-detail .explanation-box {
     background: var(--exp-bg);
@@ -2103,14 +2106,12 @@
   @media (min-width: 900px) {
     .saved-q-detail { padding-top: 20px; }
     .saved-q-detail .question-text { font-size: 1.2rem; margin-bottom: 18px; padding-left: 14px; border-left-width: 5px; }
-    .saved-q-detail .options-list { gap: 10px; margin-bottom: 18px; }
-    .saved-q-detail .option { font-size: 1.02rem; padding: 12px 16px; border-radius: 12px; }
+    .saved-q-detail .options-list { gap: 12px; margin-bottom: 18px; }
     .saved-q-detail .explanation-box { font-size: 0.96rem; padding: 16px 18px; line-height: 1.7; margin-bottom: 16px; }
     .saved-q-chip { width: 48px; min-width: 48px; padding: 9px 0; font-size: 0.88rem; }
   }
   @media (min-width: 1280px) {
     .saved-q-detail .question-text { font-size: 1.32rem; }
-    .saved-q-detail .option { font-size: 1.08rem; }
     .saved-q-detail .explanation-box { font-size: 1.02rem; }
   }
   .saved-q-detail .explanation-line {
@@ -3539,12 +3540,10 @@
       const letter = opt.charAt(0).toLowerCase();
       const isCorrect = opt.charAt(0) === q.ans;
       const info = expMap[letter];
-      const optCls = isCorrect ? 'correct-highlight' : (info ? 'incorrect-highlight' : '');
-      const expHtml = info
-        ? `<div class="option-explanation ${info.correct ? 'exp-is-correct' : 'exp-is-incorrect'}">${escapeHtml(info.text)}</div>`
-        : '';
-      return `<div class="option-block">
-        <div class="option ${optCls}">${escapeHtml(opt)}</div>
+      const capsuleCls = isCorrect ? 'correct-highlight' : (info ? 'incorrect-highlight' : '');
+      const expHtml = info ? `<div class="option-explanation">${escapeHtml(info.text)}</div>` : '';
+      return `<div class="option-capsule ${capsuleCls}">
+        <div class="option-text">${escapeHtml(opt)}</div>
         ${expHtml}
       </div>`;
     }).join('');
