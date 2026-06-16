@@ -1167,7 +1167,7 @@
         }
     ];
 
-    const topicName = "Tribes of Madhya Pradesh – General Introduction"; // must exactly match the uploaded filename (minus numeric prefix and .html) for the Saved-Questions feature to work
+    const topicName = "General Introduction to the Tribes of MP"; // must exactly match the uploaded filename (minus numeric prefix and .html) for the Saved-Questions feature to work
 
     // --------------------------------------------------------------
     // DO NOT EDIT ANYTHING BELOW THIS LINE
@@ -1175,11 +1175,13 @@
 
     const TOTAL_QS = FULL_QUIZ.length;
 
-    // Generate unique storage keys based on the quiz title (to avoid cross-quiz contamination)
+    // Generate unique storage keys based on quiz title + logged-in portal user
     const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const STORAGE_KEY = `quiz_saved_state_${safeTopicName}`;
-    const LEADERBOARD_KEY = `quiz_leaderboard_${safeTopicName}`;
-    const SAVED_KEY = `quiz_saved_questions_${safeTopicName}`;
+    const _portalUser = (localStorage.getItem('portal_current_user') || 'guest').trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
+    const _userPrefix = `u_${_portalUser}__`;
+    const STORAGE_KEY = `quiz_saved_state_${_userPrefix}${safeTopicName}`;
+    const LEADERBOARD_KEY = `quiz_leaderboard_${_userPrefix}${safeTopicName}`;
+    const SAVED_KEY = `quiz_saved_questions_${_userPrefix}${safeTopicName}`;
 
     // --- Firebase Setup ---
     const firebaseConfig = {
