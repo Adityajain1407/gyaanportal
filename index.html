@@ -5302,6 +5302,10 @@
             <span style="font-size:1.4rem;flex-shrink:0;">✅</span>
             <span><strong>Approved Accounts</strong><br><span style="font-size:0.8rem;opacity:0.65;">Manage approved users</span></span>
           </button>
+          <button style="${row}" onclick="closeFMModal();dmAction('legacy')">
+            <span style="font-size:1.4rem;flex-shrink:0;">🧹</span>
+            <span><strong>Clean Up Legacy Data</strong><br><span style="font-size:0.8rem;opacity:0.65;">Removes old data from before accounts existed</span></span>
+          </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="closeFMModal();dmAction('master')">
             <span style="font-size:1.4rem;flex-shrink:0;">💥</span>
             <span><strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;opacity:0.65;">Wipes ALL data from Firebase</span></span>
@@ -5332,7 +5336,8 @@
     const configs = {
       recents: { icon: '🕐', title: 'Clear Recents?', desc: 'All recent quiz history will be permanently deleted.', color: '#d9453d' },
       saved:   { icon: '🔖', title: 'Clear Saved Questions?', desc: 'All bookmarked questions across all quizzes will be permanently deleted.', color: '#d9453d' },
-      master:  { icon: '💥', title: 'Master Reset?', desc: 'ALL Firebase data will be wiped — quiz states, leaderboards, saved questions, recents, favourites. This cannot be undone.', color: '#7f1d1d' }
+      master:  { icon: '💥', title: 'Master Reset?', desc: 'ALL Firebase data will be wiped — quiz states, leaderboards, saved questions, recents, favourites. This cannot be undone.', color: '#7f1d1d' },
+      legacy:  { icon: '🧹', title: 'Clean Up Legacy Data?', desc: 'Removes old saved questions, recents, favourites and quiz progress saved before the account system existed. Only affects data NOT tied to any username. This cannot be undone.', color: '#d9453d' }
     };
     const c = configs[type];
     const backdrop = document.createElement('div');
@@ -5401,6 +5406,22 @@
         await db.ref('/').remove();
         recents = {}; favourites = {};
         showToast('✅ Master reset complete');
+      } else if (type === 'legacy') {
+        // Remove orphaned data from before the multi-user system existed —
+        // any quiz_saved_questions_/quiz_portal_recents_/quiz_portal_favourites_/
+        // quiz_saved_state_/quiz_leaderboard_ key that does NOT contain "u_...__"
+        const snap = await db.ref('/').get();
+        if (snap.exists()) {
+          const data = snap.val();
+          const prefixes = ['quiz_saved_questions_', 'quiz_portal_recents_', 'quiz_portal_favourites_', 'quiz_saved_state_', 'quiz_leaderboard_'];
+          const toDelete = Object.keys(data).filter(k =>
+            prefixes.some(p => k.startsWith(p)) && !k.includes('u_') 
+          );
+          for (const k of toDelete) await db.ref(k).remove();
+          showToast(`✅ Removed ${toDelete.length} legacy key(s)`);
+        } else {
+          showToast('Nothing to clean');
+        }
       }
     } catch(e) { showToast('❌ Error: ' + e.message); }
   }
