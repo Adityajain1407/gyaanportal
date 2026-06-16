@@ -567,7 +567,8 @@
      outline — the default 3px offset is too loose inside the tightly-packed
      toggle group and looks misaligned against the small rounded buttons. */
   .view-toggle-btn.kb-focus {
-    outline-offset: 1px !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2.5px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent) !important;
     border-radius: 20px;
   }
   .view-toggle-divider {
@@ -1272,6 +1273,13 @@
     background: var(--surface-2) !important;
     position: relative;
     z-index: 2;
+  }
+  /* Option-capsule focus (saved question detail) must NOT override the
+     correct/incorrect background — only add a visible ring on top of it. */
+  .option-capsule.kb-lib-focus {
+    background: inherit !important;
+    box-shadow: 0 0 0 2.5px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+    outline: none !important;
   }
   .clock-cal-layout {
     display: flex;
@@ -6115,10 +6123,9 @@
   // jumps to a different row just because it's geometrically "closer" overall —
   // e.g. pressing Right from the logo must reach Search on the same row, not
   // jump down to the Home breadcrumb on the row below.
-  function findNeighbour(from, dir) {
-    const all = getAllFocusable();
+  function findNeighbour(from, dir, pool) {
+    const all = pool || getAllFocusable();
     const fc = getCenter(from);
-    const fromRect = from.getBoundingClientRect();
     let best = null, bestScore = Infinity;
     const isHorizontal = dir === 'right' || dir === 'left';
     for (const el of all) {
@@ -6163,8 +6170,8 @@
     rows.sort((a, b) => a.top - b.top);
     return rows;
   }
-  function findRowNeighbour(from, dir) {
-    const all = getAllFocusable();
+  function findRowNeighbour(from, dir, pool) {
+    const all = pool || getAllFocusable();
     const rows = getRows(all);
     const fromRect = from.getBoundingClientRect();
     const curRowIdx = rows.findIndex(r => Math.abs(r.top - fromRect.top) <= ROW_TOLERANCE);
@@ -6243,7 +6250,7 @@
 
     // ── Library Hub popup (🥷) ──
     if (libOpen) {
-      // Saved question detail: Left/Right navigate questions
+      // Saved question detail: Left/Right navigate questions, Up/Down slide through answer options
       const sqPrev = document.getElementById('sqPrev');
       const sqNext = document.getElementById('sqNext');
       if (sqPrev || sqNext) {
@@ -6251,11 +6258,13 @@
           e.preventDefault(); e.stopImmediatePropagation();
           if (isLeft  && sqPrev && !sqPrev.disabled) fireNoBubble(sqPrev);
           if (isRight && sqNext && !sqNext.disabled) fireNoBubble(sqNext);
+          // Moving to a new question resets option focus back to the top
+          libFocusIdx = -1;
         }
         if (isUp || isDown) {
           e.preventDefault();
-          const items = [...document.querySelectorAll('#libraryBody .recent-item, #libraryBody .lib-saved-item, #libraryBody .saved-hub-back')];
-          libNavItems(items, isDown, key);
+          const capsules = [...document.querySelectorAll('#libraryBody .option-capsule')];
+          libNavItems(capsules, isDown, key);
         }
         return;
       }
@@ -6292,14 +6301,29 @@
 
     // ── Choice modal (⚙️ Quick Access hub) ──
     if (document.getElementById('choiceModal')?.classList.contains('active')) {
-      if (isUp || isDown) {
+      const modalPool = () => [...document.querySelectorAll(
+        '#choiceModal .choice-card, #choiceModal .settings-pill, #choiceModal .theme-swatch, #hubProfileCapsule, #closeChoiceBtn'
+      )].filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+
+      if (isArrow) {
         e.preventDefault();
-        const items = [...document.querySelectorAll('#choiceModal .choice-card, #choiceModal .settings-pill, #choiceModal .theme-swatch')];
-        libNavItems(items, isDown, key);
+        const pool = modalPool();
+        const curFocusedInModal = kbFocused && pool.includes(kbFocused) ? kbFocused : null;
+        if (!curFocusedInModal) {
+          // First arrow press inside the modal: focus the first item (profile capsule)
+          if (pool.length) setKbFocus(pool[0]);
+          return;
+        }
+        const dir = isRight ? 'right' : isLeft ? 'left' : isDown ? 'down' : 'up';
+        const next = (dir === 'up' || dir === 'down')
+          ? (findRowNeighbour(curFocusedInModal, dir, pool) || findNeighbour(curFocusedInModal, dir, pool))
+          : findNeighbour(curFocusedInModal, dir, pool);
+        if (next) setKbFocus(next);
+        return;
       }
-      if (key === 'Enter') {
-        const focused = document.querySelector('#choiceModal .kb-lib-focus');
-        if (focused) { e.preventDefault(); focused.click(); }
+      if (key === 'Enter' && kbFocused) {
+        e.preventDefault();
+        kbFocused.click();
       }
       return;
     }
