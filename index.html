@@ -563,6 +563,13 @@
   }
   .view-toggle-btn:hover { color: var(--accent); }
   .view-toggle-btn.active { background: var(--accent); color: #fff; }
+  /* Keyboard focus on these compact pill buttons needs a tighter, shape-matched
+     outline — the default 3px offset is too loose inside the tightly-packed
+     toggle group and looks misaligned against the small rounded buttons. */
+  .view-toggle-btn.kb-focus {
+    outline-offset: 1px !important;
+    border-radius: 20px;
+  }
   .view-toggle-divider {
     width: 1px;
     height: 16px;
