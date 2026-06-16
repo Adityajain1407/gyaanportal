@@ -1790,6 +1790,14 @@
     justify-content: center;
     padding: 20px;
   }
+  /* Avoid stacked double-darkening when fm-modal opens on top of an already-open
+     choice/library/search overlay — only the outermost backdrop should dim */
+  .choice-modal.active ~ .fm-modal-backdrop,
+  .library-backdrop.open ~ .fm-modal-backdrop,
+  .search-overlay.active ~ .fm-modal-backdrop {
+    background: transparent;
+    backdrop-filter: none;
+  }
   .fm-modal {
     background: var(--surface);
     border: 1px solid var(--border-2);
