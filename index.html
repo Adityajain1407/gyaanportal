@@ -250,11 +250,9 @@
   }
 
   /* THEME HOVER PHYSICS */
-  body[data-theme="ocean"] .folder-card:hover { transform: translateY(-8px) scale(1.02); }
-  body[data-theme="forest"] .folder-card:hover { transform: rotate(2deg) scale(1.02); }
-  body[data-theme="sunset"] .folder-card:hover { transform: scale(1.05); }
-  body[data-theme="amethyst"] .folder-card:hover { transform: scale(0.96); box-shadow: inset 0 0 10px rgba(147, 51, 234, 0.2); }
-  body[data-theme="monochrome"] .folder-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--border); }
+  /* Hover effect (scale-down + accent-tinted inset glow) is now universal —
+     see the base .folder-card:hover rule — so every theme automatically
+     gets the same feel with its own accent colour, light or dark. */
   body[data-theme="monochrome"] .folder-card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--border); }
 
 
@@ -673,8 +671,8 @@
     -webkit-touch-callout: none;
   }
   .folder-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: scale(0.96);
+    box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 20%, transparent);
     background: var(--surface-2);
   }
   .folder-icon {
@@ -2360,13 +2358,10 @@
     font-size: 1rem;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.15s, background 0.15s;
     flex-shrink: 0;
   }
-  .recent-item:hover .recent-menu-btn,
-  .recent-item:has(.kb-focus) .recent-menu-btn,
-  .recent-menu-btn.kb-focus { opacity: 1; }
   .recent-menu-btn:hover { background: var(--surface-3); color: var(--text); }
 
   /* ----- DATA MANAGEMENT COUNTDOWN ----- */
@@ -3723,7 +3718,6 @@
         const questions = Object.entries(data)
           .map(([id, q]) => ({ id: Number(id), ...q, safeTopicName: safe }))
           .sort((a, b) => a.id - b.id);
-        savedCurrentIdx = 0;
         showSavedQuestionGrid(body, questions, name, allSaved);
       }).catch(() => showToast('Could not load questions'));
     }));
@@ -3740,7 +3734,6 @@
   }
 
   let savedViewMode = 'attempt'; // 'revise' | 'attempt' — persists across re-entries within this session, never saved to Firebase/localStorage
-  let savedCurrentIdx = 0; // which question is currently being viewed, kept in sync by both modes so toggling between them preserves position
 
   function showSavedQuestionGrid(body, questions, quizName, allSaved, startIdx = 0) {
     body.innerHTML = `
@@ -3758,7 +3751,7 @@
       e.stopPropagation();
       if (savedViewMode === btn.dataset.mode) return;
       savedViewMode = btn.dataset.mode;
-      showSavedQuestionGrid(body, questions, quizName, allSaved, savedCurrentIdx);
+      showSavedQuestionGrid(body, questions, quizName, allSaved, 0);
     }));
     const modeBody = document.getElementById('savedModeBody');
     if (!questions.length) {
@@ -3805,7 +3798,7 @@
   }
 
   function renderAttemptQuestion(modeBody, questions, idx, quizName, allSaved, body) {
-    savedCurrentIdx = idx;
+    document.getElementById('libraryBody').scrollTop = 0;
     const q = questions[idx];
     let correct = 0, wrong = 0, notAttempted = 0;
     questions.forEach(qq => {
@@ -3905,7 +3898,7 @@
   }
 
   function showSavedQuestionDetail(detail, questions, idx, body, allSaved) {
-    savedCurrentIdx = idx;
+    document.getElementById('libraryBody').scrollTop = 0;
     const q = questions[idx];
     const expMap = parseExplanationByOption(q.exp);
     let optsHtml = q.opts.map(opt => {
