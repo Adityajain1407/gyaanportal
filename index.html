@@ -109,8 +109,8 @@
     --shadow-md: 0 4px 12px rgba(22, 163, 74, 0.08);
     --radius-card: 12px; --radius-folder: 12px;
     --button-text: #ffffff;
-    --correct-bg: #4ade80; --correct-border: #166534; --correct-text: #14532d;
-    --wrong-bg: #f87171; --wrong-border: #991b1b; --wrong-text: #7f1d1d;
+    --correct-bg: #d3f0d9; --correct-border: #2b7e3a; --correct-text: #145c23;
+    --wrong-bg: #ffe0e0; --wrong-border: #c7362b; --wrong-text: #a51b0f;
     --option-bg: #ffffff; --option-border: #d1fae5; --option-text: #14532d;
     --exp-bg: #fef7e0; --exp-border: #16a34a;
     --exp-correct-bg: #e0f3e3; --exp-correct-text: #1f6e2f;
@@ -120,7 +120,7 @@
   body[data-theme="forest"].dark {
     --bg: #052e16; --surface: #14532d; --surface-2: #166534; --surface-3: #15803d;
     --border: rgba(255,255,255,0.1); --border-2: rgba(255,255,255,0.18);
-    --text: #f0fdf4; --text-2: #dcfce7; --text-3: #86efac; --accent: #4ade80; --accent-bg: rgba(74, 222, 128, 0.1);
+    --text: #f0fdf4; --text-2: #bbf7d0; --text-3: #86efac; --accent: #4ade80; --accent-bg: rgba(74, 222, 128, 0.1);
     --button-text: #ffffff;
     --correct-bg: #22c55e; --correct-border: #86efac; --correct-text: #052e16;
     --wrong-bg: #792e26; --wrong-border: #cc6b5e; --wrong-text: #ffffff;
@@ -2131,39 +2131,36 @@
   .option-capsule {
     background: var(--option-bg);
     border: 1.5px solid var(--option-border);
-    border-radius: 14px;
-    padding: 10px 14px 12px;
+    border-radius: 1.2rem;
+    padding: 0.85rem 1.2rem 1rem;
     pointer-events: none;
   }
   .option-capsule.correct-highlight {
     background: var(--correct-bg);
     border-color: var(--correct-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
   .option-capsule.incorrect-highlight {
     background: var(--wrong-bg);
     border-color: var(--wrong-border);
   }
   .option-text {
-    font-size: 0.88rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--option-text);
-    margin-bottom: 4px;
   }
   .option-capsule.correct-highlight .option-text { color: var(--correct-text); }
   .option-capsule.incorrect-highlight .option-text { color: var(--wrong-text); }
   .option-explanation {
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    font-weight: 400;
+    margin-top: 0.6rem;
     color: var(--option-text);
     opacity: 0.85;
   }
-  .option-capsule.correct-highlight .option-explanation { color: var(--correct-text); opacity: 0.9; }
-  .option-capsule.incorrect-highlight .option-explanation { color: var(--wrong-text); opacity: 0.85; }
-  @media (min-width: 900px) {
-    .option-text { font-size: 1.02rem; }
-    .option-capsule { padding: 14px 18px 16px; border-radius: 16px; }
-    .option-explanation { font-size: 0.9rem; }
-  }
+  .option-capsule.correct-highlight .option-explanation { color: var(--correct-text); opacity: 0.92; }
+  .option-capsule.incorrect-highlight .option-explanation { color: var(--wrong-text); opacity: 0.88; }
   .saved-q-detail .explanation-box {
     background: var(--exp-bg);
     border-left: 5px solid var(--exp-border);
