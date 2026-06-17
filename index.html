@@ -2037,6 +2037,7 @@
   .library-tab:hover { color: var(--text); }
   .library-body {
     overflow-y: auto;
+    overscroll-behavior: contain;
     flex: 1;
     padding: 12px 16px;
     -webkit-overflow-scrolling: touch;
@@ -2133,7 +2134,7 @@
     margin-top: 4px;
   }
   .saved-q-detail .question-text {
-    font-size: 1rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 12px;
@@ -2272,13 +2273,12 @@
   /* Scale up text and spacing for comfortable reading on tablets/desktops */
   @media (min-width: 900px) {
     .saved-q-detail { padding-top: 20px; }
-    .saved-q-detail .question-text { font-size: 1.2rem; margin-bottom: 18px; padding-left: 14px; border-left-width: 5px; }
+    .saved-q-detail .question-text { margin-bottom: 18px; padding-left: 14px; border-left-width: 5px; }
     .saved-q-detail .options-list { gap: 12px; margin-bottom: 18px; }
     .saved-q-detail .explanation-box { font-size: 0.96rem; padding: 16px 18px; line-height: 1.7; margin-bottom: 16px; }
     .saved-q-chip { width: 48px; min-width: 48px; padding: 9px 0; font-size: 0.88rem; }
   }
   @media (min-width: 1280px) {
-    .saved-q-detail .question-text { font-size: 1.32rem; }
     .saved-q-detail .explanation-box { font-size: 1.02rem; }
   }
   .saved-q-detail .explanation-line {
@@ -3561,12 +3561,14 @@
     pathBeforeFav = [...currentPath];
     libOpen = true;
     libTab = tab || libTab;
+    document.body.style.overflow = 'hidden';
     document.getElementById('libraryBackdrop').classList.add('open');
     renderLibTab();
   }
   function closeLibrary() {
     libOpen = false;
     clearKbFocus();
+    document.body.style.overflow = '';
     document.getElementById('libraryBackdrop').classList.remove('open');
     currentPath = pathBeforeFav;
     renderNavigationView();
@@ -3885,6 +3887,11 @@
         if (!questions.length) { renderLibSaved(body); return; }
         renderAttemptQuestion(modeBody, questions, Math.min(idx, questions.length - 1), quizName, allSaved, body);
       } catch (e) { showToast('Could not remove — check connection'); }
+    });
+    attachSwipeNav(modeBody, () => {
+      if (idx < questions.length - 1) renderAttemptQuestion(modeBody, questions, idx + 1, quizName, allSaved, body);
+    }, () => {
+      if (idx > 0) renderAttemptQuestion(modeBody, questions, idx - 1, quizName, allSaved, body);
     });
   }
 
@@ -6580,23 +6587,9 @@
           clearKbFocus();
           return;
         }
-        const capsulePool = [...document.querySelectorAll('#libraryBody .option-capsule')]
-          .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
-        const curCapsule = kbFocused && capsulePool.includes(kbFocused) ? kbFocused : null;
-        if (isUp || isDown) {
-          e.preventDefault();
-          const next = curCapsule ? spatialNav(curCapsule, isDown ? 'down' : 'up', capsulePool) : (isDown ? capsulePool[0] : null);
-          if (next) { setKbFocus(next); return; }
-          if (isUp) { // already at/above the first capsule — exit to the active tab
-            const activeTab = document.querySelector('.library-tab.active');
-            if (activeTab) setKbFocus(activeTab);
-          }
-          return;
-        }
-        if (key === 'Enter') {
-          e.preventDefault();
-          if (curCapsule && curCapsule.classList.contains('unanswered-capsule')) curCapsule.click();
-        }
+        // Up/Down are deliberately NOT intercepted here — they're left to
+        // scroll the page natively instead of moving a focus ring between
+        // options (1-4 already selects an answer directly).
         return;
       }
       // Everywhere else in the Library Hub: the unified row model — one
