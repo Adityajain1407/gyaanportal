@@ -3847,7 +3847,13 @@
           <button class="saved-q-nav-btn" id="atNext" ${idx === questions.length - 1 ? 'disabled' : ''}>Next →</button>
         </div>
       </div>`;
-    modeBody.querySelector('.attempt-nav-grid')?.scrollIntoView({ block: 'start' });
+    {
+      const container = document.getElementById('libraryBody');
+      const navGrid = modeBody.querySelector('.attempt-nav-grid');
+      if (container && navGrid) {
+        container.scrollTop += navGrid.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      }
+    }
     if (!answered) {
       modeBody.querySelectorAll('.option-capsule.unanswered-capsule').forEach(cap => {
         cap.addEventListener('click', (e) => {
@@ -3922,7 +3928,13 @@
           <button class="saved-q-nav-btn" id="sqNext" ${idx===questions.length-1?'disabled':''}>Next →</button>
         </div>
       </div>`;
-    body.querySelector('.saved-q-grid')?.scrollIntoView({ block: 'start' });
+    {
+      const container = document.getElementById('libraryBody');
+      const navGrid = body.querySelector('.saved-q-grid');
+      if (container && navGrid) {
+        container.scrollTop += navGrid.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      }
+    }
     // Sync active chip
     body.querySelectorAll('.saved-q-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
     // Scroll active chip into view — scroll within the grid only, never the page
