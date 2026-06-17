@@ -6541,8 +6541,12 @@
       // back over.
       const prevBtn = document.getElementById('sqPrev') || document.getElementById('atPrev');
       const nextBtn = document.getElementById('sqNext') || document.getElementById('atNext');
-      const onTabRow = kbFocused && kbFocused.classList.contains('library-tab');
-      if ((prevBtn || nextBtn) && !onTabRow) {
+      const onOuterRow = kbFocused && (
+        kbFocused.classList.contains('library-tab') ||
+        kbFocused.classList.contains('smt-btn') ||
+        kbFocused.classList.contains('saved-hub-back')
+      );
+      if ((prevBtn || nextBtn) && !onOuterRow) {
         if (key === 'Tab') {
           // Switch Reattempt/Revise without leaving the detail view — the
           // one action besides question-nav/option-select this screen
