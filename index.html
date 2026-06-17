@@ -2963,7 +2963,7 @@
       if (!Array.isArray(items)) return null;
       let results = [];
       for (const item of items) {
-        if (item.type === 'file') results.push({ type: 'file', path: item.path });
+        if (item.type === 'file') results.push({ type: 'file', path: item.path, sha: item.sha });
         else if (item.type === 'dir') {
           const sub = await fetchAllFilesFlat(item.path, headers);
           if (sub) results = results.concat(sub);
@@ -5036,11 +5036,6 @@
       for (const { path: filePath, sha } of filesWithSha) {
         const ok = await ghDeleteFile(filePath, sha);
         if (!ok) { showToast(`⚠️ GitHub sync issue — refresh to verify`); return; }
-        // Cascade Firebase logs
-        if (db && (filePath.endsWith('.html') || filePath.endsWith('.md'))) {
-          const safe = cleanName(filePath.split('/').pop()).toLowerCase().replace(/[^a-z0-9]+/g,'_');
-          await cascadeDeleteQuizFirebaseData(safe);
-        }
       }
 
       // Background sync + Firebase broadcast
@@ -5081,22 +5076,10 @@
   async function refreshFilesAndSync(changeInfo) {
     const files = await loadFiles(true); // bust cache after any mutation
     if (files) {
-      // Only update tree + re-render if GitHub returned valid data
-      rootTree = buildTree(files);
-      if (changeInfo) {
-        const { type, oldPath, newPath } = changeInfo;
-        await updateFavouritesOnChange(type, oldPath, newPath || '');
-        if (type === 'delete') await updateRecentsOnChange(type, oldPath);
-      }
+      // Diffs against the last known file list and cascades Firebase
+      // cleanup/migration across every account, then rebuilds the tree.
+      rootTree = await reconcileFiles(files);
       renderNavigationView();
-    } else {
-      // loadFiles failed (GitHub API hiccup) — optimistic UI is already showing,
-      // just fire Firebase broadcast and silently skip the re-render
-      if (changeInfo) {
-        const { type, oldPath, newPath } = changeInfo;
-        await updateFavouritesOnChange(type, oldPath, newPath || '');
-        if (type === 'delete') await updateRecentsOnChange(type, oldPath);
-      }
     }
     if (db && changeInfo) {
       db.ref(FM_SYNC_KEY).set({ ...changeInfo, ts: Date.now() }).catch(() => {});
@@ -5114,17 +5097,14 @@
       if (ts <= lastSyncTs) return;
       lastSyncTs = ts;
 
-      // Refresh file list silently
-      const files = await loadFiles();
-      if (files) { rootTree = buildTree(files); }
+      // Refresh file list silently — also cascades any cleanup/migration
+      // across every account if this device is the one to notice it first
+      const files = await loadFiles(true);
+      if (files) { rootTree = await reconcileFiles(files); }
 
       if (!data || typeof data === 'number') { renderNavigationView(); return; }
 
       const { type, itemType, oldPath, newPath, displayName } = data;
-
-      // Update favourites and recents on this device too
-      await updateFavouritesOnChange(type, oldPath, newPath || '');
-      if (type === 'delete') await updateRecentsOnChange(type, oldPath);
 
       const pathStr = currentPath.join('/');
       const affectedFolder = itemType === 'folder' ? oldPath : (oldPath ? oldPath.substring(0, oldPath.lastIndexOf('/')) : '');
@@ -5176,18 +5156,18 @@
   }
   let lastSyncTs = null;
 
-  // --- Polling fallback: re-fetch every 60s (Option A) ---
+  // --- Polling fallback: catches changes made outside the portal too
+  // (raw GitHub web editor, GitHub Desktop, git push, etc.) ---
   setInterval(async () => {
     if (!rootTree) return;
-    const files = await loadFiles();
+    const files = await loadFiles(true); // always fetch fresh, never the browser's HTTP cache
     if (files) {
-      const newTree = buildTree(files);
-      if (JSON.stringify(newTree) !== JSON.stringify(rootTree)) {
-        rootTree = newTree;
-        renderNavigationView(); // silent refresh, no popup (Firebase already handled messaging)
-      }
+      const newTree = await reconcileFiles(files);
+      const changed = JSON.stringify(newTree) !== JSON.stringify(rootTree);
+      rootTree = newTree;
+      if (changed) renderNavigationView(); // silent refresh, no popup (Firebase already handled messaging for portal-made changes)
     }
-  }, 60000);
+  }, 20000);
 
   function showChangePopup(title, message, variant) {
     document.getElementById('changePopupBackdrop')?.remove();
@@ -5248,6 +5228,156 @@
       ));
       for (const k of toDelete) { try { await db.ref(k).remove(); } catch(e) {} }
     } catch(e) {}
+  }
+
+  // ── Unified change-detection + cross-account Firebase cleanup ──────────
+  // Every refresh path (portal mutations, the realtime sync listener, the
+  // polling fallback, pull-to-refresh, app init) funnels through
+  // reconcileFiles() below. It diffs the freshly-loaded file list against
+  // the last known one: a file whose old path disappeared but whose content
+  // (git blob sha) reappears under a new path is a rename/move — its data
+  // is migrated to the new path/key for every account. A file that
+  // disappears with no matching sha anywhere is a true deletion — all its
+  // data is wiped for every account. This works identically whether the
+  // change was made through the portal's own UI or directly on GitHub (raw
+  // web editor, GitHub Desktop, git push, etc.), so there's no need to
+  // special-case the source of the change, and no way for a new quiz that
+  // happens to reuse an old name/path to inherit stale data.
+  let lastKnownFiles = [];
+
+  function safeNameFromPath(path) {
+    return cleanName(path.split('/').pop()).toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  }
+
+  function diffFileLists(oldFiles, newFiles) {
+    const isQuiz = f => f.path.endsWith('.html') || f.path.endsWith('.md');
+    const oldQuiz = oldFiles.filter(isQuiz);
+    const newQuiz = newFiles.filter(isQuiz);
+    const oldPaths = new Set(oldQuiz.map(f => f.path));
+    const newPaths = new Set(newQuiz.map(f => f.path));
+
+    // Index newly-appeared quiz files by content hash, so a disappeared old
+    // path can be matched to its new location when the content is unchanged.
+    const newBySha = new Map();
+    for (const f of newQuiz) {
+      if (oldPaths.has(f.path) || !f.sha) continue;
+      if (!newBySha.has(f.sha)) newBySha.set(f.sha, []);
+      newBySha.get(f.sha).push(f.path);
+    }
+
+    const renamed = [], deleted = [];
+    const usedNewPaths = new Set();
+    for (const f of oldQuiz) {
+      if (newPaths.has(f.path)) continue; // unchanged
+      const candidates = f.sha ? (newBySha.get(f.sha) || []).filter(p => !usedNewPaths.has(p)) : [];
+      if (candidates.length) {
+        const newPath = candidates[0];
+        usedNewPaths.add(newPath);
+        renamed.push({ oldPath: f.path, newPath, oldSafe: safeNameFromPath(f.path), newSafe: safeNameFromPath(newPath) });
+      } else {
+        deleted.push({ path: f.path, safe: safeNameFromPath(f.path) });
+      }
+    }
+
+    // Folders: a disappeared .gitkeep path means that folder no longer
+    // exists there. Content-matching isn't meaningful for empty marker
+    // files, so folder renames/moves aren't detected directly here — they
+    // still come out correct in practice because every quiz file inside a
+    // moved folder is matched individually above. This only catches a
+    // favourited folder itself disappearing.
+    const folderPath = p => p.replace(/\/?\.gitkeep$/, '');
+    const oldFolders = oldFiles.filter(f => f.path.endsWith('.gitkeep')).map(f => folderPath(f.path));
+    const newFolders = new Set(newFiles.filter(f => f.path.endsWith('.gitkeep')).map(f => folderPath(f.path)));
+    const deletedFolders = oldFolders.filter(p => !newFolders.has(p)).map(path => ({ path }));
+
+    return { renamed, deleted, deletedFolders };
+  }
+
+  // One database snapshot, then for every account: wipe data for anything
+  // deleted, migrate data (and its displayed path) for anything renamed/moved.
+  async function applyFirebaseDiffCleanup(renamed, deleted, deletedFolders) {
+    if (!db) return;
+    if (!renamed.length && !deleted.length && !deletedFolders.length) return;
+    try {
+      const snap = await db.ref('/').get();
+      if (!snap.exists()) return;
+      const data = snap.val();
+
+      const safePrefixes = ['quiz_saved_state_', 'quiz_leaderboard_', 'quiz_saved_questions_'];
+      const deadSafes = new Set(deleted.map(d => d.safe));
+      const renameSafeMap = new Map(renamed.filter(r => r.oldSafe !== r.newSafe).map(r => [r.oldSafe, r.newSafe]));
+      const deadPaths = [...deleted.map(d => d.path), ...deletedFolders.map(d => d.path)];
+      const renamePathMap = new Map(renamed.map(r => [r.oldPath, r.newPath]));
+
+      const removals = [];
+      const writes = {};
+
+      for (const key of Object.keys(data)) {
+        const prefix = safePrefixes.find(p => key.startsWith(p));
+        if (prefix) {
+          const rest = key.slice(prefix.length); // "<safe>" (legacy) or "u_<user>__<safe>" (per-account)
+          const sep = rest.lastIndexOf('__');
+          const keySafe = sep === -1 ? rest : rest.slice(sep + 2);
+          if (renameSafeMap.has(keySafe)) {
+            const newSafe = renameSafeMap.get(keySafe);
+            const newKey = sep === -1 ? `${prefix}${newSafe}` : `${prefix}${rest.slice(0, sep + 2)}${newSafe}`;
+            writes[newKey] = data[key];
+            removals.push(key);
+          } else if (deadSafes.has(keySafe)) {
+            removals.push(key);
+          }
+          continue;
+        }
+        if (key.startsWith('quiz_portal_recents_') || key.startsWith('quiz_portal_favourites_')) {
+          const entries = data[key];
+          if (!entries || typeof entries !== 'object') continue;
+          for (const subKey of Object.keys(entries)) {
+            const entry = entries[subKey];
+            const entryPath = entry && entry.path;
+            if (!entryPath) continue;
+            // Renamed/moved takes priority over a folder-level prefix match,
+            // so an individually-migrated file inside a renamed folder
+            // never gets wrongly swept up as "deleted" below.
+            if (renamePathMap.has(entryPath)) {
+              const newPath = renamePathMap.get(entryPath);
+              const newSubKey = btoa(newPath).replace(/=/g, '');
+              const updated = { ...entry, path: newPath, name: cleanName(newPath.split('/').pop()) };
+              if ('folder' in entry) updated.folder = newPath.split('/').slice(0, -1).join(' › ') || 'Root';
+              writes[`${key}/${newSubKey}`] = updated;
+              removals.push(`${key}/${subKey}`);
+              continue;
+            }
+            if (deadPaths.some(dp => entryPath === dp || entryPath.startsWith(dp + '/'))) {
+              removals.push(`${key}/${subKey}`);
+            }
+          }
+        }
+      }
+
+      for (const [path, value] of Object.entries(writes)) { try { await db.ref(path).set(value); } catch(e) {} }
+      for (const path of removals) { try { await db.ref(path).remove(); } catch(e) {} }
+    } catch(e) {}
+  }
+
+  // Single entry point used by every refresh path. Builds the tree, and —
+  // unless this is the very first load — diffs against the previous file
+  // list first so deletions/renames/moves get cascaded across every
+  // account automatically, no matter where the change came from.
+  async function reconcileFiles(files) {
+    if (!files) return rootTree;
+    const prev = lastKnownFiles;
+    lastKnownFiles = files;
+    if (prev.length) {
+      const { renamed, deleted, deletedFolders } = diffFileLists(prev, files);
+      if (renamed.length || deleted.length || deletedFolders.length) {
+        await applyFirebaseDiffCleanup(renamed, deleted, deletedFolders);
+        // Refresh this session's own in-memory copies so its UI reflects
+        // the cleanup right away too (other open sessions catch up on
+        // their own next load/refresh).
+        await Promise.all([loadFavourites(), loadRecents()]);
+      }
+    }
+    return buildTree(files);
   }
 
   function getSavedUser()   { return localStorage.getItem('portal_current_user') || null; }
@@ -5884,34 +6014,6 @@
     return search(tree);
   }
 
-  // Update favourites when an item is renamed/moved/deleted
-  async function updateFavouritesOnChange(type, oldPath, newPath, itemType) {
-    const toUpdate = Object.values(favourites).filter(f =>
-      f.path === oldPath || f.path.startsWith(oldPath + '/')
-    );
-    if (!toUpdate.length) return;
-
-    for (const fav of toUpdate) {
-      const oldKey = btoa(fav.path).replace(/=/g,'');
-      if (type === 'delete') {
-        delete favourites[oldKey];
-        if (db) db.ref(`${getFavKey()}/${oldKey}`).remove().catch(()=>{});
-      } else {
-        // rename/move: update path
-        const updatedPath = newPath + fav.path.substring(oldPath.length);
-        const updatedName = updatedPath.split('/').pop();
-        const newKey = btoa(updatedPath).replace(/=/g,'');
-        const updated = { ...fav, path: updatedPath, name: updatedName };
-        delete favourites[oldKey];
-        favourites[newKey] = updated;
-        if (db) {
-          db.ref(`${getFavKey()}/${oldKey}`).remove().catch(()=>{});
-          db.ref(`${getFavKey()}/${newKey}`).set(updated).catch(()=>{});
-        }
-      }
-    }
-  }
-
   // =====================================================================
   // RECENTS SYSTEM (Firebase, cross-device)
   // =====================================================================
@@ -5975,17 +6077,6 @@
     openRecentsView();
   }
 
-  async function updateRecentsOnChange(type, oldPath) {
-    // Remove/update recents entries matching this path
-    const toRemove = Object.entries(recents).filter(([k,v]) =>
-      v.path === oldPath || v.path.startsWith(oldPath + '/')
-    );
-    for (const [key] of toRemove) {
-      delete recents[key];
-      if (db) db.ref(`${getRecKey()}/${key}`).remove().catch(()=>{});
-    }
-  }
-
   // Wire quiz links to log recents
   function attachRecentLogging() {
     document.addEventListener('click', (e) => {
@@ -6025,6 +6116,10 @@
             <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
             <span><strong>Clear My Recents</strong><br><span style="font-size:0.8rem;opacity:0.65;">Removes your recent quiz history</span></span>
           </button>
+          <button style="${row}" onclick="closeFMModal();dmAction('favourites')">
+            <span style="font-size:1.4rem;flex-shrink:0;">⭐</span>
+            <span><strong>Clear My Favourites</strong><br><span style="font-size:0.8rem;opacity:0.65;">Removes your favourited quizzes and folders</span></span>
+          </button>
           <button style="${row}" onclick="closeFMModal();dmAction('saved')">
             <span style="font-size:1.4rem;flex-shrink:0;">🔖</span>
             <span><strong>Clear My Saved Questions</strong><br><span style="font-size:0.8rem;opacity:0.65;">Removes your bookmarked questions</span></span>
@@ -6041,6 +6136,7 @@
   function dmAction(type) {
     const configs = {
       recents: { icon: '🕐', title: 'Clear Recents?', desc: 'All recent quiz history will be permanently deleted.', color: '#d9453d' },
+      favourites: { icon: '⭐', title: 'Clear Favourites?', desc: 'All favourited quizzes and folders will be permanently removed.', color: '#d9453d' },
       saved:   { icon: '🔖', title: 'Clear Saved Questions?', desc: 'All bookmarked questions across all quizzes will be permanently deleted.', color: '#d9453d' },
       master:  { icon: '💥', title: 'Master Reset?', desc: 'ALL Firebase data will be wiped — quiz states, leaderboards, saved questions, recents, favourites. This cannot be undone.', color: '#7f1d1d' },
       legacy:  { icon: '🧹', title: 'Clean Up Legacy Data?', desc: 'Removes old saved questions, recents, favourites and quiz progress saved before the account system existed. Only affects data NOT tied to any username. This cannot be undone.', color: '#d9453d' }
@@ -6099,6 +6195,10 @@
         await db.ref(getRecKey()).remove();
         recents = {};
         showToast('✅ Recents cleared');
+      } else if (type === 'favourites') {
+        await db.ref(getFavKey()).remove();
+        favourites = {};
+        showToast('✅ Favourites cleared');
       } else if (type === 'saved') {
         // Find all quiz saved question keys
         const snap = await db.ref('/').get();
@@ -6206,9 +6306,9 @@
       document.getElementById('retryLoadBtn').onclick = async () => {
         retryCount++;
         contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);">Retrying… (attempt ${retryCount})</div></div>`;
-        const files = await loadFiles();
+        const files = await loadFiles(true);
         if (files === null) { render(); return; }
-        rootTree = buildTree(files);
+        rootTree = await reconcileFiles(files);
         let restoredPath = [];
         try { const s = sessionStorage.getItem('quiz_current_path'); if (s) restoredPath = JSON.parse(s); } catch(e) {}
         currentPath = (Array.isArray(restoredPath) && getNodeFromPath(rootTree, restoredPath)) ? restoredPath : [];
@@ -6298,9 +6398,9 @@
       fetchWeatherInteractive();
       await Promise.all([loadFavourites(), loadRecents()]);
       contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);font-size:0.88rem;">Loading quizzes…</div></div>`;
-      const files = await loadFiles();
+      const files = await loadFiles(true);
       if (files === null) { showLoadError(); return; }
-      rootTree = buildTree(files);
+      rootTree = await reconcileFiles(files);
       let restoredPath = [];
       try { const s = sessionStorage.getItem('quiz_current_path'); if (s) restoredPath = JSON.parse(s); } catch(e) {}
       currentPath = (Array.isArray(restoredPath) && getNodeFromPath(rootTree, restoredPath)) ? restoredPath : [];
@@ -6349,9 +6449,9 @@
         refreshing = true;
         indicator.classList.add('spin');
         indicator.textContent = ' Refreshing...';
-        const files = await loadFiles();
+        const files = await loadFiles(true);
         if (files && files.length) {
-          rootTree = buildTree(files);
+          rootTree = await reconcileFiles(files);
           if (savedMode) { savedTree = await buildSavedTree(); }
           renderNavigationView();
           showToast('Quiz list refreshed');
