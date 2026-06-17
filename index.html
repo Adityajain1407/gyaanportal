@@ -3721,6 +3721,7 @@
         const questions = Object.entries(data)
           .map(([id, q]) => ({ id: Number(id), ...q, safeTopicName: safe }))
           .sort((a, b) => a.id - b.id);
+        savedCurrentIdx = 0;
         showSavedQuestionGrid(body, questions, name, allSaved);
       }).catch(() => showToast('Could not load questions'));
     }));
@@ -3737,8 +3738,9 @@
   }
 
   let savedViewMode = 'attempt'; // 'revise' | 'attempt' — persists across re-entries within this session, never saved to Firebase/localStorage
+  let savedCurrentIdx = 0; // which question is currently being viewed, kept in sync by both modes so toggling between them preserves position
 
-  function showSavedQuestionGrid(body, questions, quizName, allSaved) {
+  function showSavedQuestionGrid(body, questions, quizName, allSaved, startIdx = 0) {
     body.innerHTML = `
       <div class="saved-hub-header">
         <button class="saved-hub-back" id="savedBackToList">← Back</button>
@@ -3754,19 +3756,20 @@
       e.stopPropagation();
       if (savedViewMode === btn.dataset.mode) return;
       savedViewMode = btn.dataset.mode;
-      showSavedQuestionGrid(body, questions, quizName, allSaved);
+      showSavedQuestionGrid(body, questions, quizName, allSaved, savedCurrentIdx);
     }));
     const modeBody = document.getElementById('savedModeBody');
     if (!questions.length) {
       modeBody.innerHTML = `<div class="library-empty"><div class="lib-empty-icon">🔖</div>No saved questions left.</div>`;
       return;
     }
-    if (savedViewMode === 'attempt') renderAttemptMode(modeBody, questions, quizName, allSaved, body);
-    else renderReviseMode(modeBody, questions, quizName, allSaved, body);
+    const idx = (startIdx >= 0 && startIdx < questions.length) ? startIdx : 0;
+    if (savedViewMode === 'attempt') renderAttemptMode(modeBody, questions, quizName, allSaved, body, idx);
+    else renderReviseMode(modeBody, questions, quizName, allSaved, body, idx);
   }
 
   // ---- Revise mode (existing read-only review: chip grid + always-revealed answer) ----
-  function renderReviseMode(modeBody, questions, quizName, allSaved, body) {
+  function renderReviseMode(modeBody, questions, quizName, allSaved, body, startIdx = 0) {
     let chips = questions.map((q, i) =>
       `<div class="saved-q-chip" data-idx="${i}">${q.id}</div>`
     ).join('');
@@ -3783,8 +3786,9 @@
       });
     });
     if (questions.length) {
-      modeBody.querySelector('.saved-q-chip').classList.add('active');
-      showSavedQuestionDetail(detail, questions, 0, body, allSaved);
+      const chips2 = modeBody.querySelectorAll('.saved-q-chip');
+      chips2[startIdx]?.classList.add('active');
+      showSavedQuestionDetail(detail, questions, startIdx, body, allSaved);
     }
   }
 
@@ -3799,6 +3803,7 @@
   }
 
   function renderAttemptQuestion(modeBody, questions, idx, quizName, allSaved, body) {
+    savedCurrentIdx = idx;
     const q = questions[idx];
     let correct = 0, wrong = 0, notAttempted = 0;
     questions.forEach(qq => {
@@ -3898,6 +3903,7 @@
   }
 
   function showSavedQuestionDetail(detail, questions, idx, body, allSaved) {
+    savedCurrentIdx = idx;
     const q = questions[idx];
     const expMap = parseExplanationByOption(q.exp);
     let optsHtml = q.opts.map(opt => {
