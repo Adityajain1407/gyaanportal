@@ -3798,7 +3798,6 @@
   }
 
   function renderAttemptQuestion(modeBody, questions, idx, quizName, allSaved, body) {
-    document.getElementById('libraryBody').scrollTop = 0;
     const q = questions[idx];
     let correct = 0, wrong = 0, notAttempted = 0;
     questions.forEach(qq => {
@@ -3848,6 +3847,7 @@
           <button class="saved-q-nav-btn" id="atNext" ${idx === questions.length - 1 ? 'disabled' : ''}>Next →</button>
         </div>
       </div>`;
+    modeBody.querySelector('.attempt-nav-grid')?.scrollIntoView({ block: 'start' });
     if (!answered) {
       modeBody.querySelectorAll('.option-capsule.unanswered-capsule').forEach(cap => {
         cap.addEventListener('click', (e) => {
@@ -3898,7 +3898,6 @@
   }
 
   function showSavedQuestionDetail(detail, questions, idx, body, allSaved) {
-    document.getElementById('libraryBody').scrollTop = 0;
     const q = questions[idx];
     const expMap = parseExplanationByOption(q.exp);
     let optsHtml = q.opts.map(opt => {
@@ -3923,6 +3922,7 @@
           <button class="saved-q-nav-btn" id="sqNext" ${idx===questions.length-1?'disabled':''}>Next →</button>
         </div>
       </div>`;
+    body.querySelector('.saved-q-grid')?.scrollIntoView({ block: 'start' });
     // Sync active chip
     body.querySelectorAll('.saved-q-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
     // Scroll active chip into view — scroll within the grid only, never the page
