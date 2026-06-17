@@ -1290,17 +1290,9 @@
   #searchResultsPanel .kb-focus {
     background: var(--surface-2) !important;
   }
-  /* Library/modal item focus */
-  .kb-lib-focus {
-    outline: 2px solid var(--accent) !important;
-    outline-offset: 2px;
-    background: var(--surface-2) !important;
-    position: relative;
-    z-index: 2;
-  }
   /* Option-capsule focus (saved question detail) must NOT override the
      correct/incorrect background — only add a visible ring on top of it. */
-  .option-capsule.kb-lib-focus {
+  .option-capsule.kb-focus {
     background: inherit !important;
     box-shadow: 0 0 0 2.5px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent) !important;
     outline: none !important;
@@ -2226,7 +2218,7 @@
     border-color: var(--accent-dark);
     color: var(--button-text);
   }
-  .smt-btn.kb-lib-focus {
+  .smt-btn.kb-focus {
     outline: 2.5px solid var(--accent);
     outline-offset: 2px;
   }
@@ -2269,7 +2261,7 @@
   .attempt-nav-chip.correct { background: var(--correct-bg); color: var(--correct-text); }
   .attempt-nav-chip.wrong { background: var(--wrong-bg); color: var(--wrong-text); }
   .attempt-nav-chip.current { border-color: var(--accent); transform: scale(1.1); }
-  .attempt-nav-chip.kb-lib-focus { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+  .attempt-nav-chip.kb-focus { outline: 2.5px solid var(--accent); outline-offset: 2px; }
   .saved-q-detail .explanation-box {
     background: var(--exp-bg);
     border-left: 5px solid var(--exp-border);
@@ -3577,18 +3569,13 @@
   }
   function closeLibrary() {
     libOpen = false;
-    libFocusIdx = -1;
-    libHeaderFocus = false;
-    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
+    clearKbFocus();
     document.getElementById('libraryBackdrop').classList.remove('open');
     currentPath = pathBeforeFav;
     renderNavigationView();
   }
   function switchLibTab(tab) {
     libTab = tab;
-    libFocusIdx = -1;
-    libHeaderFocus = false;
-    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
     document.querySelectorAll('.library-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('libTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
     renderLibTab();
@@ -6416,10 +6403,6 @@
   // ----- Global spatial keyboard navigation -----
   let kbFocused = null; // currently focused element
 
-  function fireNoBubble(el) {
-    el?.dispatchEvent(new MouseEvent('click', { bubbles: false }));
-  }
-
   // All focusable elements on the page (not inside modals)
   function getAllFocusable() {
     return [...document.querySelectorAll(
@@ -6431,11 +6414,6 @@
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0;
     });
-  }
-
-  function getCenter(el) {
-    const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
 
   function setKbFocus(el) {
@@ -6452,44 +6430,16 @@
     kbFocused = null;
   }
 
-  // Find the best neighbour in a direction using screen-position scoring.
-  // For left/right, same-row candidates are strongly preferred (a much higher
-  // perpendicular-distance penalty) so horizontal movement never accidentally
-  // jumps to a different row just because it's geometrically "closer" overall —
-  // e.g. pressing Right from the logo must reach Search on the same row, not
-  // jump down to the Home breadcrumb on the row below.
-  function findNeighbour(from, dir, pool) {
-    const all = pool || getAllFocusable();
-    const fc = getCenter(from);
-    let best = null, bestScore = Infinity;
-    const isHorizontal = dir === 'right' || dir === 'left';
-    for (const el of all) {
-      if (el === from) continue;
-      const ec = getCenter(el);
-      const dx = ec.x - fc.x;
-      const dy = ec.y - fc.y;
-      // Must be in the correct half-plane
-      if (dir === 'right' && dx <= 2) continue;
-      if (dir === 'left'  && dx >= -2) continue;
-      if (dir === 'down'  && dy <= 2) continue;
-      if (dir === 'up'    && dy >= -2) continue;
-      let primary, perp;
-      if (isHorizontal) { primary = Math.abs(dx); perp = Math.abs(dy); }
-      else              { primary = Math.abs(dy); perp = Math.abs(dx); }
-      // Heavy penalty for left/right so same-row items always win over
-      // closer-but-different-row items.
-      const penalty = isHorizontal ? 12 : 2.5;
-      const score = primary + perp * penalty;
-      if (score < bestScore) { bestScore = score; best = el; }
-    }
-    return best;
-  }
-
-  // Predictable row-based up/down navigation: groups all focusable items into
-  // rows by Y-position (items within ROW_TOLERANCE px of each other share a row),
-  // then moving up/down always lands on the LEFTMOST item of the adjacent row —
-  // never a geometrically-"closest" item that could be unpredictable depending
-  // on exact pixel offsets. Left/right still use the spatial findNeighbour.
+  // Unified spatial navigation: groups all focusable items into rows by
+  // Y-position (items within ROW_TOLERANCE px of each other share a row).
+  // Up/Down move to the adjacent row and ALWAYS land on its leftmost item —
+  // never a geometrically-"closest" item, so moving up/down is predictable
+  // regardless of which column you were on. Left/Right move strictly within
+  // the current row (next/previous item by position in that row), and do
+  // nothing at the row's edges — they never jump to a different row. This
+  // one function is used everywhere: the homepage grid, every settings/FM
+  // modal, the Quick Access hub, and the Library Hub — one consistent model
+  // throughout the whole portal.
   const ROW_TOLERANCE = 12;
   function getRows(all) {
     const withRects = all.map(el => ({ el, r: el.getBoundingClientRect() }))
@@ -6500,23 +6450,24 @@
       if (!row) { row = { top: item.r.top, items: [] }; rows.push(row); }
       row.items.push(item);
     }
-    // Sort each row left-to-right, and rows top-to-bottom
     rows.forEach(r => r.items.sort((a, b) => a.r.left - b.r.left));
     rows.sort((a, b) => a.top - b.top);
     return rows;
   }
-  function findRowNeighbour(from, dir, pool) {
+  function spatialNav(from, dir, pool) {
     const all = pool || getAllFocusable();
     const rows = getRows(all);
-    const fromRect = from.getBoundingClientRect();
-    const curRowIdx = rows.findIndex(r => Math.abs(r.top - fromRect.top) <= ROW_TOLERANCE);
-    if (curRowIdx === -1) return null;
-    const targetRowIdx = dir === 'down' ? curRowIdx + 1 : curRowIdx - 1;
-    const targetRow = rows[targetRowIdx];
-    if (!targetRow || !targetRow.items.length) return null;
-    // Always land on the leftmost item of the target row — predictable, not
-    // "closest to current column", per the requested behavior.
-    return targetRow.items[0].el;
+    let curRowIdx = -1, curColIdx = -1;
+    for (let r = 0; r < rows.length; r++) {
+      const c = rows[r].items.findIndex(it => it.el === from);
+      if (c !== -1) { curRowIdx = r; curColIdx = c; break; }
+    }
+    if (curRowIdx === -1) return rows[0]?.items[0]?.el || null;
+    if (dir === 'down') return rows[curRowIdx + 1]?.items[0]?.el || null;
+    if (dir === 'up')   return rows[curRowIdx - 1]?.items[0]?.el || null;
+    if (dir === 'right') return rows[curRowIdx].items[curColIdx + 1]?.el || null;
+    if (dir === 'left')  return rows[curRowIdx].items[curColIdx - 1]?.el || null;
+    return null;
   }
 
   function isAnyModalOpen() {
@@ -6529,22 +6480,6 @@
       document.getElementById('breathingModal')?.classList.contains('active') ||
       document.getElementById('searchOverlay')?.classList.contains('active')
     );
-  }
-
-  // Library/modal list navigation helper
-  let libFocusIdx = -1;
-  let libHeaderFocus = false; // true when keyboard focus is on the Attempt/Revise toggle row, between the option capsules and the outer list
-  function libNavItems(items, goDown, key) {
-    if (!items.length) return;
-    // clear previous
-    document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
-    if (libFocusIdx === -1 && goDown) libFocusIdx = 0;
-    else if (libFocusIdx === -1 && !goDown) libFocusIdx = items.length - 1;
-    else libFocusIdx = goDown
-      ? Math.min(libFocusIdx + 1, items.length - 1)
-      : Math.max(libFocusIdx - 1, 0);
-    items[libFocusIdx].classList.add('kb-lib-focus');
-    items[libFocusIdx].scrollIntoView({ block: 'nearest' });
   }
 
   document.addEventListener('keydown', (e) => {
@@ -6584,119 +6519,31 @@
     const isArrow = isLeft || isRight || isUp || isDown;
     if (!isArrow && key !== 'Enter' && key !== ' ') return;
 
-    // ── Library Hub popup (🥷) ──
+    // ── Library Hub popup (🥷) ── — same unified model as everywhere else:
+    // one pool covering the tabs, every list row, the Attempt/Revise toggle,
+    // the question chips, the answer-option capsules, and the prev/unsave/
+    // next row. Up/Down change row and always land on that row's first
+    // (leftmost) item; Left/Right move within the current row; Enter clicks
+    // whatever is focused. No special-cased branches — clicking a tab,
+    // chip, option, or button already does the right thing via its own
+    // existing click handler.
     if (libOpen) {
-      // Toggle-row focus: between the option capsules and the outer list.
-      // Left/Right switches Attempt/Revise, Down re-enters the capsules,
-      // Up goes the rest of the way out (same as the "← Back" button).
-      if (libHeaderFocus) {
-        const toggleBtns = [...document.querySelectorAll('#libraryBody .smt-btn')];
-        if (!toggleBtns.length) { libHeaderFocus = false; }
-        else {
-          if (isLeft || isRight) {
-            e.preventDefault();
-            const activeBtn = document.querySelector('#libraryBody .smt-btn.active');
-            const otherBtn = toggleBtns.find(b => b !== activeBtn);
-            if (otherBtn) fireNoBubble(otherBtn);
-            document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
-            document.querySelector('#libraryBody .smt-btn.active')?.classList.add('kb-lib-focus');
-            return;
-          }
-          if (isUp) {
-            e.preventDefault();
-            libHeaderFocus = false;
-            libFocusIdx = -1;
-            const backBtn = document.getElementById('savedBackToList');
-            if (backBtn) fireNoBubble(backBtn);
-            return;
-          }
-          if (isDown) {
-            e.preventDefault();
-            libHeaderFocus = false;
-            document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
-            const capsules = [...document.querySelectorAll('#libraryBody .option-capsule')];
-            libNavItems(capsules, true, key);
-            return;
-          }
-          if (key === 'Enter') {
-            e.preventDefault();
-            document.querySelector('#libraryBody .smt-btn.kb-lib-focus')?.click();
-          }
-          return;
-        }
-      }
-      // Saved question detail (either mode): Left/Right navigate questions
-      // via whichever prev/next pair is present (sqPrev/sqNext = Revise,
-      // atPrev/atNext = Attempt), Up/Down focus the answer-option capsules,
-      // Enter selects the focused option if it's still unanswered/clickable.
-      const prevBtn = document.getElementById('sqPrev') || document.getElementById('atPrev');
-      const nextBtn = document.getElementById('sqNext') || document.getElementById('atNext');
-      if (prevBtn || nextBtn) {
-        if (isLeft || isRight) {
-          e.preventDefault(); e.stopImmediatePropagation();
-          if (isLeft  && prevBtn && !prevBtn.disabled) fireNoBubble(prevBtn);
-          if (isRight && nextBtn && !nextBtn.disabled) fireNoBubble(nextBtn);
-          // Moving to a new question resets option focus back to the top
-          libFocusIdx = -1;
-        }
-        // Up at (or above) the topmost option moves focus to the Attempt/
-        // Revise toggle row, rather than jumping straight out to the list.
-        if (isUp && libFocusIdx <= 0) {
-          e.preventDefault();
-          const toggleBtns = [...document.querySelectorAll('#libraryBody .smt-btn')];
-          if (toggleBtns.length) {
-            libHeaderFocus = true;
-            document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
-            document.querySelector('#libraryBody .smt-btn.active')?.classList.add('kb-lib-focus');
-          } else {
-            const backBtn = document.getElementById('savedBackToList');
-            if (backBtn) { fireNoBubble(backBtn); libFocusIdx = -1; }
-          }
-          return;
-        }
-        if (isUp || isDown) {
-          e.preventDefault();
-          const capsules = [...document.querySelectorAll('#libraryBody .option-capsule')];
-          libNavItems(capsules, isDown, key);
-        }
-        if (key === 'Enter') {
-          e.preventDefault();
-          const focused = document.querySelector('#libraryBody .option-capsule.kb-lib-focus.unanswered-capsule');
-          if (focused) focused.click();
-        }
+      const pool = [...document.querySelectorAll(
+        '#libraryPanel button, #libraryPanel .recent-item, #libraryPanel .saved-q-chip,' +
+        ' #libraryPanel .attempt-nav-chip, #libraryPanel .option-capsule.unanswered-capsule'
+      )].filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+      const cur = kbFocused && pool.includes(kbFocused) ? kbFocused : null;
+      if (isArrow) {
+        e.preventDefault();
+        if (!cur) { if (pool.length) setKbFocus(pool[0]); return; }
+        const dir = isRight ? 'right' : isLeft ? 'left' : isDown ? 'down' : 'up';
+        const next = spatialNav(cur, dir, pool);
+        if (next) setKbFocus(next);
         return;
       }
-      // Library tabs: Left/Right switch tabs
-      const tabs = ['fav','recents','saved'];
-      const activeTabIdx = tabs.indexOf(libTab);
-      if (isLeft || isRight) {
-        e.preventDefault();
-        const newTab = tabs[activeTabIdx + (isRight ? 1 : -1)];
-        if (newTab) { switchLibTab(newTab); libFocusIdx = -1; }
-      }
-      // Up at the topmost list item backs out to "tab level" — clears focus
-      // instead of staying clamped on item 0 — so Up consistently means "go
-      // up a level" everywhere, and a fresh Down press re-enters the list
-      // at the top. Same fix as above, applied to the flat Favourites/
-      // Recents/Saved-list views (not just the Saved question detail).
-      if (isUp && libFocusIdx === 0) {
-        e.preventDefault();
-        document.querySelectorAll('.kb-lib-focus').forEach(el => el.classList.remove('kb-lib-focus'));
-        libFocusIdx = -1;
-        return;
-      }
-      // Up/Down: focus items in the list
-      if (isUp || isDown) {
-        e.preventDefault();
-        const items = [...document.querySelectorAll('#libraryBody .recent-item, #libraryBody .lib-saved-item, #libraryBody .saved-hub-back, #libraryBody .fav-section-title + .recent-item, #libraryBody .lib-fav-folder, #libraryBody .lib-fav-quiz, #libraryBody .lib-recent-item')];
-        libNavItems(items, isDown, key);
-      }
-      // Enter: click focused item. Resets list focus since Enter always
-      // transitions into a new nested view/context (a quiz's saved questions,
-      // a folder, etc.) which has its own separate focus state.
       if (key === 'Enter') {
-        const focused = document.querySelector('#libraryBody .kb-lib-focus');
-        if (focused) { e.preventDefault(); focused.click(); libFocusIdx = -1; }
+        e.preventDefault();
+        if (cur) cur.click();
       }
       return;
     }
@@ -6721,9 +6568,7 @@
           return;
         }
         const dir = isRight ? 'right' : isLeft ? 'left' : isDown ? 'down' : 'up';
-        const next = (dir === 'up' || dir === 'down')
-          ? (findRowNeighbour(curFocusedInModal, dir, pool) || findNeighbour(curFocusedInModal, dir, pool))
-          : findNeighbour(curFocusedInModal, dir, pool);
+        const next = spatialNav(curFocusedInModal, dir, pool);
         if (next) setKbFocus(next);
         return;
       }
@@ -6752,9 +6597,7 @@
           return;
         }
         const dir = isRight ? 'right' : isLeft ? 'left' : isDown ? 'down' : 'up';
-        const next = (dir === 'up' || dir === 'down')
-          ? (findRowNeighbour(curFocusedInModal, dir, pool) || findNeighbour(curFocusedInModal, dir, pool))
-          : findNeighbour(curFocusedInModal, dir, pool);
+        const next = spatialNav(curFocusedInModal, dir, pool);
         if (next) setKbFocus(next);
         return;
       }
@@ -6819,9 +6662,7 @@
 
       if (kbFocused && isArrow) {
         e.preventDefault();
-        const next = (dir === 'up' || dir === 'down')
-          ? (findRowNeighbour(kbFocused, dir) || findNeighbour(kbFocused, dir))
-          : findNeighbour(kbFocused, dir);
+        const next = spatialNav(kbFocused, dir);
         if (next) setKbFocus(next);
         return;
       }
