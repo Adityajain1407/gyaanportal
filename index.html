@@ -3736,7 +3736,7 @@
     }));
   }
 
-  let savedViewMode = 'revise'; // 'revise' | 'attempt' — persists across re-entries within this session, never saved to Firebase/localStorage
+  let savedViewMode = 'attempt'; // 'revise' | 'attempt' — persists across re-entries within this session, never saved to Firebase/localStorage
 
   function showSavedQuestionGrid(body, questions, quizName, allSaved) {
     body.innerHTML = `
@@ -3745,8 +3745,8 @@
         <div class="saved-hub-title">${escapeHtml(quizName)}</div>
       </div>
       <div class="saved-mode-toggle">
+        <button class="smt-btn ${savedViewMode==='attempt'?'active':''}" data-mode="attempt">🔁 Reattempt</button>
         <button class="smt-btn ${savedViewMode==='revise'?'active':''}" data-mode="revise">📖 Revise</button>
-        <button class="smt-btn ${savedViewMode==='attempt'?'active':''}" data-mode="attempt">✏️ Attempt</button>
       </div>
       <div id="savedModeBody"></div>`;
     document.getElementById('savedBackToList').onclick = (e) => { e.stopPropagation(); showSavedQuizList(body, allSaved); };
@@ -3938,13 +3938,16 @@
         chipGrid.scrollLeft = chipRight - gridWidth + 8;
       }
     }
-    detail.querySelector('#sqPrev').onclick = () => {
+    detail.querySelector('#sqPrev').onclick = (e) => {
+      e.stopPropagation();
       if (idx > 0) showSavedQuestionDetail(detail, questions, idx - 1, body, allSaved);
     };
-    detail.querySelector('#sqNext').onclick = () => {
+    detail.querySelector('#sqNext').onclick = (e) => {
+      e.stopPropagation();
       if (idx < questions.length - 1) showSavedQuestionDetail(detail, questions, idx + 1, body, allSaved);
     };
-    detail.querySelector('#sqDelete').onclick = async () => {
+    detail.querySelector('#sqDelete').onclick = async (e) => {
+      e.stopPropagation();
       if (!db) return;
       try {
         await db.ref(`quiz_saved_questions_${getUserPrefix()}${q.safeTopicName}/${q.id}`).remove();
@@ -6519,18 +6522,66 @@
     const isArrow = isLeft || isRight || isUp || isDown;
     if (!isArrow && key !== 'Enter' && key !== ' ') return;
 
-    // ── Library Hub popup (🥷) ── — same unified model as everywhere else:
-    // one pool covering the tabs, every list row, the Attempt/Revise toggle,
-    // the question chips, the answer-option capsules, and the prev/unsave/
-    // next row. Up/Down change row and always land on that row's first
-    // (leftmost) item; Left/Right move within the current row; Enter clicks
-    // whatever is focused. No special-cased branches — clicking a tab,
-    // chip, option, or button already does the right thing via its own
-    // existing click handler.
+    // ── Library Hub popup (🥷) ──
     if (libOpen) {
+      // Inside a saved question's detail view (either Revise or Attempt
+      // mode — detected by sqPrev/sqNext or atPrev/atNext existing): a
+      // deliberate exception to the row model, since flipping through
+      // questions and browsing their 4 options is the primary thing this
+      // screen is for. Left/Right flip directly to the prev/next question.
+      // Up/Down move between the answer-option capsules. Up while nothing
+      // (or the first capsule) is focused exits straight to the active tab,
+      // where the normal row model (tabs, lists, toggle, chip grid) takes
+      // back over.
+      const prevBtn = document.getElementById('sqPrev') || document.getElementById('atPrev');
+      const nextBtn = document.getElementById('sqNext') || document.getElementById('atNext');
+      const onTabRow = kbFocused && kbFocused.classList.contains('library-tab');
+      if ((prevBtn || nextBtn) && !onTabRow) {
+        if (key === 'Tab') {
+          // Switch Reattempt/Revise without leaving the detail view — the
+          // one action besides question-nav/option-select this screen
+          // needs, so it gets its own key rather than fighting over
+          // Left/Right or Up/Down.
+          e.preventDefault();
+          const activeBtn = document.querySelector('#libraryBody .smt-btn.active');
+          const otherBtn = [...document.querySelectorAll('#libraryBody .smt-btn')].find(b => b !== activeBtn);
+          otherBtn?.click();
+          return;
+        }
+        if (isLeft || isRight) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          if (isLeft  && prevBtn && !prevBtn.disabled) prevBtn.click();
+          if (isRight && nextBtn && !nextBtn.disabled) nextBtn.click();
+          clearKbFocus();
+          return;
+        }
+        const capsulePool = [...document.querySelectorAll('#libraryBody .option-capsule')]
+          .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+        const curCapsule = kbFocused && capsulePool.includes(kbFocused) ? kbFocused : null;
+        if (isUp || isDown) {
+          e.preventDefault();
+          const next = curCapsule ? spatialNav(curCapsule, isDown ? 'down' : 'up', capsulePool) : (isDown ? capsulePool[0] : null);
+          if (next) { setKbFocus(next); return; }
+          if (isUp) { // already at/above the first capsule — exit to the active tab
+            const activeTab = document.querySelector('.library-tab.active');
+            if (activeTab) setKbFocus(activeTab);
+          }
+          return;
+        }
+        if (key === 'Enter') {
+          e.preventDefault();
+          if (curCapsule && curCapsule.classList.contains('unanswered-capsule')) curCapsule.click();
+        }
+        return;
+      }
+      // Everywhere else in the Library Hub: the unified row model — one
+      // pool covering the tabs, every list row, the Attempt/Revise toggle,
+      // and the question chips. Up/Down change row and always land on that
+      // row's first (leftmost) item; Left/Right move within the current
+      // row; Enter clicks whatever is focused.
       const pool = [...document.querySelectorAll(
         '#libraryPanel button, #libraryPanel .recent-item, #libraryPanel .saved-q-chip,' +
-        ' #libraryPanel .attempt-nav-chip, #libraryPanel .option-capsule.unanswered-capsule'
+        ' #libraryPanel .attempt-nav-chip'
       )].filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
       const cur = kbFocused && pool.includes(kbFocused) ? kbFocused : null;
       if (isArrow) {
