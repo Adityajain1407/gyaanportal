@@ -2889,6 +2889,30 @@
   ['click', 'touchend', 'keydown'].forEach(ev =>
     document.addEventListener(ev, requestAppFullscreen, { passive: true }));
 
+  // Fallback scroll forwarding while fullscreen: some browsers don't
+  // reliably route wheel/touch input to body's own overflow once <html> is
+  // the Fullscreen API's target (the OS scrollbar thumb still works since
+  // it isn't routed through these events at all) — this forwards the
+  // scroll delta directly so scrolling works regardless of that quirk.
+  (function() {
+    let touchY = null;
+    document.addEventListener('wheel', (e) => {
+      if (!document.fullscreenElement) return;
+      document.body.scrollTop += e.deltaY;
+    }, { passive: true });
+    document.addEventListener('touchstart', (e) => {
+      if (!document.fullscreenElement) return;
+      touchY = e.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!document.fullscreenElement || touchY === null) return;
+      const y = e.touches[0].clientY;
+      document.body.scrollTop += (touchY - y);
+      touchY = y;
+    }, { passive: true });
+    document.addEventListener('touchend', () => { touchY = null; }, { passive: true });
+  })();
+
   // Central quiz-opening logic — branches on webapp (standalone) vs website (browser tab) mode.
   // Webapp: navigate in-place (same tab) for a seamless native-app feel; returning
   //   from the quiz lands back on this exact folder via sessionStorage restore.
