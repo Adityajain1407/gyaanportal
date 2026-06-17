@@ -2677,6 +2677,41 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
+  // ----- Lightweight crash/error log -----
+  // Captures uncaught errors and unhandled promise rejections so a real bug
+  // can be told apart from hitting the GitHub API limit at a glance (paired
+  // with the API Requests Left counter in the Profile menu). Deliberately
+  // does NOT catch anything from the app's own try/catch blocks — those are
+  // already handled gracefully on purpose. Persisted to localStorage so the
+  // log survives the page actually crashing/reloading before anyone looks.
+  const ERROR_LOG_KEY = 'portal_error_log';
+  const ERROR_LOG_MAX = 10;
+  function logPortalError(message, detail) {
+    try {
+      const log = JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]');
+      log.unshift({ message: String(message || '').slice(0, 300), detail: String(detail || '').slice(0, 300), ts: Date.now() });
+      localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(log.slice(0, ERROR_LOG_MAX)));
+    } catch(e) {}
+  }
+  window.addEventListener('error', (e) => {
+    logPortalError(e.message, `${e.filename ? e.filename.split('/').pop() : ''}:${e.lineno || ''}`);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    logPortalError('Unhandled promise rejection', e.reason?.message || e.reason || '');
+  });
+  function getPortalErrorLog() {
+    try { return JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function clearPortalErrorLog() { localStorage.removeItem(ERROR_LOG_KEY); }
+  function formatRelTime(ts) {
+    const mins = Math.floor((Date.now() - ts) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return new Date(ts).toLocaleDateString();
+  }
+
   // ----- FIREBASE (for Saved Questions) -----
   const firebaseConfig = {
     apiKey: "AIzaSyDX9dw3QKC23S7ukdqvropANz4qUvI3Bq0",
@@ -5380,6 +5415,10 @@
             <span style="font-size:1.4rem;flex-shrink:0;">📊</span>
             <span><strong>API Requests Left</strong><br><span style="font-size:0.8rem;opacity:0.65;" id="apiRateLimitText">Checking…</span></span>
           </button>
+          <button style="${row}" onclick="showErrorLogModal()">
+            <span style="font-size:1.4rem;flex-shrink:0;">🐛</span>
+            <span><strong>Error Log</strong><br><span style="font-size:0.8rem;opacity:0.65;" id="errorLogSummary">…</span></span>
+          </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="setSavedUser(null);setSessionToken(null);currentUser=null;localStorage.removeItem(PAT_KEY);stopInactivityWatch();location.reload();">
             <span style="font-size:1.4rem;flex-shrink:0;">🚪</span>
             <span><strong style="color:#d9453d;">Log Out</strong></span>
@@ -5391,6 +5430,32 @@
       buttons: []
     });
     checkApiRateLimit();
+    updateErrorLogSummary();
+  }
+
+  function updateErrorLogSummary() {
+    const el = document.getElementById('errorLogSummary');
+    if (!el) return;
+    const log = getPortalErrorLog();
+    el.textContent = log.length ? `${log.length} recorded — last: ${formatRelTime(log[0].ts)}` : 'No errors recorded ✅';
+  }
+
+  function showErrorLogModal() {
+    const log = getPortalErrorLog();
+    const rows = log.length ? log.map(e => `
+      <div style="padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border-2);margin-bottom:8px;">
+        <div style="font-size:0.75rem;color:var(--text-3);margin-bottom:4px;">${formatRelTime(e.ts)} · ${new Date(e.ts).toLocaleString()}</div>
+        <div style="font-size:0.88rem;color:var(--text);word-break:break-word;"><strong>${escapeHtml(e.message)}</strong></div>
+        ${e.detail ? `<div style="font-size:0.78rem;color:var(--text-2);opacity:0.8;word-break:break-word;">${escapeHtml(e.detail)}</div>` : ''}
+      </div>`).join('') : `<div style="color:var(--text-3);text-align:center;padding:20px;">No errors recorded ✅</div>`;
+    showFMModal({
+      title: '🐛 Error Log',
+      body: `<p style="color:var(--text-2);font-size:0.85rem;margin-bottom:12px;">Uncaught errors only — code that already fails gracefully won't show up here. Use this alongside API Requests Left to tell a real bug apart from hitting the limit.</p><div>${rows}</div>`,
+      buttons: log.length
+        ? [{ label: '🗑️ Clear Log', cls: 'fm-btn-cancel', action: () => { clearPortalErrorLog(); showToast('🗑️ Error log cleared'); } },
+           { label: 'Close', cls: 'fm-btn-primary' }]
+        : [{ label: 'Close', cls: 'fm-btn-primary' }]
+    });
   }
 
   // Shows how many of the shared GitHub API quota's requests are left this
