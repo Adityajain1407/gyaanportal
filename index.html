@@ -262,11 +262,14 @@
     box-sizing: border-box;
   }
 
-  html, body {
+  html {
+    overflow-x: hidden;
+  }
+
+  body {
     overflow-x: hidden;
     width: 100%;
     max-width: 100%;
-    overscroll-behavior-y: contain;
   }
 
   .pull-refresh-indicator {
@@ -2040,7 +2043,6 @@
   .library-tab:hover { color: var(--text); }
   .library-body {
     overflow-y: auto;
-    overscroll-behavior: contain;
     flex: 1;
     padding: 12px 16px;
     -webkit-overflow-scrolling: touch;
@@ -6851,16 +6853,20 @@
       if (!liveFocus && isArrow) {
         // First keypress (or first press after a stale focus): pick first
         // content item or first focusable
-        e.preventDefault();
         const first = document.querySelector('.folder-card, .quiz-item') || getAllFocusable()[0];
-        if (first) setKbFocus(first);
+        if (first) {
+          e.preventDefault();
+          setKbFocus(first);
+        }
         return;
       }
 
       if (liveFocus && isArrow) {
-        e.preventDefault();
         const next = spatialNav(liveFocus, dir);
-        if (next) setKbFocus(next);
+        if (next) {
+          e.preventDefault();
+          setKbFocus(next);
+        }
         return;
       }
 
