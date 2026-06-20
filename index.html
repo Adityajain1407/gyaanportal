@@ -2780,6 +2780,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
   // ----- Lightweight crash/error log -----
   // Captures uncaught errors and unhandled promise rejections so a real bug
@@ -4492,16 +4493,42 @@
   // =====================================================================
 
   const PAT_KEY = 'quiz_portal_gh_pat';
+  const PAT_OWNER_KEY = 'quiz_portal_gh_pat_owner';
   const FM_SYNC_KEY = 'quiz_portal_file_changed';
   let selectedPaths = new Set();
   let selectionActive = false;
 
-  // --- PAT storage (per-account, synced via Firebase) ---
+  // --- PAT storage: LOCAL-ONLY, never synced to Firebase ---
+  // This token can move/delete/rename files in the repo, so it must never
+  // sit in a database that (depending on security rules) could be read by
+  // anyone — it's entered once per device and stays in that browser's
+  // localStorage only. What DOES sync to Firebase is a separate, non-secret
+  // `isAdmin` boolean on the account (see savePAT below), which only says
+  // "this username is an admin" — not the credential itself — so a brand
+  // new device can still skip the pending-approval queue for an admin who
+  // hasn't re-entered their token there yet.
   function getPAT() { return (localStorage.getItem(PAT_KEY) || '').trim(); }
 
-  // Shared read-only token: any logged-in user (admin or standard) can use this
-  // for read-only GitHub API calls (loading the quiz list), avoiding the 60/hr
-  // unauthenticated rate limit. Only write operations check isAdmin()/getPAT().
+  // If the locally-stored token belongs to a different account than the one
+  // now logging in (e.g. a shared device previously used by another admin),
+  // clear it — admin status should never silently carry over between accounts.
+  function reconcileLocalPATOwnership(username) {
+    const owner = localStorage.getItem(PAT_OWNER_KEY);
+    if (getPAT() && owner !== username) {
+      localStorage.removeItem(PAT_KEY);
+      localStorage.removeItem(PAT_OWNER_KEY);
+    }
+  }
+
+  // Dedicated, deliberately low-privilege read-only token: any logged-in user
+  // (admin or standard) can use this for read-only GitHub API calls (loading
+  // the quiz list), avoiding the 60/hr unauthenticated rate limit. This is a
+  // SEPARATE token from the admin's powerful one above — generated with only
+  // read access, so it's safe to publish here even though every visitor's
+  // client can see it: the worst case is someone reads slightly faster from
+  // a repo that's already public, not that they gain write/delete/rename
+  // access. Only write operations check isAdmin()/getPAT() (the local-only
+  // powerful token), never this one.
   const SHARED_READ_TOKEN_KEY = 'portal_shared_read_token';
   let _sharedReadToken = '';
   function getReadToken() { return getPAT() || _sharedReadToken || ''; }
@@ -4512,21 +4539,30 @@
       if (snap.exists() && snap.val()) _sharedReadToken = snap.val();
     } catch(e) {}
   }
+  async function saveSharedReadToken(token) {
+    token = token.trim();
+    if (!db) return;
+    try {
+      if (token) { await db.ref(SHARED_READ_TOKEN_KEY).set(token); _sharedReadToken = token; }
+      else { await db.ref(SHARED_READ_TOKEN_KEY).remove(); _sharedReadToken = ''; }
+    } catch(e) {}
+  }
 
   async function savePAT(token) {
     token = token.trim();
     if (token) {
       localStorage.setItem(PAT_KEY, token);
-      // Store in Firebase under this user's account so it loads on any device
+      if (currentUser) localStorage.setItem(PAT_OWNER_KEY, currentUser);
+      // Only a non-secret "this account is an admin" flag goes to Firebase —
+      // never the token value itself.
       if (db && currentUser) {
-        try { await db.ref(`${USERS_FB_KEY}/${currentUser}/pat`).set(token); } catch(e) {}
-        // Also publish as the shared read token so standard accounts can read without rate limits
-        try { await db.ref(SHARED_READ_TOKEN_KEY).set(token); _sharedReadToken = token; } catch(e) {}
+        try { await db.ref(`${USERS_FB_KEY}/${currentUser}/isAdmin`).set(true); } catch(e) {}
       }
     } else {
       localStorage.removeItem(PAT_KEY);
+      localStorage.removeItem(PAT_OWNER_KEY);
       if (db && currentUser) {
-        try { await db.ref(`${USERS_FB_KEY}/${currentUser}/pat`).remove(); } catch(e) {}
+        try { await db.ref(`${USERS_FB_KEY}/${currentUser}/isAdmin`).remove(); } catch(e) {}
       }
     }
     // Refresh admin UI immediately
@@ -4534,18 +4570,12 @@
     showUserPill();
   }
 
-  // Called after login — loads PAT from Firebase into localStorage for this session
+  // Called after login — the powerful token is never fetched from Firebase
+  // (it was never stored there). This just makes sure a stale token from a
+  // different account on this same device doesn't carry over, then loads
+  // the safe shared read-only token.
   async function loadPATFromAccount(username) {
-    if (!db || !username) return;
-    try {
-      const snap = await db.ref(`${USERS_FB_KEY}/${username}/pat`).get();
-      if (snap.exists() && snap.val()) {
-        localStorage.setItem(PAT_KEY, snap.val());
-      } else {
-        // No PAT stored for this account — clear any leftover from another account
-        localStorage.removeItem(PAT_KEY);
-      }
-    } catch(e) { console.warn('Could not load PAT from account:', e); }
+    reconcileLocalPATOwnership(username);
     await loadSharedReadToken();
   }
 
@@ -4553,15 +4583,39 @@
   function openPATModal() {
     const current = getPAT();
     showFMModal({
-      title: '🔑 GitHub Access Token',
-      body: `<p>Required for rename, move and delete. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AditPortalToken" target="_blank" style="color:var(--accent)">Generate a token</a> with <strong>repo</strong> scope (or <strong>public_repo</strong> for public repos).<br>Stored securely in your account — works across all your devices.</p>
+      title: '🔑 GitHub Access Token (Admin)',
+      body: `<p>Required for rename, move and delete. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AditPortalToken" target="_blank" style="color:var(--accent)">Generate a token</a> with <strong>repo</strong> scope (or <strong>public_repo</strong> for public repos).<br><strong>Stored only on this device</strong> — for security, this powerful token is never synced anywhere, so you'll need to enter it again on each new device you use as admin.</p>
              <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxx" value="${escapeHtml(current)}">
-             ${current ? '<span class="pat-status set">✅ Token saved</span>' : '<span class="pat-status unset">⚪ No token saved</span>'}`,
+             ${current ? '<span class="pat-status set">✅ Token saved on this device</span>' : '<span class="pat-status unset">⚪ No token saved</span>'}`,
       buttons: [
         { label: 'Save Token', cls: 'fm-btn-primary', action: async () => {
           const val = document.getElementById('patInput').value.trim();
           await savePAT(val);
-          showToast(val ? '✅ Token saved to your account!' : 'Token cleared.');
+          showToast(val ? '✅ Token saved on this device!' : 'Token cleared.');
+        }},
+        { label: 'Cancel', cls: 'fm-btn-cancel' }
+      ]
+    });
+  }
+
+  // A separate, deliberately low-privilege token — only needs read access,
+  // so unlike the admin token above it's safe to publish for every visitor's
+  // client to use (avoids GitHub's 60/hr unauthenticated rate limit when
+  // just browsing the quiz list). Keeping this as its own distinct token,
+  // generated with read-only scope, means there's nothing destructive for
+  // anyone to find even if they look at how the portal loads quizzes.
+  function openReadTokenModal() {
+    const current = _sharedReadToken;
+    showFMModal({
+      title: '📖 Shared Read Token (everyone)',
+      body: `<p>Optional. Used by <strong>all</strong> visitors (not just admins) to browse the quiz list without hitting GitHub's rate limit. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=AditPortalReadOnly" target="_blank" style="color:var(--accent)">Generate a token</a> with <strong>read-only</strong> access (fine-grained: Contents → Read-only) — do not use your admin token here.<br>This token is visible to every visitor by design, so only ever give it read access.</p>
+             <input type="password" id="readTokenInput" placeholder="github_pat_xxxxxxxxxxxx" value="${escapeHtml(current)}">
+             ${current ? '<span class="pat-status set">✅ Read token set</span>' : '<span class="pat-status unset">⚪ No read token set</span>'}`,
+      buttons: [
+        { label: 'Save', cls: 'fm-btn-primary', action: async () => {
+          const val = document.getElementById('readTokenInput').value.trim();
+          await saveSharedReadToken(val);
+          showToast(val ? '✅ Shared read token saved!' : 'Read token cleared.');
         }},
         { label: 'Cancel', cls: 'fm-btn-cancel' }
       ]
@@ -5544,12 +5598,15 @@
     currentUser = u;
     applyThemeObj(getUserTheme(u));
 
-    // Load this account's PAT from Firebase — determines admin status
-    if (data.pat) localStorage.setItem(PAT_KEY, data.pat);
-    else localStorage.removeItem(PAT_KEY);
+    // The token itself is never stored in Firebase — only a non-secret
+    // isAdmin flag is. Reconcile the local token in case this device
+    // previously had a different account's token saved.
+    reconcileLocalPATOwnership(u);
 
-    // Admin (has PAT in their account) → auto-approve if pending
-    if (getPAT()) {
+    // Admin account → auto-approve if pending (uses the safe isAdmin flag,
+    // not the token, so this works even on a brand-new device where the
+    // admin hasn't entered their token yet)
+    if (data.isAdmin) {
       if (data.status !== 'approved') {
         await db.ref(`${USERS_FB_KEY}/${u}/status`).set('approved').catch(() => {});
         await db.ref(`${USERS_FB_KEY}/${u}/approvedAt`).set(Date.now()).catch(() => {});
@@ -5801,6 +5858,10 @@
             <span style="font-size:1.4rem;flex-shrink:0;">🔑</span>
             <span><strong>GitHub Token</strong><br><span style="font-size:0.8rem;opacity:0.65;">${getPAT() ? 'Token saved — tap to manage' : 'Add a token to become admin'}</span></span>
           </button>
+          ${isAdmin() ? `<button style="${row}" onclick="closeFMModal();openReadTokenModal()">
+            <span style="font-size:1.4rem;flex-shrink:0;">📖</span>
+            <span><strong>Shared Read Token</strong><br><span style="font-size:0.8rem;opacity:0.65;">Read-only token used by all visitors — tap to manage</span></span>
+          </button>` : ''}
           <button style="${row}" id="apiRateLimitRow" onclick="checkApiRateLimit()">
             <span style="font-size:1.4rem;flex-shrink:0;">📊</span>
             <span><strong>API Requests Left</strong><br><span style="font-size:0.8rem;opacity:0.65;" id="apiRateLimitText">Checking…</span></span>
@@ -5809,7 +5870,7 @@
             <span style="font-size:1.4rem;flex-shrink:0;">🐛</span>
             <span><strong>Error Log</strong><br><span style="font-size:0.8rem;opacity:0.65;" id="errorLogSummary">…</span></span>
           </button>
-          <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="setSavedUser(null);setSessionToken(null);currentUser=null;localStorage.removeItem(PAT_KEY);stopInactivityWatch();location.reload();">
+          <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="setSavedUser(null);setSessionToken(null);currentUser=null;localStorage.removeItem(PAT_KEY);localStorage.removeItem(PAT_OWNER_KEY);stopInactivityWatch();location.reload();">
             <span style="font-size:1.4rem;flex-shrink:0;">🚪</span>
             <span><strong style="color:#d9453d;">Log Out</strong></span>
           </button>
@@ -6331,6 +6392,17 @@
     setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide'), 3000);
 
     try { initTheme(); } catch(e) {}
+
+    // Sign in anonymously before touching the database. The portal's login
+    // system is custom (usernames/passwords stored in the database itself),
+    // not Firebase's real auth — so this anonymous sign-in doesn't identify
+    // *who* is using the app. What it does do is require Firebase security
+    // rules to be "auth != null" rather than fully open, which blocks raw,
+    // unauthenticated requests (the kind automated scanners send when
+    // sweeping the internet for exposed Firebase databases) without
+    // breaking the app for real visitors, who get signed in transparently.
+    try { await firebase.auth().signInAnonymously(); } catch(e) { console.warn('Anonymous auth failed:', e); }
+
     await loadSharedReadToken();
 
     const hideSplash = () => document.getElementById('splashScreen')?.classList.add('hide');
@@ -6354,17 +6426,19 @@
           if (!snap.exists() || snap.val()?.status === 'denied') {
             setSavedUser(null); setSessionToken(null); currentUser = null;
             localStorage.removeItem(PAT_KEY);
+            localStorage.removeItem(PAT_OWNER_KEY);
             showLoginScreen(() => initPortal());
             return;
           }
           const data = snap.val();
 
-          // Load THIS account's PAT from Firebase into localStorage
-          if (data.pat) localStorage.setItem(PAT_KEY, data.pat);
-          else localStorage.removeItem(PAT_KEY);
+          // The token itself is never stored in Firebase — only reconcile
+          // ownership of whatever's already local on this device.
+          reconcileLocalPATOwnership(savedUser);
 
-          // Approval check (admins with PAT auto-pass)
-          if (!getPAT() && data.status !== 'approved') {
+          // Approval check (admins auto-pass via the safe isAdmin flag,
+          // not the token — works even before they've entered it on this device)
+          if (!data.isAdmin && data.status !== 'approved') {
             showPendingScreen(savedUser, () => initPortal());
             return;
           }
