@@ -5158,7 +5158,7 @@
     if (files) {
       // Diffs against the last known file list and cascades Firebase
       // cleanup/migration across every account, then rebuilds the tree.
-      rootTree = await reconcileFiles(files);
+      rootTree = (await reconcileFiles(files)).tree;
       renderNavigationView();
     }
     if (db && changeInfo) {
@@ -5180,7 +5180,7 @@
       // Refresh file list silently — also cascades any cleanup/migration
       // across every account if this device is the one to notice it first
       const files = await loadFiles(true);
-      if (files) { rootTree = await reconcileFiles(files); }
+      if (files) { rootTree = (await reconcileFiles(files)).tree; }
 
       if (!data || typeof data === 'number') { renderNavigationView(); return; }
 
@@ -5240,11 +5240,11 @@
   // (raw GitHub web editor, GitHub Desktop, git push, etc.) ---
   setInterval(async () => {
     if (!rootTree) return;
+    if (document.visibilityState !== 'visible') return; // skip while backgrounded
     const files = await loadFiles(true); // always fetch fresh, never the browser's HTTP cache
     if (files) {
-      const newTree = await reconcileFiles(files);
-      const changed = JSON.stringify(newTree) !== JSON.stringify(rootTree);
-      rootTree = newTree;
+      const { tree, changed } = await reconcileFiles(files);
+      rootTree = tree;
       if (changed) renderNavigationView(); // silent refresh, no popup (Firebase already handled messaging for portal-made changes)
     }
   }, 20000);
@@ -5446,7 +5446,7 @@
   // from or whether any portal session was open to witness it.
   const LAST_KNOWN_FILES_KEY = 'portal_last_known_files';
   async function reconcileFiles(files) {
-    if (!files) return rootTree;
+    if (!files) return { tree: rootTree, changed: false };
 
     // The "previous" snapshot to diff against is read fresh from Firebase
     // each time, rather than relying on an in-memory variable. An
@@ -5476,17 +5476,30 @@
       }
     }
 
+    // Cheap "did anything actually change" signal — comparing flat
+    // [path, sha] pairs, computed once and reused both for deciding
+    // whether to persist the snapshot below AND for telling the caller
+    // whether a re-render is actually needed. This replaced callers doing
+    // their own JSON.stringify comparison of the full BUILT TREE (every
+    // folder/file with all its rendering metadata) after the fact — on
+    // the 20-second polling fallback that runs for as long as a tab stays
+    // open, that deep comparison was expensive enough to cause visible
+    // stutter if it landed mid-scroll, every single poll, changed or not.
+    const prevKey = JSON.stringify(prev.map(f => [f.path, f.sha]));
+    const newKey = JSON.stringify(files.map(f => [f.path, f.sha]));
+    const changed = prevKey !== newKey;
+
     lastKnownFiles = files;
     // Persist the new snapshot as the baseline for future reconciliation —
     // by this session later, or any other session/device entirely. Only
     // written when it actually changed, to skip a redundant write on every
     // idle poll tick.
-    if (db && JSON.stringify(prev.map(f => [f.path, f.sha])) !== JSON.stringify(files.map(f => [f.path, f.sha]))) {
+    if (db && changed) {
       const minimal = files.map(f => ({ path: f.path, sha: f.sha }));
       try { await db.ref(LAST_KNOWN_FILES_KEY).set(minimal); } catch(e) {}
     }
 
-    return buildTree(files);
+    return { tree: buildTree(files), changed };
   }
 
   // ── Comprehensive orphan sweep (safety net) ─────────────────────────────
@@ -5502,11 +5515,27 @@
   // against the file list as it exists RIGHT NOW. Anything that references
   // a file/folder that doesn't currently exist gets removed — correct
   // regardless of how or when the deletion happened, or whether any portal
-  // session was open to see it. Runs once per fresh portal session (from
-  // initPortal), not on every poll, since it requires a full-database read
-  // and is meant as an eventual-consistency safety net, not a real-time path.
+  // session was open to see it. Attempted once per fresh portal session
+  // (from initPortal), but throttled to actually run at most every few
+  // hours (see ORPHAN_SWEEP_THROTTLE_MS below) — it requires a full-
+  // database read, so it's meant as an eventual-consistency safety net,
+  // not something that needs to redo a full scan every time the portal
+  // happens to be opened or reloaded.
+  const ORPHAN_SWEEP_THROTTLE_MS = 6 * 60 * 60 * 1000; // 6 hours
   async function sweepOrphanedFirebaseData(files) {
     if (!db || !files) return;
+    // This does a full database read to cross-check every quiz-related key
+    // against the live file list — correct and thorough, but not cheap
+    // enough to redo on every single portal load. It's an eventual-
+    // consistency safety net (the fast diff-based system in reconcileFiles
+    // handles real-time cleanup already), so running it a few times a day
+    // per device is plenty to keep things tidy without adding load-time
+    // and post-load background work every time someone opens the portal.
+    try {
+      const lastRun = parseInt(localStorage.getItem('portal_last_orphan_sweep') || '0', 10);
+      if (Date.now() - lastRun < ORPHAN_SWEEP_THROTTLE_MS) return;
+      localStorage.setItem('portal_last_orphan_sweep', String(Date.now()));
+    } catch(e) {}
     try {
       const liveFiles = files.filter(f => f.path.endsWith('.html') || f.path.endsWith('.md'));
       const livePaths = new Set(liveFiles.map(f => f.path));
@@ -6549,7 +6578,7 @@
         contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);">Retrying… (attempt ${retryCount})</div></div>`;
         const files = await loadFiles(true);
         if (files === null) { render(); return; }
-        rootTree = await reconcileFiles(files);
+        rootTree = (await reconcileFiles(files)).tree;
         let restoredPath = [];
         try { const s = sessionStorage.getItem('quiz_current_path'); if (s) restoredPath = JSON.parse(s); } catch(e) {}
         currentPath = (Array.isArray(restoredPath) && getNodeFromPath(rootTree, restoredPath)) ? restoredPath : [];
@@ -6654,7 +6683,7 @@
       contentDiv.innerHTML = `<div class="state-msg"><div class="icon" style="font-size:2rem;">⏳</div><div style="margin-top:8px;color:var(--text-3);font-size:0.88rem;">Loading quizzes…</div></div>`;
       const files = await loadFiles(true);
       if (files === null) { showLoadError(); return; }
-      rootTree = await reconcileFiles(files);
+      rootTree = (await reconcileFiles(files)).tree;
       sweepOrphanedFirebaseData(files); // safety net — runs in the background, doesn't block first paint
       let restoredPath = [];
       try { const s = sessionStorage.getItem('quiz_current_path'); if (s) restoredPath = JSON.parse(s); } catch(e) {}
@@ -6706,7 +6735,7 @@
         indicator.textContent = ' Refreshing...';
         const files = await loadFiles(true);
         if (files && files.length) {
-          rootTree = await reconcileFiles(files);
+          rootTree = (await reconcileFiles(files)).tree;
           if (savedMode) { savedTree = await buildSavedTree(); }
           renderNavigationView();
           showToast('Quiz list refreshed');
