@@ -262,6 +262,25 @@
     box-sizing: border-box;
   }
 
+  /* ----- Modern themed scrollbar (replaces the default browser/OS one) -----
+     Reuses the same CSS variables every other themed element already relies
+     on, so it automatically matches whichever of the 6 accent themes ×
+     light/dark mode is active — no per-theme overrides needed here. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-3) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--text-3);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
+
   html {
     overflow-x: hidden;
   }
