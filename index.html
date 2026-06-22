@@ -6216,10 +6216,36 @@
       b.addEventListener('touchend',   () => b.style.background='var(--surface-2)', {passive:true});
       pad.appendChild(b);
     });
-    // keyboard support
+    // Shared in-flight guard — prevents rapid keyboard/click entry from
+    // queuing multiple simultaneous async PIN checks against Firebase.
+    let pinCheckInFlight = false;
+    const safeOnDigit = (d) => {
+      if (!pinCheckInFlight) {
+        pinCheckInFlight = true;
+        Promise.resolve(onDigit(d)).finally(() => { pinCheckInFlight = false; });
+      }
+    };
+    // Re-bind click handlers on already-created buttons to use safeOnDigit
+    pad.querySelectorAll('button').forEach(b => {
+      const k = b.innerHTML === '⌫' ? 'del' : b.innerHTML;
+      if (k === '' || b.style.visibility === 'hidden') return;
+      b.replaceWith(b.cloneNode(true)); // remove old listener
+    });
+    pad.querySelectorAll('button').forEach(b => {
+      const k = b.innerHTML === '⌫' ? 'del' : b.innerHTML;
+      if (!k || b.style.visibility === 'hidden') return;
+      b.addEventListener('click', () => { b.style.transform='scale(0.9)'; setTimeout(()=>b.style.transform='',100); safeOnDigit(k); });
+    });
+    // Keyboard support — guards:
+    // 1. Ignore if focus is on an input/textarea/select so typing in a
+    //    password field can't simultaneously advance the PIN
+    // 2. preventDefault stops the digit from also firing other global listeners
+    // 3. In-flight flag (via safeOnDigit) prevents rapid-typing double-submit
     el._pinKeyHandler = (e) => {
-      if (e.key >= '0' && e.key <= '9') onDigit(e.key);
-      if (e.key === 'Backspace') onDigit('del');
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); safeOnDigit(e.key); }
+      else if (e.key === 'Backspace') { e.preventDefault(); safeOnDigit('del'); }
     };
     document.removeEventListener('keydown', el._pinKeyHandler);
     document.addEventListener('keydown', el._pinKeyHandler);
