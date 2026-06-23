@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UPSC Prelims Subjectwise Weightage (2011–2025)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 24px;
+        }
+        .table-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 20px 20px 18px 20px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 0 0 14px 4px;
+            letter-spacing: 0.3px;
+        }
+        table {
+            border-collapse: collapse;
+            font-size: 14px;
+            width: 100%;
+            min-width: 1100px;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid #d0d7de;
+            white-space: nowrap;
+        }
+        /* -------- header row (subjects + years) -------- */
+        thead th {
+            background: #1a1a2e;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        thead th:first-child {
+            text-align: left;
+            padding-left: 14px;
+            min-width: 170px;
+        }
+        thead th:last-child {
+            background: #16213e;
+            min-width: 72px;
+        }
+
+        /* -------- body cells -------- */
+        tbody td {
+            font-weight: 500;
+            font-size: 13.5px;
+            transition: transform 0.1s ease;
+        }
+        tbody td:first-child {
+            text-align: left;
+            padding-left: 14px;
+            font-weight: 500;
+            background: #f8f9fc !important;
+            color: #1a1a2e;
+            border-right: 1.5px solid #c8ced6;
+            min-width: 170px;
+        }
+        tbody td:last-child {
+            font-weight: 700;
+            border-left: 1.5px solid #c8ced6;
+            min-width: 72px;
+        }
+
+        /* -------- total row -------- */
+        tfoot td {
+            background: #1a1a2e;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13.5px;
+            padding: 12px 8px;
+            border: 1px solid #2a2a44;
+        }
+        tfoot td:first-child {
+            text-align: left;
+            padding-left: 14px;
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+        tfoot td:last-child {
+            background: #16213e;
+            color: #ffffff;
+        }
+
+        /* -------- hover effect -------- */
+        tbody tr:hover td {
+            filter: brightness(0.95) saturate(1.05);
+        }
+        tbody tr:hover td:first-child {
+            filter: none;
+            background: #eef0f4 !important;
+        }
+
+        /* -------- responsive tweaks -------- */
+        @media (max-width: 780px) {
+            .table-wrapper {
+                padding: 12px 8px;
+            }
+            h1 {
+                font-size: 18px;
+            }
+            table {
+                font-size: 12px;
+                min-width: 900px;
+            }
+            th,
+            td {
+                padding: 6px 5px;
+            }
+            thead th:first-child {
+                min-width: 120px;
+                padding-left: 8px;
+            }
+            tbody td:first-child {
+                min-width: 120px;
+                padding-left: 8px;
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            table {
+                font-size: 10px;
+                min-width: 720px;
+            }
+            th,
+            td {
+                padding: 4px 3px;
+            }
+            thead th:first-child {
+                min-width: 90px;
+                padding-left: 4px;
+            }
+            tbody td:first-child {
+                min-width: 90px;
+                padding-left: 4px;
+                font-size: 10px;
+            }
+            h1 {
+                font-size: 15px;
+            }
+        }
+
+        /* -------- tooltip style (optional) -------- */
+        td[data-value] {
+            cursor: default;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="table-wrapper">
+        <h1>UPSC Prelims Subjectwise Weightage (2011–2025)</h1>
+        <table id="weightageTable">
+            <thead>
+                <tr>
+                    <th>UPSC Prelims Subject</th>
+                    <th>2011</th>
+                    <th>2012</th>
+                    <th>2013</th>
+                    <th>2014</th>
+                    <th>2015</th>
+                    <th>2016</th>
+                    <th>2017</th>
+                    <th>2018</th>
+                    <th>2019</th>
+                    <th>2020</th>
+                    <th>2021</th>
+                    <th>2022</th>
+                    <th>2023</th>
+                    <th>2024</th>
+                    <th>2025</th>
+                    <th>Average</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- rows injected by JavaScript -->
+            </tbody>
+            <tfoot id="tableFoot">
+                <!-- total row injected by JavaScript -->
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        // -------- DATA --------
+        const subjects = [
+            { name: '1) Art and Culture', values: [0, 3, 2, 10, 1, 0, 2, 4, 0, 0, 3, 0, 0, 2, 2], avg: 2 },
+            { name: '2) Ancient History', values: [4, 5, 8, 7, 1, 7, 4, 3, 4, 10, 7, 8, 9, 5, 6], avg: 6 },
+            { name: '3) Medieval History', values: [0, 1, 1, 2, 4, 4, 0, 1, 6, 1, 5, 4, 2, 1, 1], avg: 2 },
+            { name: '4) Modern History', values: [8, 12, 6, 5, 8, 6, 7, 13, 6, 8, 8, 3, 2, 3, 7], avg: 7 },
+            { name: '5) Polity', values: [7, 18, 15, 11, 13, 12, 23, 16, 15, 18, 17, 11, 15, 16, 18], avg: 15 },
+            { name: '6) Economy', values: [29, 17, 23, 11, 20, 28, 27, 25, 27, 20, 15, 20, 16, 16, 17], avg: 21 },
+            { name: '7) Geography', values: [13, 12, 13, 11, 11, 3, 8, 7, 10, 10, 12, 10, 15, 17, 13], avg: 11 },
+            { name: '8) Environment', values: [19, 20, 17, 24, 19, 17, 14, 12, 18, 18, 15, 17, 18, 19, 19], avg: 18 },
+            { name: '9) Science and Tech.', values: [15, 10, 15, 10, 7, 7, 8, 13, 12, 11, 11, 14, 9, 7, 9], avg: 11 },
+            { name: '10) Current Affairs & GK', values: [5, 2, 0, 9, 16, 16, 7, 6, 2, 4, 7, 13, 14, 14, 8], avg: 8 }
+        ];
+
+        const years = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+
+        // Totals per year (to verify 100 each)
+        const totals = years.map((_, idx) =>
+            subjects.reduce((sum, s) => sum + s.values[idx], 0)
+        );
+
+        // -------- COLOR ENGINE (heatmap) --------
+        // 11 colour stops matching the original image's gradient
+        const colorStops = [
+            { value: 0, color: '#FEF3E2' },
+            { value: 2, color: '#FDE8C8' },
+            { value: 4, color: '#FCD5A5' },
+            { value: 6, color: '#FABF7A' },
+            { value: 8, color: '#F8A54F' },
+            { value: 10, color: '#F5872E' },
+            { value: 12, color: '#E86A20' },
+            { value: 15, color: '#D44A15' },
+            { value: 18, color: '#B83010' },
+            { value: 22, color: '#991A0A' },
+            { value: 29, color: '#7A0A04' }
+        ];
+
+        function getColor(value) {
+            // clamp
+            const v = Math.min(Math.max(value, 0), 29);
+            for (let i = 0; i < colorStops.length - 1; i++) {
+                const low = colorStops[i];
+                const high = colorStops[i + 1];
+                if (v >= low.value && v <= high.value) {
+                    const t = (v - low.value) / (high.value - low.value || 1);
+                    return lerpColor(low.color, high.color, t);
+                }
+            }
+            return colorStops[colorStops.length - 1].color;
+        }
+
+        function lerpColor(c1, c2, t) {
+            const r1 = parseInt(c1.slice(1, 3), 16),
+                g1 = parseInt(c1.slice(3, 5), 16),
+                b1 = parseInt(c1.slice(5, 7), 16);
+            const r2 = parseInt(c2.slice(1, 3), 16),
+                g2 = parseInt(c2.slice(3, 5), 16),
+                b2 = parseInt(c2.slice(5, 7), 16);
+            const r = Math.round(r1 + (r2 - r1) * t);
+            const g = Math.round(g1 + (g2 - g1) * t);
+            const b = Math.round(b1 + (b2 - b1) * t);
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+
+        // -------- RENDER TABLE --------
+        const tbody = document.getElementById('tableBody');
+        const tfoot = document.getElementById('tableFoot');
+
+        // ---- rows ----
+        subjects.forEach((subj) => {
+            const tr = document.createElement('tr');
+            // subject name cell
+            const nameTd = document.createElement('td');
+            nameTd.textContent = subj.name;
+            tr.appendChild(nameTd);
+
+            // value cells
+            subj.values.forEach((val) => {
+                const td = document.createElement('td');
+                td.textContent = val;
+                td.style.backgroundColor = getColor(val);
+                td.setAttribute('data-value', val);
+                tr.appendChild(td);
+            });
+
+            // average cell (use same color map)
+            const avgTd = document.createElement('td');
+            avgTd.textContent = subj.avg;
+            avgTd.style.backgroundColor = getColor(subj.avg);
+            avgTd.setAttribute('data-value', subj.avg);
+            tr.appendChild(avgTd);
+
+            tbody.appendChild(tr);
+        });
+
+        // ---- total row ----
+        const trTotal = document.createElement('tr');
+        const totalLabel = document.createElement('td');
+        totalLabel.textContent = 'Total';
+        trTotal.appendChild(totalLabel);
+
+        totals.forEach((val) => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            // totals get a slightly darker treatment (subtle)
+            td.style.backgroundColor = '#2a2a44';
+            td.style.color = '#ffffff';
+            td.style.fontWeight = '700';
+            trTotal.appendChild(td);
+        });
+
+        // total average (sum of averages = 100? actually average of totals = 100)
+        const avgTotal = Math.round(totals.reduce((a, b) => a + b, 0) / totals.length);
+        const avgTdTotal = document.createElement('td');
+        avgTdTotal.textContent = avgTotal;
+        avgTdTotal.style.backgroundColor = '#16213e';
+        avgTdTotal.style.color = '#ffffff';
+        avgTdTotal.style.fontWeight = '700';
+        trTotal.appendChild(avgTdTotal);
+
+        tfoot.appendChild(trTotal);
+
+        // -------- (optional) tiny tooltip on hover: show value --------
+        document.querySelectorAll('td[data-value]').forEach((td) => {
+            td.title = `Value: ${td.getAttribute('data-value')}`;
+        });
+
+        console.log('✅ UPSC weightage table rendered with heatmap colours.');
+    </script>
+</body>
+</html>
