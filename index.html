@@ -260,23 +260,27 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* Prevent text selection and touch callout sitewide */
+  }
+  /* Prevent text selection on interactive UI elements only —
+     not globally, which breaks scrollbar dragging and iOS touch events */
+  body, .folders-grid, .folder-card, .file-list-item,
+  .nav-header, .top-bar, .bottom-bar, .sidebar,
+  .breadcrumb, .toolbar, .search-compact,
+  .library-item, .recent-item, .hub-section,
+  h1, h2, h3, h4, p, span, label, div {
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
   }
-  /* Re-enable selection only where the user needs to type */
-  input, textarea, [contenteditable="true"] {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    user-select: text;
-    -webkit-touch-callout: default;
-  }
-  /* Re-enable scrollbar thumb dragging — user-select:none on * blocks it */
+  /* Re-enable selection where the user needs to type or drag scrollbars */
+  input, textarea, [contenteditable="true"],
   *::-webkit-scrollbar-thumb {
     -webkit-user-select: auto;
+    -moz-user-select: auto;
     user-select: auto;
+    -webkit-touch-callout: default;
+    pointer-events: auto;
   }
 
   /* ----- Custom right-click context menu (Refresh only) ----- */
@@ -6322,12 +6326,8 @@
     const pad = el.querySelector('#pinPad');
     if (!pad) return;
     pad.innerHTML = '';
-    const btnStyle = 'border:1.5px solid var(--border-2);background:var(--surface-2);border-radius:14px;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.1s;';
+    const btnStyle = 'border:1.5px solid var(--border-2);background:var(--surface-2);border-radius:14px;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.1s;pointer-events:auto;';
 
-    // Keyboard is gated behind an explicit click/tap on the pad.
-    // This prevents the inactivity-lock screen being bypassed by
-    // incidental typing before the user has touched the PIN pad.
-    let pinPadActivated = false;
     let pinCheckInFlight = false;
     const safeOnDigit = (d) => {
       if (!pinCheckInFlight) {
@@ -6342,18 +6342,19 @@
       b.innerHTML = k === 'del' ? '⌫' : k === '' ? '' : k;
       if (k === '') { b.style.visibility = 'hidden'; pad.appendChild(b); return; }
       b.addEventListener('click', () => {
-        pinPadActivated = true;
         b.style.transform = 'scale(0.9)';
         setTimeout(() => b.style.transform = '', 100);
         safeOnDigit(String(k));
       });
       b.addEventListener('touchstart', () => b.style.background = 'var(--surface-3)', { passive: true });
-      b.addEventListener('touchend',   () => { b.style.background = 'var(--surface-2)'; pinPadActivated = true; }, { passive: true });
+      b.addEventListener('touchend',   () => b.style.background = 'var(--surface-2)', { passive: true });
       pad.appendChild(b);
     });
 
+    // Keyboard: only fires when the auth overlay is actually visible
+    // and focus is not inside a text input (password field etc.)
     el._pinKeyHandler = (e) => {
-      if (!pinPadActivated) return;                            // must tap pad first
+      if (!document.getElementById('authOverlay')) return; // overlay gone
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.key >= '0' && e.key <= '9') { e.preventDefault(); safeOnDigit(e.key); }
