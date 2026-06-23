@@ -260,9 +260,58 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Prevent text selection and touch callout sitewide */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Re-enable selection only where the user needs to type */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 
-  /* ----- Modern themed scrollbar (replaces the default browser/OS one) -----
+  /* ----- Custom right-click context menu (Refresh only) ----- */
+  #customContextMenu {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    background: var(--surface);
+    border: 1.5px solid var(--border-2);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 6px;
+    min-width: 140px;
+    animation: ctxFadeIn 0.12s ease;
+  }
+  #customContextMenu.visible { display: block; }
+  @keyframes ctxFadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  #customContextMenu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s;
+    margin: 0;
+  }
+  #customContextMenu button:hover {
+    background: var(--surface-2);
+    color: var(--accent);
+  }
+
+  /* ----- Modern themed scrollbar -----
      Reuses the same CSS variables every other themed element already relies
      on, so it automatically matches whichever of the 6 accent themes ×
      light/dark mode is active — no per-theme overrides needed here. */
@@ -2687,6 +2736,9 @@
   <button class="sel-bar-btn" onclick="clearSelection()">✕</button>
 </div>
 <div id="ctxMenuContainer"></div>
+<div id="customContextMenu">
+  <button id="customCtxRefresh">↻ &nbsp;Refresh</button>
+</div>
 
 <!-- SEARCH OVERLAY -->
 <div id="searchOverlay" class="search-overlay">
@@ -5250,43 +5302,90 @@
     return res.ok;
   }
 
+  // Makes a single atomic git commit adding and/or removing multiple files.
+  // newFiles: [{path, content (base64)}]  deletedPaths: [path string]
+  // This avoids the "both folders briefly visible" issue that occurs when
+  // a rename is done as N separate create+delete commits — git Desktop /
+  // local fetch sees the intermediate states. One commit = one fetch = done.
+  async function ghAtomicCommit(message, newFiles = [], deletedPaths = []) {
+    const token = getPAT();
+    if (!token) { showToast('⚠️ No GitHub token'); return false; }
+    const base = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git`;
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github+json' };
+
+    // 1. Get the current HEAD commit SHA + tree SHA
+    const refRes = await fetch(`${base}/refs/heads/${GITHUB_BRANCH}`, { headers });
+    if (!refRes.ok) return false;
+    const refData = await refRes.json();
+    const headSha = refData.object.sha;
+
+    const commitRes = await fetch(`${base}/commits/${headSha}`, { headers });
+    if (!commitRes.ok) return false;
+    const commitData = await commitRes.json();
+    const baseTreeSha = commitData.tree.sha;
+
+    // 2. Build the new tree: existing tree + our adds/deletes in one shot.
+    //    Setting blob sha to null with mode 100644 deletes the file.
+    const treeEntries = [];
+    for (const f of newFiles) {
+      // Create a blob for each new file
+      const blobRes = await fetch(`${base}/blobs`, { method: 'POST', headers,
+        body: JSON.stringify({ content: f.content, encoding: 'base64' }) });
+      if (!blobRes.ok) return false;
+      const blob = await blobRes.json();
+      treeEntries.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+    }
+    for (const p of deletedPaths) {
+      treeEntries.push({ path: p, mode: '100644', type: 'blob', sha: null });
+    }
+
+    const newTreeRes = await fetch(`${base}/trees`, { method: 'POST', headers,
+      body: JSON.stringify({ base_tree: baseTreeSha, tree: treeEntries }) });
+    if (!newTreeRes.ok) return false;
+    const newTree = await newTreeRes.json();
+
+    // 3. Create the commit
+    const newCommitRes = await fetch(`${base}/commits`, { method: 'POST', headers,
+      body: JSON.stringify({ message, tree: newTree.sha, parents: [headSha] }) });
+    if (!newCommitRes.ok) return false;
+    const newCommit = await newCommitRes.json();
+
+    // 4. Update the branch ref to point to the new commit
+    const updateRes = await fetch(`${base}/refs/heads/${GITHUB_BRANCH}`, { method: 'PATCH', headers,
+      body: JSON.stringify({ sha: newCommit.sha }) });
+    return updateRes.ok;
+  }
+
   async function ghMove(oldPath, newPath) {
     if (oldPath === newPath) return;
     const token = getPAT();
     if (!token) { showToast('⚠️ No GitHub token — open ⚙️ Settings → GitHub Token'); return; }
     const isFolder = !oldPath.split('/').pop().includes('.');
-    const isRename = oldPath.split('/').slice(0,-1).join('/') === newPath.split('/').slice(0,-1).join('/');
     showToast('⏳ Working...');
     try {
-      let filesWithSha;
+      let newFiles = [], deletedPaths = [];
       if (isFolder) {
-        filesWithSha = await ghGetAllFilesRecursive(oldPath); // [{path, sha}]
+        const filesWithSha = await ghGetAllFilesRecursive(oldPath);
         if (!filesWithSha.length) {
-          // Empty folder — just move the .gitkeep
-          filesWithSha = []; // nothing to move, will create .gitkeep at new location
-          const newKeep = newPath + '/.gitkeep';
-          await ghCreateOrUpdate(newKeep, btoa(''), null);
-          // Delete old .gitkeep if exists
+          // Empty folder — just move the .gitkeep atomically
+          newFiles = [{ path: newPath + '/.gitkeep', content: btoa('') }];
           const oldKeep = oldPath + '/.gitkeep';
           try {
             const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghEncodePath(oldKeep)}`,
               { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
-            if (r.ok) { const d = await r.json(); await ghDeleteFile(oldKeep, d.sha); }
+            if (r.ok) { deletedPaths = [oldKeep]; }
           } catch(e) {}
         } else {
-          for (const { path: fp, sha } of filesWithSha) {
-            const relative = fp.substring(oldPath.length + 1);
-            const dest = newPath + '/' + relative;
-            // Get file content
+          // Fetch all file contents in parallel, then commit everything at once
+          const fetched = await Promise.all(filesWithSha.map(async ({ path: fp }) => {
             const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghEncodePath(fp)}`,
               { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
-            if (!r.ok) { showToast(`❌ Cannot read: ${fp.split('/').pop()}`); return; }
+            if (!r.ok) throw new Error(`Cannot read: ${fp.split('/').pop()}`);
             const d = await r.json();
-            const ok1 = await ghCreateOrUpdate(dest, d.content.replace(/\n/g,''), null);
-            if (!ok1) { showToast(`❌ Cannot create: ${dest.split('/').pop()}`); return; }
-            const ok2 = await ghDeleteFile(fp, sha);
-            if (!ok2) { showToast(`❌ Cannot delete: ${fp.split('/').pop()}`); return; }
-          }
+            return { path: fp, content: d.content.replace(/\n/g,'') };
+          }));
+          newFiles = fetched.map(f => ({ path: newPath + '/' + f.path.substring(oldPath.length + 1), content: f.content }));
+          deletedPaths = filesWithSha.map(f => f.path);
         }
       } else {
         // Single file
@@ -5294,11 +5393,13 @@
           { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
         if (!r.ok) { const e = await r.json().catch(()=>({})); showToast(`❌ ${r.status}: ${e.message||'Cannot read file'}`); return; }
         const d = await r.json();
-        const ok1 = await ghCreateOrUpdate(newPath, d.content.replace(/\n/g,''), null);
-        if (!ok1) { showToast('❌ Cannot create file at new location'); return; }
-        const ok2 = await ghDeleteFile(oldPath, d.sha);
-        if (!ok2) { showToast('❌ Cannot delete old file'); return; }
+        newFiles = [{ path: newPath, content: d.content.replace(/\n/g,'') }];
+        deletedPaths = [oldPath];
       }
+
+      const label = isFolder ? oldPath.split('/').pop() : oldPath.split('/').pop();
+      const ok = await ghAtomicCommit(`Portal: rename ${label} → ${newPath.split('/').pop()}`, newFiles, deletedPaths);
+      if (!ok) { showToast('❌ Rename failed'); return; }
 
       // Optimistic UI update
       const newTree = JSON.parse(JSON.stringify(rootTree)); // deep clone
@@ -5376,9 +5477,20 @@
       }
       if (!filesWithSha.length) { showToast('❌ Nothing found at: ' + path); return; }
 
-      for (const { path: filePath, sha } of filesWithSha) {
+      if (isFolder) {
+        // Delete all files in one atomic commit — avoids the "partially
+        // deleted folder still visible" state that occurred when each file
+        // was deleted as a separate commit and fetched one by one locally.
+        const ok = await ghAtomicCommit(
+          `Portal: delete ${cleanName(path.split('/').pop())}`,
+          [],
+          filesWithSha.map(f => f.path)
+        );
+        if (!ok) { showToast('⚠️ GitHub sync issue — refresh to verify'); return; }
+      } else {
+        const { path: filePath, sha } = filesWithSha[0];
         const ok = await ghDeleteFile(filePath, sha);
-        if (!ok) { showToast(`⚠️ GitHub sync issue — refresh to verify`); return; }
+        if (!ok) { showToast('⚠️ GitHub sync issue — refresh to verify'); return; }
       }
 
       // Background sync + Firebase broadcast
@@ -7487,6 +7599,74 @@
     deferredInstallPrompt = null;
     if (installBtn) installBtn.style.display = 'none';
   }
+
+  // ── 1. CUSTOM RIGHT-CLICK MENU (Refresh only) ──────────────────────────
+  const customCtxMenu = document.getElementById('customContextMenu');
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('input, textarea, [contenteditable]')) return;
+    e.preventDefault();
+    const x = Math.min(e.clientX, window.innerWidth  - 160);
+    const y = Math.min(e.clientY, window.innerHeight - 60);
+    customCtxMenu.style.left = x + 'px';
+    customCtxMenu.style.top  = y + 'px';
+    customCtxMenu.classList.add('visible');
+  });
+  document.addEventListener('click',   () => customCtxMenu.classList.remove('visible'));
+  document.addEventListener('scroll',  () => customCtxMenu.classList.remove('visible'), true);
+  document.getElementById('customCtxRefresh').addEventListener('click', () => {
+    customCtxMenu.classList.remove('visible');
+    refreshFilesAndSync(null);
+    showToast('Refreshing...');
+  });
+
+  // ── 2. BLOCK COPY / CUT / DRAG ─────────────────────────────────────────
+  document.addEventListener('copy',      (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+  document.addEventListener('cut',       (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+  document.addEventListener('dragstart', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+
+  // ── 3. PIN KEYBOARD FIX — require explicit pad tap before keyboard works ─
+  // Overrides the buildPinPad function defined earlier with a version that
+  // gates keyboard input behind pinPadActivated — set only when the user
+  // physically clicks or taps a button on the pad. This prevents the inactivity
+  // lock screen from being bypassed by typing without touching the pad first.
+  buildPinPad = function(el, onDigit) {
+    const pad = el.querySelector('#pinPad');
+    if (!pad) return;
+    pad.innerHTML = '';
+    const btnStyle = 'border:1.5px solid var(--border-2);background:var(--surface-2);border-radius:14px;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.1s;';
+    let pinPadActivated = false;
+    let pinCheckInFlight = false;
+    const safeOnDigit = (d) => {
+      if (!pinCheckInFlight) {
+        pinCheckInFlight = true;
+        Promise.resolve(onDigit(d)).finally(() => { pinCheckInFlight = false; });
+      }
+    };
+    [1,2,3,4,5,6,7,8,9,'',0,'del'].forEach(k => {
+      const b = document.createElement('button');
+      b.style.cssText = btnStyle;
+      b.innerHTML = k === 'del' ? '⌫' : k === '' ? '' : k;
+      if (k === '') { b.style.visibility='hidden'; pad.appendChild(b); return; }
+      b.addEventListener('click', () => {
+        pinPadActivated = true;
+        b.style.transform='scale(0.9)'; setTimeout(()=>b.style.transform='',100);
+        safeOnDigit(String(k));
+      });
+      b.addEventListener('touchstart', () => b.style.background='var(--surface-3)', {passive:true});
+      b.addEventListener('touchend',   () => { b.style.background='var(--surface-2)'; pinPadActivated = true; }, {passive:true});
+      pad.appendChild(b);
+    });
+    // Keyboard only works after the user has explicitly clicked/tapped a pad button
+    el._pinKeyHandler = (e) => {
+      if (!pinPadActivated) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); safeOnDigit(e.key); }
+      else if (e.key === 'Backspace')    { e.preventDefault(); safeOnDigit('del'); }
+    };
+    document.removeEventListener('keydown', el._pinKeyHandler);
+    document.addEventListener('keydown', el._pinKeyHandler);
+  };
 
 </script>
 </body>
