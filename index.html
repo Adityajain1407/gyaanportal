@@ -314,7 +314,8 @@
     background: var(--surface-2);
     color: var(--accent);
   }
-  #customContextMenu #customCtxUpload {
+  #customContextMenu #customCtxUpload,
+  #customContextMenu #customCtxNewFolder {
     border-top: 1px solid var(--border);
     margin-top: 3px;
     padding-top: 10px;
@@ -2884,7 +2885,7 @@
 <div id="customContextMenu">
   <button id="customCtxRefresh">↻ &nbsp;Hard Refresh</button>
   <button id="customCtxUpload" class="sel-admin-only">⬆ &nbsp;Upload Quiz</button>
-  <button id="customCtxNewFolder" class="sel-admin-only" style="border-top: 1px solid var(--border); margin-top:3px; padding-top:10px;">📁 &nbsp;New Folder</button>
+  <button id="customCtxNewFolder" class="sel-admin-only">📁 &nbsp;New Folder</button>
 </div>
 <!-- Hidden file input for quiz upload -->
 <input type="file" id="quizUploadInput" accept=".html" style="display:none" multiple>
@@ -3529,18 +3530,37 @@
       openQuizLink(link.href);
     }));
 
-    // Long-press to enter selection mode (touch) — does NOT open item
-    let lpTimer = null;
-    document.querySelectorAll(".folder-card, .quiz-item").forEach(el => {
-      el.addEventListener("touchstart", (e) => {
-        lpTimer = setTimeout(() => {
-          lpTimer = null;
-          toggleItemSelect(el.dataset.path);
+    // Right-click / long-press on folder or quiz → item context menu
+    const addItemCtx = (el, path, type, name) => {
+      // Right-click (desktop)
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showCtxMenu(e.clientX, e.clientY, path, type, name);
+      });
+      // Long-press (touch)
+      let ctxLpTimer = null;
+      el.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        const sx = t.clientX, sy = t.clientY;
+        ctxLpTimer = setTimeout(() => {
+          ctxLpTimer = null;
           navigator.vibrate && navigator.vibrate(30);
-        }, 600);
+          showCtxMenu(sx, sy, path, type, name);
+        }, 500);
       }, { passive: true });
-      el.addEventListener("touchend", () => clearTimeout(lpTimer), { passive: true });
-      el.addEventListener("touchmove", () => clearTimeout(lpTimer), { passive: true });
+      el.addEventListener('touchmove',   () => { clearTimeout(ctxLpTimer); ctxLpTimer = null; }, { passive: true });
+      el.addEventListener('touchend',    () => { clearTimeout(ctxLpTimer); ctxLpTimer = null; }, { passive: true });
+      el.addEventListener('touchcancel', () => { clearTimeout(ctxLpTimer); ctxLpTimer = null; }, { passive: true });
+    };
+
+    document.querySelectorAll('.folder-card').forEach(card => {
+      const path = card.dataset.path, name = card.dataset.folder;
+      addItemCtx(card, path, 'folder', cleanName(name));
+    });
+    document.querySelectorAll('.quiz-item').forEach(item => {
+      const path = item.dataset.path, name = cleanName((path || '').split('/').pop());
+      addItemCtx(item, path, 'quiz', name);
     });
 
     document.querySelectorAll(".saved-item").forEach((el, idx) => el.addEventListener("click", () => {
@@ -5137,40 +5157,40 @@
   }
 
   // --- Context menu ---
-  function showCtxMenu(e, path, type, name) {
+  function showCtxMenu(x, y, path, type, name) {
     closeCtxMenu();
+    const admin = isAdmin();
     const container = document.getElementById('ctxMenuContainer');
     const menu = document.createElement('div');
     menu.className = 'ctx-menu';
     menu.id = 'activeCtxMenu';
     const isStarred = isFavourited(path);
-    const starLabel = isStarred ? '⭐ Remove from Favourites' : '☆ Add to Favourites';
-    const resetLogsBtn = type === 'quiz'
+    const starLabel = isStarred ? '⭐ Favourites से हटाएं' : '☆ Favourites में जोड़ें';
+    const resetLogsBtn = (type === 'quiz' && admin)
       ? `<button class="ctx-menu-item" id="ctxResetLogsBtn">🔄 Reset Logs</button>` : '';
-    menu.innerHTML = `
-      <button class="ctx-menu-item" id="ctxStarBtn">${starLabel}</button>
+    const adminBtns = admin ? `
       <button class="ctx-menu-item" id="ctxRenameBtn">✏️ Rename</button>
       <button class="ctx-menu-item" id="ctxMoveBtn">📂 Move</button>
       ${resetLogsBtn}
-      <button class="ctx-menu-item danger" id="ctxDeleteBtn">🗑️ Delete</button>
+      <button class="ctx-menu-item danger" id="ctxDeleteBtn">🗑️ Delete</button>` : '';
+    menu.innerHTML = `
+      <button class="ctx-menu-item" id="ctxStarBtn">${starLabel}</button>
+      ${adminBtns}
     `;
     container.appendChild(menu);
-
-    // Wire up via JS (not inline onclick) to avoid escaping issues
     document.getElementById('ctxStarBtn').onclick = () => { closeCtxMenu(); toggleFavourite(path, name, type); };
-    document.getElementById('ctxRenameBtn').onclick = () => { closeCtxMenu(); openRenameModal(path, name); };
-    document.getElementById('ctxMoveBtn').onclick = () => { closeCtxMenu(); openMoveModal([path]); };
-    document.getElementById('ctxDeleteBtn').onclick = () => { closeCtxMenu(); openDeleteModal([path], name); };
-    if (type === 'quiz') {
-      document.getElementById('ctxResetLogsBtn').onclick = () => { closeCtxMenu(); ctxResetLogs(path, name); };
+    if (admin) {
+      document.getElementById('ctxRenameBtn').onclick = () => { closeCtxMenu(); openRenameModal(path, name); };
+      document.getElementById('ctxMoveBtn').onclick   = () => { closeCtxMenu(); openMoveModal([path]); };
+      document.getElementById('ctxDeleteBtn').onclick = () => { closeCtxMenu(); openDeleteModal([path], name); };
+      if (type === 'quiz') document.getElementById('ctxResetLogsBtn')?.addEventListener('click', () => { closeCtxMenu(); ctxResetLogs(path, name); });
     }
-    const rect = e.target.getBoundingClientRect();
-    const mw = 190, mh = type === 'quiz' ? 180 : 145;
-    let left = rect.right + 4, top = rect.top;
-    if (left + mw > window.innerWidth) left = rect.left - mw - 4;
-    if (top + mh > window.innerHeight) top = window.innerHeight - mh - 8;
-    menu.style.left = Math.max(8, left) + 'px';
-    menu.style.top = Math.max(8, top) + 'px';
+    // Position safely within viewport
+    requestAnimationFrame(() => {
+      const mw = menu.offsetWidth || 180, mh = menu.offsetHeight || 160;
+      menu.style.left = Math.min(x, window.innerWidth  - mw - 8) + 'px';
+      menu.style.top  = Math.min(y, window.innerHeight - mh - 8) + 'px';
+    });
     setTimeout(() => document.addEventListener('click', closeCtxMenuOnOutside), 10);
   }
   function closeCtxMenu() {
@@ -8018,6 +8038,7 @@
   // Desktop: right-click
   document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('input, textarea, [contenteditable]')) return;
+    if (e.target.closest('.folder-card, .quiz-item, .quiz-link')) return;
     e.preventDefault();
     showRefreshMenu(e.clientX, e.clientY);
   });
