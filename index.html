@@ -3375,9 +3375,9 @@
       for (const [folderName, folderNode] of Object.entries(node.__folders__)) {
         items.push({
           type: "folder",
-          name: folderName,
+          name: cleanName(folderName),
           path: [...currentPathArr, folderName],
-          parentPath: currentPathArr.join(" / ") || "Root",
+          parentPath: currentPathArr.map(p => cleanName(p)).join(" / ") || "Root",
           quizCount: countQuizzes(folderNode)
         });
         traverse(folderNode, [...currentPathArr, folderName]);
@@ -3389,7 +3389,7 @@
           type: "quiz",
           name: quizName,
           path: [...currentPathArr],
-          parentPath: currentPathArr.length ? currentPathArr.join(" / ") : "Root",
+          parentPath: currentPathArr.length ? currentPathArr.map(p => cleanName(p)).join(" / ") : "Root",
           url: url,
           fullPath: file.path
         });
@@ -3424,9 +3424,10 @@
         const label = savedMode ? `${count} saved` : `${count} quiz${count!==1?'zes':''}`;
         const itemPath = [...currentPath, name].join('/');
         const starred = isFavourited(itemPath);
+        const displayName = cleanName(name);
         html += `<div class="folder-card" data-folder="${name.replace(/"/g,'&quot;')}" data-path="${escapeHtml(itemPath)}" data-type="folder">
           <div class="folder-icon">${icon}</div>
-          <div class="folder-name">${escapeHtml(name)}</div>
+          <div class="folder-name">${escapeHtml(displayName)}</div>
           <div class="folder-count">${label}</div>
           <button class="item-star-btn ${starred?'starred':''}" data-path="${escapeHtml(itemPath)}" data-name="${escapeHtml(name)}" data-type="folder">${starred?'⭐':'☆'}</button>
           <div class="item-checkbox" data-path="${escapeHtml(itemPath)}"></div>
@@ -3612,7 +3613,7 @@
       <div class="breadcrumb">
         <span class="breadcrumb-item breadcrumb-home" data-path="root">${homeLabel}</span>`;
     for (let i=0; i<currentPath.length; i++) {
-      html += `<span class="breadcrumb-sep">›</span><span class="breadcrumb-item" data-path-index="${i}">${escapeHtml(currentPath[i])}</span>`;
+      html += `<span class="breadcrumb-sep">›</span><span class="breadcrumb-item" data-path-index="${i}">${escapeHtml(cleanName(currentPath[i]))}</span>`;
     }
     html += `</div>
       <div class="breadcrumb-controls">
