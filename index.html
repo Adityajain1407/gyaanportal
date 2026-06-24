@@ -17,6 +17,9 @@
 <style>
   /* ----- LIGHT THEME (DEFAULT) ----- */
   :root, body[data-theme="default"] {
+    --danger: #e03030;
+    --danger-bg: rgba(224,48,48,0.10);
+    --danger-hover: #c42424;
     --bg: #f4f6fa;
     --surface: #ffffff;
     --surface-2: #f8fafc;
@@ -1617,7 +1620,7 @@
   .gcal-connect-status.connected { color: #2e7d32; font-weight: 600; }
   .gcal-btn { padding: 8px 16px; border-radius: 40px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: 0.15s; white-space: nowrap; }
   .gcal-btn:hover { background: var(--accent); color: #fff; }
-  .gcal-btn.disconnect { border-color: #e53935; color: #e53935; }
+  .gcal-btn.disconnect { border-color: var(--danger); color: var(--danger); }
   .gcal-btn.disconnect:hover { background: #e53935; color: #fff; }
   .gcal-connected-info { margin-top: 10px; padding: 10px 12px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border-2); }
   .gcal-connected-info .gcal-email { font-weight: 700; font-size: 0.85rem; color: var(--text); margin-bottom: 3px; }
@@ -2076,8 +2079,8 @@
     transition: background 0.12s;
   }
   .ctx-menu-item:hover { background: var(--surface-2); }
-  .ctx-menu-item.danger { color: #d9453d; }
-  .ctx-menu-item.danger:hover { background: #fff0ef; }
+  .ctx-menu-item.danger { color: var(--danger); }
+  .ctx-menu-item.danger:hover { background: var(--danger-bg); }
 
   /* Floating action bar shown when items are selected */
   .selection-bar {
@@ -2117,7 +2120,7 @@
     transition: background 0.15s;
   }
   .sel-bar-btn:hover { background: var(--accent); color: var(--button-text); }
-  .sel-bar-btn.danger:hover { background: #d9453d; color: #fff; }
+  .sel-bar-btn.danger:hover { background: var(--danger); color: #fff; }
   .sel-bar-divider { width: 1px; height: 24px; background: var(--border-2); margin: 0 2px; }
 
   /* Rename / Move / PAT input modals */
@@ -2182,7 +2185,7 @@
   .fm-btn:hover { opacity: 0.85; }
   .fm-btn-primary { background: var(--accent); color: var(--button-text); }
   .fm-btn-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-2); }
-  .fm-btn-danger { background: #d9453d; color: #fff; }
+  .fm-btn-danger { background: var(--danger); color: #fff; }
 
   /* PAT status indicator */
   .pat-status {
@@ -2563,8 +2566,8 @@
   }
   .saved-q-nav-btn:hover { background: var(--surface-3); }
   .saved-q-nav-btn:disabled { opacity: 0.35; cursor: default; }
-  .saved-q-nav-btn.danger { color: #d9453d; border-color: rgba(217,69,61,0.3); }
-  .saved-q-nav-btn.danger:hover { background: rgba(217,69,61,0.08); }
+  .saved-q-nav-btn.danger { color: var(--danger); border-color: var(--danger-bg); }
+  .saved-q-nav-btn.danger:hover { background: var(--danger-bg); }
   .saved-q-counter {
     font-size: 0.78rem;
     color: var(--text-3);
@@ -2681,7 +2684,7 @@
   }
   .saved-back-btn { background: var(--surface-3); color: var(--text); }
   .saved-back-btn:hover { background: var(--surface-2); }
-  .saved-delete-btn { background: #d9534f; color: white; }
+  .saved-delete-btn { background: var(--danger); color: #fff; }
   .saved-delete-btn:hover { background: #c7362b; }
   .saved-detail-wrap { position: relative; }
   .saved-nav-arrow {
@@ -2814,7 +2817,7 @@
     cursor: pointer; margin-top: 6px; transition: opacity 0.15s;
   }
   .auth-submit:hover { opacity: 0.88; }
-  .auth-error { color: #d9453d; font-size: 0.82rem; text-align: center; margin-top: 10px; font-weight: 600; min-height: 18px; }
+  .auth-error { color: var(--danger); font-size: 0.82rem; text-align: center; margin-top: 10px; font-weight: 600; min-height: 18px; }
   .auth-note { font-size: 0.75rem; color: var(--text-3); text-align: center; margin-top: 14px; line-height: 1.5; }
   .pin-pad button:hover { background: var(--surface-3) !important; }
   @media (max-width: 400px) {
@@ -4250,7 +4253,7 @@
           <div class="recent-folder">📁 ${escapeHtml(folder)}</div>
           <div class="recent-time">${s.count} saved question${s.count!==1?'s':''}</div>
         </div>
-        <button class="lib-saved-delete" data-safename="${escapeHtml(safe)}" title="Delete all saved for this quiz" style="background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-3);padding:6px;border-radius:50%;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#d9453d'" onmouseout="this.style.color='var(--text-3)'">🗑️</button>
+        <button class="lib-saved-delete" data-safename="${escapeHtml(safe)}" title="Delete all saved for this quiz" style="background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-3);padding:6px;border-radius:50%;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-3)'">🗑️</button>
       </div>`;
     }
     body.innerHTML = html;
@@ -5159,6 +5162,7 @@
   // --- Context menu ---
   function showCtxMenu(x, y, path, type, name) {
     closeCtxMenu();
+    customCtxMenu.classList.remove('visible'); // close empty-area menu if open
     const admin = isAdmin();
     const container = document.getElementById('ctxMenuContainer');
     const menu = document.createElement('div');
@@ -5198,7 +5202,7 @@
     document.removeEventListener('click', closeCtxMenuOnOutside);
   }
   function closeCtxMenuOnOutside(e) {
-    if (!e.target.closest('#activeCtxMenu')) closeCtxMenu();
+    if (!e.target.closest('#activeCtxMenu')) { closeCtxMenu(); customCtxMenu.classList.remove('visible'); }
   }
   function ctxRename(path, name) { closeCtxMenu(); singlePath = path; singleName = name; openRenameModal(path, name); }
   function ctxMove(path) { closeCtxMenu(); singlePath = path; openMoveModal([path]); }
@@ -5774,7 +5778,7 @@
     backdrop.id = 'changePopupBackdrop';
     backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;';
     const icon = variant === 'danger' ? '🗑️' : variant === 'info' ? '📋' : '✅';
-    const accentColor = variant === 'danger' ? '#d9453d' : 'var(--accent)';
+    const accentColor = variant === 'danger' ? 'var(--danger)' : 'var(--accent)';
     backdrop.innerHTML = `
       <div style="background:var(--surface);border-radius:20px;padding:1.5rem;max-width:380px;width:100%;box-shadow:var(--shadow-lg);text-align:center;animation:fadeInDown 0.2s ease;">
         <div style="font-size:2.5rem;margin-bottom:0.5rem;">${icon}</div>
@@ -6563,7 +6567,7 @@
           </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="setSavedUser(null);setSessionToken(null);currentUser=null;localStorage.removeItem(PAT_KEY);localStorage.removeItem(PAT_OWNER_KEY);stopInactivityWatch();location.reload();">
             <span style="font-size:1.4rem;flex-shrink:0;">🚪</span>
-            <span><strong style="color:#d9453d;">Log Out</strong></span>
+            <span><strong style="color:var(--danger);">Log Out</strong></span>
           </button>
           <button style="${row}justify-content:center;margin-top:4px;" onclick="closeFMModal()">
             <span style="font-weight:600;">Cancel</span>
@@ -6638,7 +6642,7 @@
         <span style="flex:1;font-weight:600;color:var(--text);">${r.username}</span>
         <span style="font-size:0.75rem;color:var(--text-3);">${new Date(r.created).toLocaleDateString()}</span>
         <button class="pr-approve" data-u="${r.username}" title="Approve" style="background:#1f9d55;border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">✓</button>
-        <button class="pr-deny"   data-u="${r.username}" title="Deny"    style="background:#d9453d;border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">✕</button>
+        <button class="pr-deny"   data-u="${r.username}" title="Deny"    style="background:var(--danger);border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">✕</button>
       </div>`).join('')
       : '<div style="color:var(--text-3);text-align:center;padding:20px;font-size:0.9rem;">No pending requests 🎉</div>';
 
@@ -6672,7 +6676,7 @@
       `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border-2);margin-bottom:8px;">
         <span style="flex:1;font-weight:600;color:var(--text);">👤 ${u}</span>
         <span style="font-size:0.75rem;color:var(--text-3);">${d.approvedAt ? new Date(d.approvedAt).toLocaleDateString() : '—'}</span>
-        <button class="aa-revoke" data-u="${u}" title="Revoke access" style="background:transparent;border:1.5px solid #d9453d;color:#d9453d;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">🗑️</button>
+        <button class="aa-revoke" data-u="${u}" title="Revoke access" style="background:transparent;border:1.5px solid var(--danger);color:var(--danger);border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;flex-shrink:0;">🗑️</button>
       </div>`).join('')
       : '<div style="color:var(--text-3);text-align:center;padding:20px;font-size:0.9rem;">No other approved accounts.</div>';
     showFMModal({ title:'✅ Approved Accounts', body:`<div>${rows}</div>`, buttons:[{label:'Close',cls:'fm-btn-cancel'}] });
@@ -6867,7 +6871,7 @@
           </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="closeFMModal();dmAction('master')">
             <span style="font-size:1.4rem;flex-shrink:0;">💥</span>
-            <span><strong style="color:#d9453d;">Master Reset</strong><br><span style="font-size:0.8rem;opacity:0.65;">Wipes ALL data from Firebase</span></span>
+            <span><strong style="color:var(--danger);">Master Reset</strong><br><span style="font-size:0.8rem;opacity:0.65;">Wipes ALL data from Firebase</span></span>
           </button>` : '';
     showFMModal({
       title: '🗂️ Data Management',
@@ -6896,7 +6900,7 @@
           </button>
           <button style="${row}border-color:rgba(217,69,61,0.4);" onclick="closeFMModal();dmAction('all_mine')">
             <span style="font-size:1.4rem;flex-shrink:0;">🧺</span>
-            <span><strong style="color:#d9453d;">Clear ALL My Data</strong><br><span style="font-size:0.8rem;opacity:0.65;">Recents, favourites, saved questions and progress — all at once</span></span>
+            <span><strong style="color:var(--danger);">Clear ALL My Data</strong><br><span style="font-size:0.8rem;opacity:0.65;">Recents, favourites, saved questions and progress — all at once</span></span>
           </button>
           ${adminRows}
           <button style="${row}justify-content:center;margin-top:4px;border-color:var(--border-2);" onclick="closeFMModal()">
@@ -6909,13 +6913,13 @@
 
   function dmAction(type) {
     const configs = {
-      recents: { icon: '🕐', title: 'Clear Recents?', desc: 'All recent quiz history will be permanently deleted.', color: '#d9453d' },
-      favourites: { icon: '⭐', title: 'Clear Favourites?', desc: 'All favourited quizzes and folders will be permanently removed.', color: '#d9453d' },
-      saved:   { icon: '🔖', title: 'Clear Saved Questions?', desc: 'All bookmarked questions across all quizzes will be permanently deleted.', color: '#d9453d' },
-      progress: { icon: '⏳', title: 'Clear Saved Progress?', desc: 'Your in-progress position in any partially-completed quizzes will be lost — they\'ll start over from the beginning next time.', color: '#d9453d' },
+      recents: { icon: '🕐', title: 'Clear Recents?', desc: 'All recent quiz history will be permanently deleted.', color: 'var(--danger)' },
+      favourites: { icon: '⭐', title: 'Clear Favourites?', desc: 'All favourited quizzes and folders will be permanently removed.', color: 'var(--danger)' },
+      saved:   { icon: '🔖', title: 'Clear Saved Questions?', desc: 'All bookmarked questions across all quizzes will be permanently deleted.', color: 'var(--danger)' },
+      progress: { icon: '⏳', title: 'Clear Saved Progress?', desc: 'Your in-progress position in any partially-completed quizzes will be lost — they\'ll start over from the beginning next time.', color: 'var(--danger)' },
       all_mine: { icon: '🧺', title: 'Clear ALL My Data?', desc: 'Everything tied to your account — recents, favourites, saved questions, and in-progress quiz positions — will be permanently deleted. Other accounts are not affected.', color: '#7f1d1d' },
       master:  { icon: '💥', title: 'Master Reset?', desc: 'ALL Firebase data will be wiped — quiz states, leaderboards, saved questions, recents, favourites. This cannot be undone.', color: '#7f1d1d' },
-      legacy:  { icon: '🧹', title: 'Clean Up Legacy Data?', desc: 'Removes old saved questions, recents, favourites and quiz progress saved before the account system existed. Only affects data NOT tied to any username. This cannot be undone.', color: '#d9453d' }
+      legacy:  { icon: '🧹', title: 'Clean Up Legacy Data?', desc: 'Removes old saved questions, recents, favourites and quiz progress saved before the account system existed. Only affects data NOT tied to any username. This cannot be undone.', color: 'var(--danger)' }
     };
     const c = configs[type];
     const backdrop = document.createElement('div');
@@ -8028,6 +8032,7 @@
   const customCtxMenu = document.getElementById('customContextMenu');
 
   function showRefreshMenu(x, y) {
+    closeCtxMenu(); // close item context menu if open
     const safeX = Math.min(x, window.innerWidth  - 160);
     const safeY = Math.min(y, window.innerHeight - 60);
     customCtxMenu.style.left = safeX + 'px';
@@ -8067,9 +8072,9 @@
   document.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); longPressTimer = null; }, { passive: true });
 
   // Dismiss menu
-  document.addEventListener('click',      () => customCtxMenu.classList.remove('visible'));
-  document.addEventListener('touchstart', () => customCtxMenu.classList.remove('visible'), { passive: true });
-  document.addEventListener('scroll',     () => customCtxMenu.classList.remove('visible'), true);
+  document.addEventListener('click',      () => { customCtxMenu.classList.remove('visible'); closeCtxMenu(); });
+  document.addEventListener('touchstart', () => { customCtxMenu.classList.remove('visible'); }, { passive: true });
+  document.addEventListener('scroll',     () => { customCtxMenu.classList.remove('visible'); closeCtxMenu(); }, true);
 
   document.getElementById('customCtxRefresh').addEventListener('click', () => {
     customCtxMenu.classList.remove('visible');
