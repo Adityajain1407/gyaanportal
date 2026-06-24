@@ -261,10 +261,10 @@
     padding: 0;
     box-sizing: border-box;
   }
-  /* Prevent text selection on display-only UI elements.
-     Critical: 'div' must NOT be here — it would block scrollbar dragging
-     on every scrollable container (which are all divs). */
-  body, .folders-grid, .folder-card, .file-list-item,
+  /* Prevent text selection on display-only UI elements only.
+     Do NOT include body, html, or div — these affect scrollbar
+     draggability on the page's main scroll container. */
+  .folders-grid, .folder-card, .file-list-item,
   .nav-header, .top-bar, .bottom-bar, .sidebar,
   .breadcrumb, .toolbar, .search-compact,
   .library-item, .recent-item, .hub-section,
@@ -7622,7 +7622,15 @@
   // ── 2. BLOCK COPY / CUT / DRAG ─────────────────────────────────────────
   document.addEventListener('copy',      (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
   document.addEventListener('cut',       (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
-  document.addEventListener('dragstart', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+  // Only block dragstart on actual content elements — NOT on body/html,
+  // since dragging the scrollbar thumb fires dragstart on the document
+  // and preventing it cancels the scroll drag.
+  document.addEventListener('dragstart', (e) => {
+    const t = e.target;
+    if (!t || t === document.body || t === document.documentElement) return;
+    if (t.closest('input, textarea, [contenteditable]')) return;
+    e.preventDefault();
+  });
 
 </script>
 </body>
