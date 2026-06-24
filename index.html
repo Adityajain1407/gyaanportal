@@ -318,6 +318,11 @@
     background: var(--surface-2);
     color: var(--accent);
   }
+  #customContextMenu #customCtxUpload {
+    border-top: 1px solid var(--border);
+    margin-top: 3px;
+    padding-top: 10px;
+  }
 
   /* ----- Modern themed scrollbar -----
      Reuses the same CSS variables every other themed element already relies
@@ -2746,7 +2751,10 @@
 <div id="ctxMenuContainer"></div>
 <div id="customContextMenu">
   <button id="customCtxRefresh">↻ &nbsp;Refresh</button>
+  <button id="customCtxUpload" class="sel-admin-only">⬆ &nbsp;Upload Quiz</button>
 </div>
+<!-- Hidden file input for quiz upload -->
+<input type="file" id="quizUploadInput" accept=".html" style="display:none" multiple>
 
 <!-- SEARCH OVERLAY -->
 <div id="searchOverlay" class="search-overlay">
@@ -7608,21 +7616,102 @@
 
   // ── 1. CUSTOM RIGHT-CLICK MENU (Refresh only) ──────────────────────────
   const customCtxMenu = document.getElementById('customContextMenu');
+
+  function showRefreshMenu(x, y) {
+    const safeX = Math.min(x, window.innerWidth  - 160);
+    const safeY = Math.min(y, window.innerHeight - 60);
+    customCtxMenu.style.left = safeX + 'px';
+    customCtxMenu.style.top  = safeY + 'px';
+    customCtxMenu.classList.add('visible');
+  }
+
+  // Desktop: right-click
   document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('input, textarea, [contenteditable]')) return;
     e.preventDefault();
-    const x = Math.min(e.clientX, window.innerWidth  - 160);
-    const y = Math.min(e.clientY, window.innerHeight - 60);
-    customCtxMenu.style.left = x + 'px';
-    customCtxMenu.style.top  = y + 'px';
-    customCtxMenu.classList.add('visible');
+    showRefreshMenu(e.clientX, e.clientY);
   });
-  document.addEventListener('click',  () => customCtxMenu.classList.remove('visible'));
-  document.addEventListener('scroll', () => customCtxMenu.classList.remove('visible'), true);
+
+  // Mobile: long-press on empty area (contextmenu doesn't fire on blank divs on iOS/Android)
+  let longPressTimer = null;
+  let longPressStartX = 0, longPressStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    if (e.target.closest('input, textarea, [contenteditable], a, button, .folder-card, .quiz-item, .quiz-link')) return;
+    const touch = e.touches[0];
+    longPressStartX = touch.clientX;
+    longPressStartY = touch.clientY;
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      showRefreshMenu(longPressStartX, longPressStartY);
+    }, 500);
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!longPressTimer) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - longPressStartX;
+    const dy = touch.clientY - longPressStartY;
+    if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(longPressTimer); longPressTimer = null; }
+  }, { passive: true });
+  document.addEventListener('touchend',    () => { clearTimeout(longPressTimer); longPressTimer = null; }, { passive: true });
+  document.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); longPressTimer = null; }, { passive: true });
+
+  // Dismiss menu
+  document.addEventListener('click',      () => customCtxMenu.classList.remove('visible'));
+  document.addEventListener('touchstart', () => customCtxMenu.classList.remove('visible'), { passive: true });
+  document.addEventListener('scroll',     () => customCtxMenu.classList.remove('visible'), true);
+
   document.getElementById('customCtxRefresh').addEventListener('click', () => {
     customCtxMenu.classList.remove('visible');
     refreshFilesAndSync(null);
     showToast('Refreshing...');
+  });
+
+  // ── Upload Quiz ──────────────────────────────────────────────────────────
+  const quizUploadInput = document.getElementById('quizUploadInput');
+
+  document.getElementById('customCtxUpload')?.addEventListener('click', () => {
+    customCtxMenu.classList.remove('visible');
+    if (!isAdmin()) { showToast('⚠️ Admin access required'); return; }
+    quizUploadInput.value = ''; // reset so same file can be re-uploaded
+    quizUploadInput.click();
+  });
+
+  quizUploadInput.addEventListener('change', async () => {
+    const files = Array.from(quizUploadInput.files);
+    if (!files.length) return;
+    const folderPrefix = currentPath.length ? currentPath.join('/') + '/' : '';
+    let succeeded = 0, failed = 0;
+    showToast(`⏳ Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
+    for (const file of files) {
+      if (!file.name.endsWith('.html')) { failed++; continue; }
+      try {
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload  = () => res(reader.result.split(',')[1]);
+          reader.onerror = () => rej(new Error('Read failed'));
+          reader.readAsDataURL(file);
+        });
+        const destPath = folderPrefix + file.name;
+        // Check if file already exists (get its SHA for update vs create)
+        let existingSha = null;
+        try {
+          const check = await fetch(
+            `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghEncodePath(destPath)}?ref=${GITHUB_BRANCH}`,
+            { headers: { Authorization: `Bearer ${getPAT()}`, Accept: 'application/vnd.github+json' } }
+          );
+          if (check.ok) { const d = await check.json(); existingSha = d.sha; }
+        } catch(e) {}
+        const ok = await ghCreateOrUpdate(destPath, base64, existingSha);
+        if (ok) succeeded++; else failed++;
+      } catch(e) { failed++; }
+    }
+    quizUploadInput.value = '';
+    if (succeeded > 0) {
+      showToast(`✅ Uploaded ${succeeded} file${succeeded > 1 ? 's' : ''}${failed > 0 ? `, ${failed} failed` : ''}`);
+      await refreshFilesAndSync(null);
+    } else {
+      showToast(`❌ Upload failed — check your GitHub token`);
+    }
   });
 
   // ── 2. BLOCK COPY / CUT / DRAG ─────────────────────────────────────────
