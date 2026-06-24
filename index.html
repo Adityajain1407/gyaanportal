@@ -6246,7 +6246,8 @@
     touchLastActive();
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-      if (setupInProgress) { startInactivityWatch(); return; } // don't lock during setup
+      if (setupInProgress) { startInactivityWatch(); return; }
+      if (document.getElementById('authOverlay')) { startInactivityWatch(); return; }
       if (currentUser) lockNow();
     }, INACTIVITY_MS);
   }
@@ -6271,6 +6272,8 @@
   // so we always re-verify using the real wall-clock timestamp on resume)
   function checkInactivityOnResume() {
     if (!currentUser) return;
+    if (setupInProgress) return; // setup wizard in progress
+    if (document.getElementById('authOverlay')) return; // login/PIN/setup screen visible
     const elapsed = Date.now() - getLastActive();
     if (elapsed >= INACTIVITY_MS) {
       lockNow();
