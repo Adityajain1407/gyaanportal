@@ -6508,13 +6508,13 @@
   // Progress dots HTML — 4 steps
   function setupProgressHtml(currentStep) {
     let html = '<div class="setup-progress">';
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 3; i++) {
       const cls = i < currentStep ? 'done' : i === currentStep ? 'active' : '';
       html += `<div class="setup-dot ${cls}"></div>`;
-      if (i < 4) html += `<div class="setup-dot-line ${i < currentStep ? 'done' : ''}"></div>`;
+      if (i < 3) html += `<div class="setup-dot-line ${i < currentStep ? 'done' : ''}"></div>`;
     }
     html += '</div>';
-    html += `<div class="setup-step-label">Step ${currentStep} of 4</div>`;
+    html += `<div class="setup-step-label">Step ${currentStep} of 3</div>`;
     return html;
   }
 
@@ -6607,10 +6607,9 @@
     if (step === 1) showSetupRole(u, state, onSuccess);
     else if (step === 2) {
       if (state.role === 'admin') showSetupPAT(u, state, onSuccess);
-      else showSetupEngine(u, state, onSuccess);
+      else showSetupPIN(u, state, onSuccess);
     }
-    else if (step === 3) showSetupEngine(u, state, onSuccess);
-    else if (step === 4) showSetupPIN(u, state, onSuccess);
+    else showSetupPIN(u, state, onSuccess);
   }
 
   // ── STEP 1: Role Selection ──
@@ -6642,7 +6641,7 @@
       el.querySelector('#roleStd').onclick = async () => {
         const ns = { ...state, step: 2, role: 'standard' };
         await saveSetupState(u, ns);
-        showSetupEngine(u, ns, onSuccess);
+        showSetupPIN(u, ns, onSuccess);
       };
     });
   }
@@ -6679,21 +6678,21 @@
             headers: { Authorization: `Bearer ${val}`, Accept: 'application/vnd.github+json' }
           });
           if (!res.ok) throw new Error('Invalid token — check it and try again');
-          currentUser = u; // ensure currentUser is set before savePAT writes owner key
+          currentUser = u;
           await savePAT(val);
           await db.ref(`${USERS_FB_KEY}/${u}/isAdmin`).set(true);
-          const ns = { ...state, step: 3, role: 'admin' };
+          const ns = { ...state, step: 2, role: 'admin' };
           await saveSetupState(u, ns);
-          showSetupEngine(u, ns, onSuccess);
+          showSetupPIN(u, ns, onSuccess);
         } catch(e) {
           errEl.textContent = e.message;
           btn.textContent = 'Activate Admin Account'; btn.disabled = false;
         }
       };
       el.querySelector('#patSetupSkip').onclick = async () => {
-        const ns = { ...state, step: 3, role: 'standard' };
+        const ns = { ...state, step: 2, role: 'standard' };
         await saveSetupState(u, ns);
-        showSetupEngine(u, ns, onSuccess);
+        showSetupPIN(u, ns, onSuccess);
       };
     });
   }
