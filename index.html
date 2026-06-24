@@ -3253,7 +3253,9 @@
     if (!currentNode) { contentDiv.innerHTML = `<div class="empty-state">Folder not found</div>`; return; }
     const subfolders = Object.entries(currentNode.__folders__).sort((a,b) => {
       if (savedMode) return (a[1].__order__ ?? 0) - (b[1].__order__ ?? 0);
-      return a[0].localeCompare(b[0]);
+      const numA = parseInt(a[0].match(/^(\d+)/)?.[1] ?? '9999');
+      const numB = parseInt(b[0].match(/^(\d+)/)?.[1] ?? '9999');
+      return numA - numB || a[0].localeCompare(b[0]);
     });
     const quizzes = currentNode.__files__;
     const savedItems = currentNode.__saved__ || [];
@@ -3954,7 +3956,11 @@
 
   function renderLibFav(body) {
     const favList = Object.values(favourites);
-    const folders = favList.filter(f => f.type === 'folder').sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    const folders = favList.filter(f => f.type === 'folder').sort((a,b) => {
+      const numA = parseInt((a.name||'').match(/^(\d+)/)?.[1] ?? '9999');
+      const numB = parseInt((b.name||'').match(/^(\d+)/)?.[1] ?? '9999');
+      return numA - numB || (a.name||'').localeCompare(b.name||'');
+    });
     const quizzes = favList.filter(f => f.type === 'quiz').sort((a,b) => (b.ts||0)-(a.ts||0));
     let html = '';
     if (!favList.length) {
