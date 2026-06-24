@@ -7708,7 +7708,7 @@
   // ── GOOGLE CALENDAR INTEGRATION ──────────────────────────────────────────
   const GCAL_API_KEY    = 'AIzaSyCO9_PtQeMFNR-pKhoVCC0AM7azM6GmCUY';
   const GCAL_CLIENT_ID  = '460932863387-qdhrlcpl463cet2jerusfrqfu1sungi7.apps.googleusercontent.com';
-  const GCAL_SCOPES     = 'https://www.googleapis.com/auth/calendar.readonly';
+  const GCAL_SCOPES     = 'https://www.googleapis.com/auth/calendar.events.readonly https://www.googleapis.com/auth/userinfo.email';
   const HOLIDAY_CALENDARS = [
     'en.indian%23holiday%40group.v.calendar.google.com',       // National public holidays
     'en.hinduism%23holiday%40group.v.calendar.google.com',     // Hindu festivals
@@ -7831,7 +7831,7 @@
     if (!window.google?.accounts?.oauth2) return;
     gcalTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GCAL_CLIENT_ID,
-      scope: GCAL_SCOPES + ' https://www.googleapis.com/auth/userinfo.email',
+      scope: GCAL_SCOPES,
       callback: async (resp) => {
         if (resp.error) { showToast('❌ Google Calendar connection failed'); return; }
         setGCalToken(resp.access_token);
