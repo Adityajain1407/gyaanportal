@@ -1500,18 +1500,41 @@
   .cal-dot.mp { background: #f57c00; }
   .cal-dot.personal { background: var(--accent); }
   /* Day events popup */
-  .cal-events-popup {
-    position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-    background: var(--surface); border: 1.5px solid var(--border-2);
-    border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-    padding: 10px 12px; min-width: 180px; max-width: 260px;
-    z-index: 999; font-size: 0.78rem; text-align: left;
-    animation: ctxFadeIn 0.12s ease;
+  .cal-day-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
   }
-  .cal-events-popup .cal-ev-title { font-weight: 700; font-size: 0.8rem; color: var(--text); margin-bottom: 6px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-  .cal-ev-item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; color: var(--text-2); }
-  .cal-ev-item .cal-dot { margin-top: 3px; flex-shrink: 0; }
-  .cal-ev-item span { line-height: 1.3; }
+  .cal-day-modal.active { display: flex; }
+  .cal-day-modal-card {
+    background: var(--surface);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 380px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .cal-day-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-day-modal-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text); }
+  .cal-day-modal-close { font-size: 1.5rem; cursor: pointer; color: var(--text-3); background: none; border: none; line-height: 1; padding: 0; }
+  .cal-day-modal-body { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
+  .cal-ev-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; background: var(--surface-2); border-radius: 10px; }
+  .cal-ev-row .cal-dot { margin-top: 4px; width: 8px; height: 8px; flex-shrink: 0; }
+  .cal-ev-row .cal-ev-name { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .cal-ev-row .cal-ev-time { font-size: 0.75rem; color: var(--text-2); margin-top: 2px; }
   /* Google Calendar connect section in hub */
   .gcal-modal-overlay {
     display: none;
@@ -2960,6 +2983,17 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- CALENDAR DAY EVENTS MODAL -->
+<div id="calDayModal" class="cal-day-modal">
+  <div class="cal-day-modal-card">
+    <div class="cal-day-modal-header">
+      <h3 id="calDayModalTitle">Events</h3>
+      <button class="cal-day-modal-close" id="calDayModalClose">&times;</button>
+    </div>
+    <div class="cal-day-modal-body" id="calDayModalBody"></div>
   </div>
 </div>
 
@@ -7897,7 +7931,7 @@
   });
 
   // Enhanced renderCalendar — fetches holidays + personal events, renders dots, handles day click popup
-  let calViewYear, calViewMonth, activeCalPopup = null;
+  let calViewYear, calViewMonth;
   function renderCalendar() {
     const now = new Date();
     const realToday = now.getDate(), realMonth = now.getMonth(), realYear = now.getFullYear();
@@ -7929,11 +7963,11 @@
     wrap.innerHTML = html;
     document.getElementById('calPrevBtn').addEventListener('click', () => {
       calViewMonth--; if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
-      activeCalPopup = null; renderCalendar();
+      renderCalendar();
     });
     document.getElementById('calNextBtn').addEventListener('click', () => {
       calViewMonth++; if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
-      activeCalPopup = null; renderCalendar();
+      renderCalendar();
     });
     // Click on any day cell
     wrap.querySelectorAll('.cal-day:not(.other-month)').forEach(cell => {
@@ -7976,34 +8010,41 @@
     }
   }
 
+  // Wire up the day modal close button once
+  document.getElementById('calDayModalClose').addEventListener('click', () => {
+    document.getElementById('calDayModal').classList.remove('active');
+  });
+  document.getElementById('calDayModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('calDayModal')) document.getElementById('calDayModal').classList.remove('active');
+  });
+
   async function showCalDayPopup(cell, day, year, month) {
-    // Remove existing popup
-    document.querySelectorAll('.cal-events-popup').forEach(p => p.remove());
-    if (activeCalPopup === day) { activeCalPopup = null; return; }
-    activeCalPopup = day;
     const [holidays, personal] = await Promise.all([
       fetchHolidays(year, month),
       fetchPersonalEvents(year, month)
     ]);
     const dayHols = holidays.filter(h => h.day === day);
     const dayEvts = personal.filter(p => p.day === day);
-    if (!dayHols.length && !dayEvts.length) { activeCalPopup = null; return; }
-    const popup = document.createElement('div');
-    popup.className = 'cal-events-popup';
-    const dateStr = new Date(year, month, day).toLocaleDateString(undefined, {weekday:'short',day:'numeric',month:'short'});
-    let inner = `<div class="cal-ev-title">${dateStr}</div>`;
-    for (const h of dayHols) inner += `<div class="cal-ev-item"><span class="cal-dot ${h.type === 'mp' ? 'mp' : 'holiday'}"></span><span>${h.name}</span></div>`;
-    for (const e of dayEvts) inner += `<div class="cal-ev-item"><span class="cal-dot personal"></span><span><strong>${e.time}</strong> ${e.name}</span></div>`;
-    popup.innerHTML = inner;
-    cell.style.position = 'relative';
-    cell.appendChild(popup);
-    // Close popup on outside click
-    setTimeout(() => {
-      document.addEventListener('click', function closePopup() {
-        popup.remove(); activeCalPopup = null;
-        document.removeEventListener('click', closePopup);
-      });
-    }, 50);
+    if (!dayHols.length && !dayEvts.length) return;
+
+    const dateStr = new Date(year, month, day).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('calDayModalTitle').textContent = dateStr;
+
+    let body = '';
+    for (const h of dayHols) {
+      body += `<div class="cal-ev-row">
+        <span class="cal-dot ${h.type === 'mp' ? 'mp' : 'holiday'}"></span>
+        <div><div class="cal-ev-name">${h.name}</div><div class="cal-ev-time">${h.type === 'mp' ? 'MP State Holiday' : 'Public Holiday'}</div></div>
+      </div>`;
+    }
+    for (const e of dayEvts) {
+      body += `<div class="cal-ev-row">
+        <span class="cal-dot personal"></span>
+        <div><div class="cal-ev-name">${e.name}</div><div class="cal-ev-time">${e.time}</div></div>
+      </div>`;
+    }
+    document.getElementById('calDayModalBody').innerHTML = body;
+    document.getElementById('calDayModal').classList.add('active');
   }
 
   // Init GCal token client once Google Identity Services loads
