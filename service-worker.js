@@ -55,11 +55,15 @@ self.addEventListener('message', (event) => {
 // ── FETCH ──────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-
-  // Only handle GET
   if (request.method !== 'GET') return;
 
-  const url = new URL(request.url);
+  // Strip cache-bust param added by hardRefresh() before matching/storing
+  const rawUrl = new URL(request.url);
+  rawUrl.searchParams.delete('_cb');
+  const cleanUrl = rawUrl.toString();
+  const cleanRequest = cleanUrl !== request.url ? new Request(cleanUrl, request) : request;
+
+  const url = rawUrl;
 
   // ── Cross-origin → bypass completely (Firebase, GitHub API, Google fonts,
   //    CDNs, Lingva translation servers, etc.)
@@ -75,11 +79,11 @@ self.addEventListener('fetch', (event) => {
 
   if (isShell) {
     event.respondWith(
-      caches.match(request).then((cached) => {
+      caches.match(cleanRequest).then((cached) => {
         // Kick off a background refresh regardless
-        const fresh = fetch(request).then((res) => {
+        const fresh = fetch(cleanRequest).then((res) => {
           if (res && res.ok) {
-            caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+            caches.open(CACHE_NAME).then((c) => c.put(cleanRequest, res.clone()));
           }
           return res;
         }).catch(() => null);
@@ -93,14 +97,14 @@ self.addEventListener('fetch', (event) => {
   // ── search-index.json → Network-first, cache fallback ──────────────────
   if (path.endsWith('search-index.json')) {
     event.respondWith(
-      fetch(request)
+      fetch(cleanRequest)
         .then((res) => {
           if (res && res.ok) {
-            caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+            caches.open(CACHE_NAME).then((c) => c.put(cleanRequest, res.clone()));
           }
           return res;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(cleanRequest))
     );
     return;
   }
@@ -108,27 +112,27 @@ self.addEventListener('fetch', (event) => {
   // ── Quiz HTML files (.html same-origin, not index.html) → Network-first ─
   if (path.endsWith('.html') && !path.endsWith('/index.html') && !path.endsWith('/about.html') && !path.endsWith('/terms.html') && !path.endsWith('/privacy.html')) {
     event.respondWith(
-      fetch(request)
+      fetch(cleanRequest)
         .then((res) => {
           if (res && res.ok) {
-            caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+            caches.open(CACHE_NAME).then((c) => c.put(cleanRequest, res.clone()));
           }
           return res;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(cleanRequest))
     );
     return;
   }
 
   // ── Everything else same-origin → Network-first, cache as fallback ──────
   event.respondWith(
-    fetch(request)
+    fetch(cleanRequest)
       .then((res) => {
         if (res && res.ok) {
-          caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+          caches.open(CACHE_NAME).then((c) => c.put(cleanRequest, res.clone()));
         }
         return res;
       })
-      .catch(() => caches.match(request))
+      .catch(() => caches.match(cleanRequest))
   );
 });

@@ -8382,7 +8382,6 @@
   async function hardRefresh() {
     showToast('🔄 Hard refreshing...');
     try {
-      // Tell the service worker to skip waiting and update immediately
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.getRegistration();
         if (reg) {
@@ -8390,14 +8389,16 @@
           if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
       }
-      // Clear all Cache Storage caches
       if ('caches' in window) {
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
     } catch(e) {}
-    // Force reload bypassing HTTP cache
-    window.location.reload(true);
+    // Cache-bust param forces the browser/SW to fetch fresh — reload(true) is
+    // ignored on many mobile browsers and PWA contexts
+    const url = new URL(window.location.href);
+    url.searchParams.set('_cb', Date.now());
+    window.location.replace(url.toString());
   }
 
   const customCtxMenu = document.getElementById('customContextMenu');
