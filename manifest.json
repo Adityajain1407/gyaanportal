@@ -1,7 +1,7 @@
 {
-  "name": "Aditya's Portal",
-  "short_name": "Quiz Portal",
-  "description": "UPSC & competitive exam quiz portal with folders, revision mode, leaderboard and saved questions.",
+  "name": "Gyaan Portal",
+  "short_name": "Gyaan Portal",
+  "description": "Gyaan Portal — UPSC & competitive exam preparation with quizzes, notes, articles and community.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

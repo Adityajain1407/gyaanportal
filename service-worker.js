@@ -1,4 +1,4 @@
-// Aditya's Portal — Service Worker v2
+// Gyaan Portal — Service Worker v2
 // Strategy:
 //   • App shell (index.html, manifest, icons) → Cache-first + background refresh
 //   • Quiz HTML files (same-origin .html) → Network-first, fallback to cache
@@ -9,7 +9,7 @@
 // immediately without requiring a second page load.
 
 const CACHE_VERSION = 'v2';
-const CACHE_NAME    = `aditya-portal-${CACHE_VERSION}`;
+const CACHE_NAME    = `gyaan-portal-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   './',
@@ -38,7 +38,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((names) => Promise.all(
         names
-          .filter((n) => n.startsWith('aditya-portal-') && n !== CACHE_NAME)
+          .filter((n) => n.startsWith('gyaan-portal-') && n !== CACHE_NAME)
           .map((n) => caches.delete(n))
       ))
       .then(() => self.clients.claim())
