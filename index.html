@@ -2510,13 +2510,12 @@
     margin-top: 0.6rem;
     color: var(--option-text);
     opacity: 0.85;
-    max-height: 200px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
     overflow-y: auto;
     padding-right: 6px;
   }
-  .option-explanation::-webkit-scrollbar { width: 4px; }
-  .option-explanation::-webkit-scrollbar-track { background: transparent; }
-  .option-explanation::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 2px; }
   .option-capsule.correct-highlight .option-explanation { color: var(--correct-text); opacity: 0.92; }
   .option-capsule.incorrect-highlight .option-explanation { color: var(--wrong-text); opacity: 0.88; }
 
@@ -4103,26 +4102,10 @@
     let optsHtml = '';
     const expMap = {};
     if (question.exp) {
-      const expLines = question.exp.split(/\r?\n/);
-      let currentOpt = null;
-      let optText = '';
-      expLines.forEach(line => {
+      question.exp.split(/\r?\n/).forEach(line => {
         const m = line.match(/^\(([a-d])\)\s*(.*)/i);
-        if (m) {
-          if (currentOpt) expMap[currentOpt] = optText.trim();
-          currentOpt = m[1].toLowerCase();
-          optText = m[2].trim();
-        } else if (currentOpt && line.trim()) {
-          // Multi-line: accumulate text (handle bullets)
-          const trimmed = line.trim();
-          if (trimmed.startsWith('•')) {
-            optText += ' ' + trimmed.substring(1).trim();
-          } else {
-            optText += ' ' + trimmed;
-          }
-        }
+        if (m) expMap[m[1].toLowerCase()] = m[2].trim();
       });
-      if (currentOpt) expMap[currentOpt] = optText.trim();
     }
     (question.opts || []).forEach((opt, i) => {
       const letter = String.fromCharCode(65 + i);
@@ -4600,48 +4583,49 @@
     });
   }
 
-  // Parses "(a) Correct - text" / "(b) Incorrect - text" lines + multi-line bullets into a map: {a: {correct, text}, b: {...}, ...}
+  // Parses "(a) Correct - text" / "(b) Incorrect - text" lines into a map: {a: {correct, text}, b: {...}, ...}
   function parseExplanationByOption(expText) {
-    const lines = (expText || '').split(/\r?\n/);
+    // Parse multi-line bullet explanations from markdown format
+    // Input: "(a) incorrect -- Bullet 1\n- Bullet 2\n- Bullet 3\n(b) incorrect -- Bullet 1\n..."
+    // Output: {a: {correct: bool, text: "Bullet 1\n- Bullet 2\n- Bullet 3"}, ...}
+    
+    const lines = (expText || '').split(/\n/);
     const map = {};
     let currentOption = null;
-    let currentLines = [];
+    let currentText = [];
     
     for (let line of lines) {
-      line = line.trim();
-      if (!line) continue;
+      // Check if line starts an option header: (a) incorrect -- or (a) correct --
+      const headerMatch = line.match(/^\(([a-d])\)\s*(Correct|Incorrect)\s*[-–—]+\s*(.*)$/i);
       
-      // Check if this is an option header line: (a) Correct/Incorrect --
-      const match = line.match(/^\(([a-d])\)\s*(Correct|Incorrect)\s*[-–—]+\s*(.*)$/i);
-      if (match) {
+      if (headerMatch) {
         // Save previous option if exists
-        if (currentOption) {
-          map[currentOption.letter] = { 
-            correct: currentOption.isCorrect, 
-            text: currentLines.join(' ').trim() 
+        if (currentOption !== null) {
+          map[currentOption.letter] = {
+            correct: currentOption.isCorrect,
+            text: currentText.join('\n').trim()
           };
         }
+        
         // Start new option
-        currentOption = { 
-          letter: match[1].toLowerCase(), 
-          isCorrect: match[2].toLowerCase() === 'correct' 
+        currentOption = {
+          letter: headerMatch[1].toLowerCase(),
+          isCorrect: headerMatch[2].toLowerCase() === 'correct'
         };
-        currentLines = [match[3]]; // First line of explanation (after --)
-      } else if (currentOption) {
-        // This is a continuation line (bullet point or regular text)
-        if (line.startsWith('•')) {
-          currentLines.push(line.substring(1).trim()); // Remove bullet, keep text
-        } else {
-          currentLines.push(line);
+        currentText = [headerMatch[3]]; // First line after the header
+      } else if (currentOption !== null) {
+        // Add to current option if line is not empty
+        if (line.trim()) {
+          currentText.push(line);
         }
       }
     }
     
-    // Save last option
-    if (currentOption) {
-      map[currentOption.letter] = { 
-        correct: currentOption.isCorrect, 
-        text: currentLines.join(' ').trim() 
+    // Save final option
+    if (currentOption !== null) {
+      map[currentOption.letter] = {
+        correct: currentOption.isCorrect,
+        text: currentText.join('\n').trim()
       };
     }
     
