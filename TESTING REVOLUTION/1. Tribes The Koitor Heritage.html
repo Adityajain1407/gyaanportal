@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TRIBES: THE KOITOR HERITAGE</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <style>
+        /* ===== THEME VARIABLES ===== */
+        :root, body[data-theme="default"] {
+            --bg: #f4f6fa;
+            --surface: #ffffff;
+            --surface-2: #f8f9fa;
+            --surface-3: #eef2f6;
+            --border: rgba(0,0,0,0.06);
+            --border-2: rgba(0,0,0,0.1);
+            --text: #1e293b;
+            --text-2: #475569;
+            --text-3: #64748b;
+            --accent: #f97316;
+            --accent-dark: #ea580c;
+            --accent-bg: #fff7ed;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 8px -2px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-lg: 0 15px 25px -8px rgba(0,0,0,0.1);
+            --radius-card: 20px;
+            --transition: all 0.25s ease;
+            --button-text: #ffffff;
+            --link-color: #0284c7;
+            --code-bg: #f5f5f5;
+            --code-text: #d73a49;
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+        }
+        
+        body[data-theme="default"].dark {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-2: #0f172a;
+            --surface-3: #334155;
+            --border: rgba(255,255,255,0.05);
+            --border-2: rgba(255,255,255,0.1);
+            --text: #f1f5f9;
+            --text-2: #cbd5e1;
+            --text-3: #94a3b8;
+            --accent: #fb923c;
+            --accent-dark: #f97316;
+            --accent-bg: #2d1a11;
+            --button-text: #ffffff;
+            --link-color: #38bdf8;
+            --code-bg: #1e293b;
+            --code-text: #fb7185;
+        }
+
+        /* Ocean theme */
+        body[data-theme="ocean"] {
+            --bg: #e0f2fe;
+            --surface: #ffffff;
+            --surface-2: #f0f9ff;
+            --surface-3: #bae6fd;
+            --border: rgba(2, 132, 199, 0.1);
+            --border-2: rgba(2, 132, 199, 0.2);
+            --text: #082f49;
+            --text-2: #0369a1;
+            --text-3: #0284c7;
+            --accent: #0284c7;
+            --accent-dark: #0369a1;
+            --accent-bg: #e0f2fe;
+            --shadow-md: 0 8px 16px rgba(2, 132, 199, 0.1);
+            --radius-card: 30px;
+            --button-text: #ffffff;
+            --link-color: #0284c7;
+            --code-bg: #e0f2fe;
+            --code-text: #0284c7;
+            --modal-overlay: rgba(2, 132, 199, 0.5);
+        }
+        
+        body[data-theme="ocean"].dark {
+            --bg: #082f49;
+            --surface: #0c4a6e;
+            --surface-2: #0e5a85;
+            --surface-3: #0369a1;
+            --border: rgba(255,255,255,0.1);
+            --border-2: rgba(255,255,255,0.18);
+            --text: #e0f2fe;
+            --text-2: #bae6fd;
+            --text-3: #7dd3fc;
+            --accent: #38bdf8;
+            --accent-dark: #0284c7;
+            --accent-bg: #1a3a5a;
+            --button-text: #ffffff;
+            --link-color: #38bdf8;
+            --code-bg: #0c4a6e;
+            --code-text: #bae6fd;
+            --modal-overlay: rgba(8, 47, 73, 0.7);
+        }
+
+        /* Forest theme */
+        body[data-theme="forest"] {
+            --bg: #f0fdf4;
+            --surface: #ffffff;
+            --surface-2: #e8f0e9;
+            --surface-3: #eef2f6;
+            --border: rgba(22,163,74,0.1);
+            --border-2: rgba(22,163,74,0.25);
+            --text: #14532d;
+            --text-2: #166534;
+            --text-3: #15803d;
+            --accent: #16a34a;
+            --accent-dark: #15803d;
+            --accent-bg: #f0fdf4;
+            --radius-card: 12px;
+            --shadow-lg: 0 15px 25px -8px rgba(22,163,74,0.15);
+            --button-text: #ffffff;
+            --link-color: #16a34a;
+            --code-bg: #f0fdf4;
+            --code-text: #16a34a;
+            --modal-overlay: rgba(22, 163, 74, 0.5);
+        }
+        
+        body[data-theme="forest"].dark {
+            --bg: #052e16;
+            --surface: #14532d;
+            --surface-2: #1a3d24;
+            --surface-3: #334155;
+            --border: rgba(255,255,255,0.1);
+            --border-2: rgba(255,255,255,0.1);
+            --text: #f0fdf4;
+            --text-2: #bbf7d0;
+            --text-3: #86efac;
+            --accent: #4ade80;
+            --accent-dark: #22c55e;
+            --accent-bg: #0a2a12;
+            --button-text: #ffffff;
+            --link-color: #4ade80;
+            --code-bg: #14532d;
+            --code-text: #bbf7d0;
+            --modal-overlay: rgba(5, 46, 22, 0.7);
+        }
+
+        /* Sunset theme */
+        body[data-theme="sunset"] {
+            --bg: #fff1f2;
+            --surface: #ffffff;
+            --surface-2: #f7eef0;
+            --surface-3: #eef2f6;
+            --border: rgba(225,29,72,0.1);
+            --border-2: rgba(225,29,72,0.2);
+            --text: #881337;
+            --text-2: #be123c;
+            --text-3: #e11d48;
+            --accent: #e11d48;
+            --accent-dark: #be123c;
+            --accent-bg: #fff1f2;
+            --radius-card: 20px;
+            --shadow-lg: 0 15px 25px -8px rgba(225,29,72,0.15);
+            --button-text: #ffffff;
+            --link-color: #e11d48;
+            --code-bg: #fff1f2;
+            --code-text: #e11d48;
+            --modal-overlay: rgba(225, 29, 72, 0.5);
+        }
+        
+        body[data-theme="sunset"].dark {
+            --bg: #4c0519;
+            --surface: #881337;
+            --surface-2: #6b1029;
+            --surface-3: #334155;
+            --border: rgba(255,255,255,0.1);
+            --border-2: rgba(255,255,255,0.1);
+            --text: #fff1f2;
+            --text-2: #ffe4e6;
+            --text-3: #fda4af;
+            --accent: #fb7185;
+            --accent-dark: #f43f5e;
+            --accent-bg: #3a0412;
+            --button-text: #ffffff;
+            --link-color: #fb7185;
+            --code-bg: #881337;
+            --code-text: #ffe4e6;
+            --modal-overlay: rgba(76, 5, 25, 0.7);
+        }
+
+        /* Cherry theme */
+        body[data-theme="cherry"] {
+            --bg: #fce7f3;
+            --surface: #ffffff;
+            --surface-2: #fbcfe8;
+            --surface-3: #f9a8d4;
+            --border: rgba(190,24,93,0.1);
+            --border-2: rgba(190,24,93,0.2);
+            --text: #740550;
+            --text-2: #be185d;
+            --text-3: #ec4899;
+            --accent: #ec4899;
+            --accent-dark: #be185d;
+            --accent-bg: #fce7f3;
+            --button-text: #ffffff;
+            --link-color: #ec4899;
+            --code-bg: #fce7f3;
+            --code-text: #be185d;
+            --modal-overlay: rgba(190, 24, 93, 0.5);
+        }
+        
+        body[data-theme="cherry"].dark {
+            --bg: #500724;
+            --surface: #740550;
+            --surface-2: #9d174d;
+            --surface-3: #be123c;
+            --border: rgba(255,255,255,0.1);
+            --border-2: rgba(255,255,255,0.1);
+            --text: #fce7f3;
+            --text-2: #fbcfe8;
+            --text-3: #f9a8d4;
+            --accent: #f472b6;
+            --accent-dark: #ec4899;
+            --accent-bg: #500724;
+            --button-text: #ffffff;
+            --link-color: #f472b6;
+            --code-bg: #740550;
+            --code-text: #fbcfe8;
+            --modal-overlay: rgba(80, 7, 36, 0.7);
+        }
+
+        /* Indigo theme */
+        body[data-theme="indigo"] {
+            --bg: #eef2ff;
+            --surface: #ffffff;
+            --surface-2: #e0e7ff;
+            --surface-3: #c7d2fe;
+            --border: rgba(79,70,229,0.1);
+            --border-2: rgba(79,70,229,0.2);
+            --text: #312e81;
+            --text-2: #4f46e5;
+            --text-3: #6366f1;
+            --accent: #4f46e5;
+            --accent-dark: #4338ca;
+            --accent-bg: #eef2ff;
+            --button-text: #ffffff;
+            --link-color: #4f46e5;
+            --code-bg: #eef2ff;
+            --code-text: #4f46e5;
+            --modal-overlay: rgba(79, 70, 229, 0.5);
+        }
+        
+        body[data-theme="indigo"].dark {
+            --bg: #1e1b4b;
+            --surface: #312e81;
+            --surface-2: #4f46e5;
+            --surface-3: #6366f1;
+            --border: rgba(255,255,255,0.1);
+            --border-2: rgba(255,255,255,0.1);
+            --text: #eef2ff;
+            --text-2: #e0e7ff;
+            --text-3: #c7d2fe;
+            --accent: #818cf8;
+            --accent-dark: #6366f1;
+            --accent-bg: #1e1b4b;
+            --button-text: #ffffff;
+            --link-color: #818cf8;
+            --code-bg: #312e81;
+            --code-text: #e0e7ff;
+            --modal-overlay: rgba(30, 27, 75, 0.7);
+        }
+
+        /* Base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+            font-size: clamp(14px, 16px * var(--font-scale, 1), 24px);
+            --font-scale: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BANNER ===== */
+        .top-banner {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-2);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .banner-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .banner-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+            transition: var(--transition);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .banner-toggle-btn:hover {
+            background: var(--surface-2);
+        }
+
+        .banner-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .banner-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .banner-btn {
+            padding: 10px 16px;
+            background: var(--accent);
+            color: var(--button-text);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .banner-btn:hover {
+            background: var(--accent-dark);
+        }
+
+        .banner-settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--text);
+            transition: var(--transition);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .banner-settings-btn:hover {
+            background: var(--surface-2);
+        }
+
+        @media (max-width: 768px) {
+            .top-banner {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .banner-title { font-size: 1rem; }
+            .banner-btn { padding: 8px 12px; font-size: 0.8rem; }
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 0;
+            flex: 1;
+            overflow: hidden;
+            transition: grid-template-columns 0.3s ease;
+        }
+
+        @media (max-width: 1023px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 60px;
+                width: 280px;
+                height: calc(100vh - 60px);
+                background: var(--surface);
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* ===== SIDEBAR ===== */
+        #sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border-2);
+            overflow-y: auto;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            max-height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        .sidebar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .toc-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-2);
+            transition: var(--transition);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+        }
+
+        .toc-link:hover {
+            background: var(--surface-2);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .toc-link.active {
+            background: var(--accent-bg);
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .toc-list .toc-list {
+            margin-left: 12px;
+            border-left: 1px solid var(--border);
+            padding-left: 0;
+        }
+
+        /* ===== MAIN CONTENT AREA ===== */
+        #contentArea {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        #noteContent {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            background: var(--bg);
+        }
+
+        @media (max-width: 768px) {
+            #noteContent { padding: 20px; }
+        }
+
+        #noteContent::-webkit-scrollbar { width: 8px; }
+        #noteContent::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+        /* ===== CONTENT FORMATTING ===== */
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            line-height: 1.4;
+            scroll-margin-top: 80px;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 2rem * var(--font-scale), 2.5rem);
+            color: var(--text);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        h2 {
+            font-size: clamp(1.3rem, 1.6rem * var(--font-scale), 2rem);
+            color: var(--text);
+            margin-top: 32px;
+        }
+
+        h3 {
+            font-size: clamp(1.1rem, 1.3rem * var(--font-scale), 1.5rem);
+            color: var(--text-2);
+        }
+
+        p {
+            margin-bottom: 16px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: underline;
+            transition: var(--transition);
+        }
+
+        a:hover { opacity: 0.8; }
+
+        strong { font-weight: 700; color: var(--text); }
+        em { font-style: italic; }
+        u { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+        mark { background-color: #fef3c7; padding: 0 4px; border-radius: 2px; }
+
+        code {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        pre code {
+            background: none;
+            color: var(--code-text);
+            padding: 0;
+        }
+
+        ul, ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        li { margin-bottom: 8px; color: var(--text); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: var(--surface-2);
+            border-bottom: 2px solid var(--border-2);
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        tbody tr:hover { background: var(--surface-2); }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid var(--border-2);
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin-left: 0;
+            margin-bottom: 16px;
+            color: var(--text-2);
+            font-style: italic;
+        }
+
+        hr {
+            border: none;
+            height: 2px;
+            background: var(--border-2);
+            margin: 32px 0;
+        }
+
+        /* ===== MODAL OVERLAY ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--modal-overlay);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ===== SETTINGS MODAL ===== */
+        .settings-modal {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .settings-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .settings-group {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-2);
+        }
+
+        .settings-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .settings-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        /* ===== THEME SELECTOR ===== */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .theme-option {
+            padding: 12px;
+            border: 2px solid var(--border-2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .theme-option:hover {
+            border-color: var(--accent);
+            background: var(--surface-2);
+        }
+
+        .theme-option.active {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dark-mode-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* ===== FONT SIZE CONTROL ===== */
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .font-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-2);
+            background: var(--surface-2);
+            color: var(--text);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-btn:hover {
+            background: var(--accent);
+            color: var(--button-text);
+            border-color: var(--accent);
+        }
+
+        .font-display {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .settings-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .settings-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--button-text);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border-2);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-3);
+        }
+
+        /* ===== CONFIRMATION POPUP ===== */
+        .confirmation-modal {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+        }
+
+        .confirmation-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .confirmation-message {
+            font-size: 0.95rem;
+            color: var(--text-2);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .confirmation-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .btn-yes {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .btn-yes:hover {
+            background: #dc2626;
+        }
+
+        .btn-no {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border-2);
+        }
+
+        .btn-no:hover {
+            background: var(--surface-3);
+        }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            position: fixed;
+            background: var(--surface);
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            padding: 8px 0;
+            box-shadow: var(--shadow-lg);
+            z-index: 10000;
+            min-width: 220px;
+            display: none;
+            animation: popIn 0.2s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .context-menu.visible {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .context-menu-item:hover {
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 6px;
+            padding: 8px 16px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .color-option:hover {
+            border-color: var(--text);
+        }
+
+        .color-option.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+        }
+
+        .color-yellow { background: #fef3c7; }
+        .color-cyan { background: #cffafe; }
+        .color-green { background: #dcfce7; }
+        .color-pink { background: #fbcfe8; }
+        .color-orange { background: #fed7aa; }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            background: var(--accent);
+            color: var(--button-text);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            z-index: 999;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ===== MARKUP STYLES ===== */
+        .markup-highlight {
+            background-color: #fef3c7;
+            padding: 0 4px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .markup-highlight.cyan { background-color: #cffafe; }
+        .markup-highlight.green { background-color: #dcfce7; }
+        .markup-highlight.pink { background-color: #fbcfe8; }
+        .markup-highlight.orange { background-color: #fed7aa; }
+
+        .markup-underline {
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+
+        .markup-bold {
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .markup-italic {
+            font-style: italic;
+            cursor: pointer;
+        }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            .top-banner, #sidebar { display: none; }
+            .main-container { grid-template-columns: 1fr; }
+            #contentArea { height: auto; }
+            #noteContent { padding: 0; overflow: visible; }
+            body { background: white; color: black; }
+        }
+
+        ::selection {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body data-theme="default" data-font-scale="1">
+    <!-- TOP BANNER -->
+    <div class="top-banner">
+        <div class="banner-left">
+            <button class="banner-toggle-btn" id="bannerToggleBtn" aria-label="Toggle sidebar">☰</button>
+            <div class="banner-title">TRIBES: THE KOITOR HERITAGE</div>
+        </div>
+        <div class="banner-right">
+            <button class="banner-btn" id="testBtn">Test</button>
+            <button class="banner-settings-btn" id="bannerSettingsBtn" aria-label="Settings">⚙️</button>
+        </div>
+    </div>
+
+    <!-- TEST MENU POPUP -->
+    <div class="modal-overlay" id="testMenuOverlay">
+        <div class="confirmation-modal" style="max-width: 320px;">
+            <div class="confirmation-title">Select Option</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="settings-btn btn-primary" id="testChapterBtn">Test This Chapter</button>
+                <button class="settings-btn btn-secondary" id="testPYQBtn">Test PYQ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLEAR ANNOTATIONS CONFIRMATION -->
+    <div class="modal-overlay" id="clearConfirmOverlay">
+        <div class="confirmation-modal">
+            <div class="confirmation-title">Clear All Annotations?</div>
+            <div class="confirmation-message">This will delete all highlights, bold, italic, and underline formatting from this chapter. This action cannot be undone.</div>
+            <div class="confirmation-buttons">
+                <button class="btn-yes" id="confirmClearYes">YES</button>
+                <button class="btn-no" id="confirmClearNo">NO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settingsOverlay">
+        <div class="settings-modal">
+            <h2 class="settings-title">⚙️ Settings</h2>
+            
+            <!-- Themes -->
+            <div class="settings-group">
+                <label class="settings-label">📚 Theme</label>
+                <div class="theme-grid" id="themeGrid">
+                    <div class="theme-option active" data-theme="default">Default</div>
+                    <div class="theme-option" data-theme="ocean">Ocean</div>
+                    <div class="theme-option" data-theme="forest">Forest</div>
+                    <div class="theme-option" data-theme="sunset">Sunset</div>
+                    <div class="theme-option" data-theme="cherry">Cherry</div>
+                    <div class="theme-option" data-theme="indigo">Indigo</div>
+                </div>
+                <div class="dark-mode-toggle">
+                    <input type="checkbox" id="darkModeToggle">
+                    <label for="darkModeToggle" style="margin: 0; font-weight: 600; cursor: pointer;">🌙 Dark Mode</label>
+                </div>
+            </div>
+
+            <!-- Font Size -->
+            <div class="settings-group">
+                <label class="settings-label">🔤 Font Size</label>
+                <div class="font-size-control">
+                    <button class="font-btn" id="fontDecreaseBtn">−</button>
+                    <div class="font-display" id="fontDisplay">100%</div>
+                    <button class="font-btn" id="fontIncreaseBtn">+</button>
+                </div>
+            </div>
+
+            <!-- Clear Annotations -->
+            <div class="settings-group">
+                <button class="settings-btn btn-danger" id="clearAnnotationsBtn">🗑️ Clear All Annotations</button>
+            </div>
+
+            <!-- Exit -->
+            <div class="settings-group">
+                <button class="settings-btn btn-secondary" id="exitBtn">← Exit Chapter</button>
+            </div>
+
+            <!-- Close -->
+            <button class="settings-btn btn-primary" id="closeSettingsBtn">Close</button>
+        </div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div class="context-menu" id="contextMenu">
+        <div id="contextMenuContent"></div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-title">📖 Contents</div>
+            <ul class="toc-list" id="tocList">
+                <li><a class="toc-link" data-toc-id="h-1">1. OVERVIEW & NATIONAL SIGNIFICANCE</a></li>
+                <li><a class="toc-link" data-toc-id="h-2">2. ORIGIN / IDENTITY</a></li>
+                <li><a class="toc-link" data-toc-id="h-3">3. ETYMOLOGY — THE WORD 'GOND'</a></li>
+                <li><a class="toc-link" data-toc-id="h-4">4. KEY SCHOLARS & HISTORICAL LITERATURE</a></li>
+                <li><a class="toc-link" data-toc-id="h-5">5. DEMOGRAPHICS — CENSUS 2011</a></li>
+                <li><a class="toc-link" data-toc-id="h-6">6. GEOGRAPHICAL DISTRIBUTION</a></li>
+                <li><a class="toc-link" data-toc-id="h-7">7. PHYSICAL CHARACTERISTICS & TRAITS</a></li>
+                <li><a class="toc-link" data-toc-id="h-8">8. CLASSIFICATION OF GOND TRIBE</a></li>
+                <li><a class="toc-link" data-toc-id="h-9">9. GOTRA / CLAN SYSTEM (KUR SYSTEM)</a></li>
+                <li><a class="toc-link" data-toc-id="h-10">10. FAMILY STRUCTURE & DYNAMICS</a></li>
+                <li><a class="toc-link" data-toc-id="h-11">11. ESSENTIAL KINSHIP TERMINOLOGY</a></li>
+                <li><a class="toc-link" data-toc-id="h-12">12. VILLAGE PANCHAYAT HIERARCHY</a></li>
+                <li><a class="toc-link" data-toc-id="h-13">13. VILLAGE & RESIDENCE PATTERNS</a></li>
+                <li><a class="toc-link" data-toc-id="h-14">14. FOOD & DIET</a></li>
+                <li><a class="toc-link" data-toc-id="h-15">15. TRADITIONAL ATTIRE & ADORNMENT</a></li>
+                <li><a class="toc-link" data-toc-id="h-16">16. BIRTH RITUALS & TRADITIONS</a></li>
+                <li><a class="toc-link" data-toc-id="h-17">17. SOCIETY & MARRIAGE RULES</a></li>
+                <li><a class="toc-link" data-toc-id="h-18">18. UNIQUE & SPECIAL MARRIAGE TYPES</a></li>
+                <li><a class="toc-link" data-toc-id="h-19">19. KEY TRIBAL TERM RAPID REVISION</a></li>
+                <li><a class="toc-link" data-toc-id="h-20">20. MANDAP TERMINOLOGY</a></li>
+                <li><a class="toc-link" data-toc-id="h-21">21. GHOTUL (YOUTH DORMITORY SYSTEM)</a></li>
+                <li><a class="toc-link" data-toc-id="h-22">22. TRIBAL DANCES</a></li>
+                <li><a class="toc-link" data-toc-id="h-23">23. MAJOR TRIBAL ART FORMS</a></li>
+                <li><a class="toc-link" data-toc-id="h-24">24. DEATH RITUALS & CUSTOMS</a></li>
+                <li><a class="toc-link" data-toc-id="h-25">25. HIGH-YIELD EXAM RECAP (MASTER REVISION)</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content -->
+        <div id="contentArea">
+            <div id="noteContent">
+                <h1 data-toc-id="h-0">THE KOITOR HERITAGE[cite: 1]</h1>
+                <p>Origins and Identity of the Gond Tribe[cite: 1]</p>
+                <p><strong>Comprehensive Exam Study Notes</strong>[cite: 1]</p>
+
+                <h2 data-toc-id="h-1">1. OVERVIEW & NATIONAL SIGNIFICANCE[cite: 1]</h2>
+                <h3>1.1 Global & National Status[cite: 1]</h3>
+                <ul>
+                    <li><strong>Global:</strong> One of the largest tribal groups in the world.[cite: 1]</li>
+                    <li><strong>National:</strong> The LARGEST tribe in India.[cite: 1]</li>
+                </ul>
+                <h3>1.2 State Level — Madhya Pradesh (MP)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Rank:</strong> 2nd largest tribe in MP (after the Bhil tribe).[cite: 1]</li>
+                    <li><strong>Top 3 tribes in Madhya Pradesh:</strong> (1) Bhil, (2) Gond, (3) Kol[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-2">2. ORIGIN / IDENTITY[cite: 1]</h2>
+                <h3>2.1 Species Group[cite: 1]</h3>
+                <ul>
+                    <li><strong>Racial Category:</strong> Proto-Australoid[cite: 1]</li>
+                </ul>
+                <h3>2.2 Linguistic Family[cite: 1]</h3>
+                <ul>
+                    <li><strong>Language Family:</strong> Dravidian Family[cite: 1]</li>
+                </ul>
+                <h3>2.3 Expert View[cite: 1]</h3>
+                <ul>
+                    <li><strong>Anthropologist Christoph von Fürer-Haimendorf:</strong> States that Dravidians likely arrived by sea route concurrently with Aryans.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-3">3. ETYMOLOGY — THE WORD 'GOND'[cite: 1]</h2>
+                <h3>3.1 Origin of the Name[cite: 1]</h3>
+                <ul>
+                    <li><strong>Source Word:</strong> 'Konda' (Telugu language)[cite: 1]</li>
+                    <li><strong>Meaning:</strong> Mountain (Parvat)[cite: 1]</li>
+                    <li><strong>Habitat Connection:</strong> They inhabited the Vindhya & Satpura mountain ranges, hence the name.[cite: 1]</li>
+                    <li><strong>Result:</strong> 'Konda' evolved into 'Gond'[cite: 1]</li>
+                </ul>
+                <h3>3.2 Alternative Theory (British Era)[cite: 1]</h3>
+                <ul>
+                    <li>General Cunningham accepted the derivation from the Bengali language.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-4">4. KEY SCHOLARS & HISTORICAL LITERATURE[cite: 1]</h2>
+                <h3>4.1 Stephen Hislop — The Researcher[cite: 1]</h3>
+                <ul>
+                    <li><strong>Role:</strong> Pioneer researcher on Gond origins.[cite: 1]</li>
+                    <li><strong>Key Work:</strong> Aboriginal Tribes of the Central Provinces[cite: 1]</li>
+                    <li><strong>Notable Contribution:</strong> Mentioned the concept of 'Lingo Mithkal' (a concept associated with the tribe).[cite: 1]</li>
+                </ul>
+                <h3>4.2 Sir Richard Temple — The Publisher[cite: 1]</h3>
+                <ul>
+                    <li><strong>Role:</strong> Posthumous Publisher of Hislop's work.[cite: 1]</li>
+                    <li><strong>Published:</strong> Hislop's critical study in the year 1866.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-5">5. DEMOGRAPHICS — CENSUS 2011[cite: 1]</h2>
+                <h3>5.1 Key Figures[cite: 1]</h3>
+                <ul>
+                    <li><strong>Total Gond Population in Madhya Pradesh:</strong> 50.93 Lakh[cite: 1]</li>
+                    <li><strong>Share of MP's Total Tribal Population:</strong> 33.25%[cite: 1]</li>
+                </ul>
+                <h3>5.2 Highest Concentration District[cite: 1]</h3>
+                <ul>
+                    <li><strong>District:</strong> Chhindwara (Chhindwara — the district with the highest Gond population)[cite: 1]</li>
+                    <li><strong>Population in Chhindwara:</strong> 6.2 Lakh[cite: 1]</li>
+                    <li><strong>Literacy Rate in Chhindwara:</strong> 60.1%[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-6">6. GEOGRAPHICAL DISTRIBUTION[cite: 1]</h2>
+                <h3>6.1 Core Region[cite: 1]</h3>
+                <ul>
+                    <li><strong>Main Region:</strong> South-Eastern Madhya Pradesh (Dakshin-Purv MP)[cite: 1]</li>
+                    <li><strong>Spread:</strong> Across both sides of the Narmada Valley[cite: 1]</li>
+                    <li><strong>Notable Absence:</strong> Generally absent in the Northern part of MP[cite: 1]</li>
+                </ul>
+                <h3>6.2 Major Districts[cite: 1]</h3>
+                <p>The Gond tribe is present across the following major districts of MP:[cite: 1]</p>
+                <p>Mandla, Dindori, Balaghat, Seoni, Chhindwara, Betul, Narmadapuram, Pandhurna, Shahdol, Sagar, Damoh, Satna, Khandwa, Burhanpur, Sehore, Raisen, Sevon, Narsinghpur[cite: 1]</p>
+
+                <h2 data-toc-id="h-7">7. PHYSICAL CHARACTERISTICS & TRAITS[cite: 1]</h2>
+                <h3>7.1 Origin Classification[cite: 1]</h3>
+                <ul>
+                    <li><strong>Origin:</strong> Dravidian Origin (Dravid Mool)[cite: 1]</li>
+                </ul>
+                <h3>7.2 Physical Features[cite: 1]</h3>
+                <ul>
+                    <li>Straight hair[cite: 1]</li>
+                    <li>Dark-black complexion[cite: 1]</li>
+                    <li>Wide mouths and large, flat noses[cite: 1]</li>
+                    <li>Thick lips[cite: 1]</li>
+                    <li>Short stature — women are typically shorter than men[cite: 1]</li>
+                </ul>
+                <h3>7.3 Personality Traits[cite: 1]</h3>
+                <ul>
+                    <li>Polite, truthful, and trustworthy[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-8">8. CLASSIFICATION OF GOND TRIBE[cite: 1]</h2>
+                <h3>8.1 Occupational Sub-Tribes (IMPORTANT)[cite: 1]</h3>
+                <p>The Gond tribe is classified into several sub-tribes based on their traditional occupation:[cite: 1]</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sub-Tribe</th>
+                            <th>Occupation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Agariya (Agariya)[cite: 1]</td>
+                            <td>Iron workers — work with iron/metal[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Pardhan (Pradhan)[cite: 1]</td>
+                            <td>Priests who perform puja in temples[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Ojha (Ojha)[cite: 1]</td>
+                            <td>Engaged in scholarly & tantric activities[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Koilabhuti (Koilabhuti)[cite: 1]</td>
+                            <td>Dancers & singers[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Solhas (Solhas)[cite: 1]</td>
+                            <td>Carpenters (Badhai)[cite: 1]</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>8.2 Status-Based Administrative Classification[cite: 1]</h3>
+                <ul>
+                    <li><strong>Raj Gond (Raja Gond):</strong> Elite class and landowners — highest social status[cite: 1]</li>
+                    <li><strong>Dhur / Dbool Gond (Dhur / Dhol Gond):</strong> Ordinary / general class[cite: 1]</li>
+                    <li><strong>Muria / Maria Gond (Muria / Maria Gond):</strong> Extremely backward caste — lowest social status[cite: 1]</li>
+                </ul>
+                <h3>8.3 Additional Classifications[cite: 1]</h3>
+                <ul>
+                    <li><strong>MP Government Records:</strong> Recognizes 50+ sub-branches including Asur, Badi Maria, Bhuta, Bison-horn Maria, Dorla, Gowari, etc.[cite: 1]</li>
+                    <li><strong>Scholar Stephen Fuchs:</strong> Notes 4 distinct social classes in Mandla district — e.g., Dev Gond, Suryavanshi Gond.[cite: 1]</li>
+                    <li><strong>Other noted sub-types:</strong> Suryavanshi, Devgadi, Ravan vanshi.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-9">9. GOTRA / CLAN SYSTEM (KUR SYSTEM)[cite: 1]</h2>
+                <h3>9.1 Local Terminology[cite: 1]</h3>
+                <ul>
+                    <li><strong>Local term for 'Gotra':</strong> 'Kur' (Kur)[cite: 1]</li>
+                    <li><strong>Note:</strong> In Bhil tribe, 'Ku' means house (for comparison).[cite: 1]</li>
+                </ul>
+                <h3>9.2 Classification of Gotras[cite: 1]</h3>
+                <ul>
+                    <li><strong>Based on Worship of Gods:</strong> Clans are named after the 7 homes of gods.[cite: 1]</li>
+                    <li><strong>Based on Devguri (Devgudi):</strong> This method yields 62 Gotras.[cite: 1]</li>
+                </ul>
+                <h3>9.3 Seven Homes of Gods[cite: 1]</h3>
+                <ul>
+                    <li>Parati / Hansiya[cite: 1]</li>
+                    <li>Pass / Bakhar[cite: 1]</li>
+                    <li>Kulhadi[cite: 1]</li>
+                    <li>Basula[cite: 1]</li>
+                    <li>Kusia[cite: 1]</li>
+                    <li>Khusi[cite: 1]</li>
+                    <li><strong>7th God:</strong> Ropi (Ropi) — resides in the house itself.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-10">10. FAMILY STRUCTURE & DYNAMICS[cite: 1]</h2>
+                <h3>10.1 Patriarchal System[cite: 1]</h3>
+                <ul>
+                    <li><strong>Head:</strong> The oldest male member (Grandfather / Dada) is the absolute head.[cite: 1]</li>
+                    <li>Strict obedience is demanded from all family members.[cite: 1]</li>
+                </ul>
+                <h3>10.2 Matriarchal Influence[cite: 1]</h3>
+                <ul>
+                    <li><strong>Grandmother (Dadi):</strong> Holds the 2nd place of importance in the household.[cite: 1]</li>
+                    <li>She is revered as the mistress of the house.[cite: 1]</li>
+                </ul>
+                <h3>10.3 Cultural Trait — Hospitality[cite: 1]</h3>
+                <ul>
+                    <li>Hospitality (Atithi Satkar) is paramount.[cite: 1]</li>
+                    <li>Every house maintains a clean, dedicated small room specifically for guests.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-11">11. ESSENTIAL KINSHIP TERMINOLOGY (MCQ ALERT)[cite: 1]</h2>
+                <p>These are important tribal terms — frequently tested in exams:[cite: 1]</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Relationship</th>
+                            <th>Gond Term</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Younger Sister[cite: 1]</td>
+                            <td>Baiya / Baiya[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Elder Sister[cite: 1]</td>
+                            <td>Didi[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Elder Brother[cite: 1]</td>
+                            <td>Babu[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Parents-in-law[cite: 1]</td>
+                            <td>Raut / Rautain[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Sister-in-law (Bhabhi)[cite: 1]</td>
+                            <td>Bhauji / Bhauji[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Parents (Mata-Pita)[cite: 1]</td>
+                            <td>Dau-Dai[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Nephews (Bhatije/Bhanje)[cite: 1]</td>
+                            <td>Bhanja[cite: 1]</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 data-toc-id="h-12">12. VILLAGE PANCHAYAT HIERARCHY[cite: 1]</h2>
+                <h3>12.1 Hierarchy Structure[cite: 1]</h3>
+                <p>The Gond village panchayat follows a strictly defined hierarchy:[cite: 1]</p>
+                <ul>
+                    <li><strong>1st — Bhoi (Bhoi):</strong> Head of the village; also called Manjhi or Deshmukh (setteled internal maters).[cite: 1]</li>
+                    <li><strong>2nd — Muqaddam (Muqaddam):</strong> Second in command.[cite: 1]</li>
+                    <li><strong>3rd — Dewan (Diwan):</strong> Third position.[cite: 1]</li>
+                    <li><strong>4th — Likhai (Likhai):</strong> Elderly members of the village.[cite: 1]</li>
+                </ul>
+                <h3>12.2 Key Officials & Their Roles[cite: 1]</h3>
+                <ul>
+                    <li><strong>Muqaddam / Gotiya:</strong> Village head. Traditional/hereditary role (passed from father to son). Responsible for collecting land revenue.[cite: 1]</li>
+                    <li><strong>Kotwar (Kotwar):</strong> Assistant to Muqaddam. Acts as liaison for visiting officials. Sole record-keeper of deaths and thefts for the police.[cite: 1]</li>
+                    <li><strong>Dewan (Diwan):</strong> Provides secret, case-related intelligence to the chief.[cite: 1]</li>
+                    <li><strong>Guniya / Barua / Panda:</strong> The spiritual authority. Performs Tantric rituals in the village.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-13">13. VILLAGE & RESIDENCE PATTERNS[cite: 1]</h2>
+                <h3>13.1 Historical Habitat[cite: 1]</h3>
+                <ul>
+                    <li>Found in inaccessible hilly areas and dense forests.[cite: 1]</li>
+                </ul>
+                <h3>13.2 Modern Settlement[cite: 1]</h3>
+                <ul>
+                    <li>Shifted to plain areas based on: arable land, water availability, and security.[cite: 1]</li>
+                </ul>
+                <h3>13.3 Traditional Housing[cite: 1]</h3>
+                <ul>
+                    <li>Houses are typically made of mud and thatch/trash (mitti aur chhappar).[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-14">14. FOOD & DIET[cite: 1]</h2>
+                <h3>14.1 General Diet[cite: 1]</h3>
+                <ul>
+                    <li><strong>Type:</strong> Both Vegetarian and Non-Vegetarian.[cite: 1]</li>
+                    <li><strong>Staple Diet:</strong> Includes Millets and Roots (Bajra and Kand-Mool).[cite: 1]</li>
+                </ul>
+                <h3>14.2 Key Food/Drink Terms[cite: 1]</h3>
+                <ul>
+                    <li><strong>Pej (Pej):</strong> A highly favored traditional drink made from coarse grains.[cite: 1]</li>
+                    <li><strong>Devanna (Devanna):</strong> The local tribal term for Mahua (a plant/flower used in food and liquor).[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-15">15. TRADITIONAL ATTIRE & ADORNMENT[cite: 1]</h2>
+                <h3>15.1 Men's Attire[cite: 1]</h3>
+                <ul>
+                    <li>Wear head turbans.[cite: 1]</li>
+                    <li>Mostly wear clothing below the waist — cotton clothes and loincloths.[cite: 1]</li>
+                    <li>Modern clothing is increasingly being adopted.[cite: 1]</li>
+                </ul>
+                <h3>15.2 Women's Adornment[cite: 1]</h3>
+                <ul>
+                    <li>High prevalence of tattooing — known as 'Godna'.[cite: 1]</li>
+                    <li>Ornaments made of brass, pearl, and coral are highly popular.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-16">16. BIRTH RITUALS & TRADITIONS[cite: 1]</h2>
+                <h3>16.1 Timeline of Birth Rituals[cite: 1]</h3>
+                <ul>
+                    <li><strong>Day 0 — Birth:</strong> Takes place at home under a makeshift cloth cover. The midwife cuts the umbilical cord with a bamboo strip and buries it on the spot.[cite: 1]</li>
+                    <li><strong>Day 6: Sighting Ritual —</strong> The baby is traditionally shown the Pole Star (Dhruv Tara).[cite: 1]</li>
+                    <li><strong>Day 12: Naming Ceremony (Namkaran) —</strong> The baby is officially named.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-17">17. SOCIETY & MARRIAGE RULES[cite: 1]</h2>
+                <h3>17.1 Allowed Practices[cite: 1]</h3>
+                <ul>
+                    <li><strong>Widow Remarriage:</strong> Allowed.[cite: 1]</li>
+                    <li><strong>Divorce:</strong> Allowed.[cite: 1]</li>
+                    <li><strong>Exogamy:</strong> Marriage outside one's clan (Gotra) is required — Bahir-vivah.[cite: 1]</li>
+                    <li><strong>General Rule:</strong> Monogamy(single marriage) is standard. Polygamy (bahu vivah) is practiced by rich/prosperous Gonds.[cite: 1]</li>
+                </ul>
+                <h3>17.2 Prohibited Practices[cite: 1]</h3>
+                <ul>
+                    <li><strong>Endogamous marriage:</strong> Prohibited — marriage within the exact same clan is strictly forbidden (Sagotriya Vivah).[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-18">18. UNIQUE & SPECIAL MARRIAGE TYPES (MCQ FOCUS)[cite: 1]</h2>
+                <h3>18.1 Doodh Lautawa (Dudh Lautawa) — Milk Return Practice[cite: 1]</h3>
+                <ul>
+                    <li><strong>Type:</strong> Famous cross-cousin marriage.[cite: 1]</li>
+                    <li><strong>Example:</strong> Marriage between a brother's son and a sister's daughter.[cite: 1]</li>
+                    <li>This is a very famous and widely practiced custom among the Gonds.[cite: 1]</li>
+                </ul>
+                <h3>18.2 Seva Marriage / Lamsena (Seva Vivah)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Also called:</strong> Lamsena Marriage[cite: 1]</li>
+                    <li><strong>Description:</strong> Service Marriage — if the groom is unable to pay the bride price (Doodh Bandh / Dudh Bandh), he serves at the father-in-law's house instead.[cite: 1]</li>
+                    <li><strong>Special Term:</strong> The groom in this marriage is called Lamanai (Lamanai).[cite: 1]</li>
+                </ul>
+                <h3>18.3 Chad Marriage (Chad Vivah)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Direction:</strong> Groom's procession goes to the bride's house.[cite: 1]</li>
+                    <li><strong>Special Note:</strong> Widow women take circumambulations (phere) with a water creature during this ritual.[cite: 1]</li>
+                </ul>
+                <h3>18.4 Pathoni Marriage (Pathoni Vivah)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Direction:</strong> Reverse procession — the girl's wedding procession goes to the boy's house.[cite: 1]</li>
+                </ul>
+                <h3>18.5 Hatth / Bhageli (Hath Vivah / Bhageli)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Description:</strong> Marriage by consent — the girl runs away to the boy's house (Sehmat se vivah).[cite: 1]</li>
+                </ul>
+                <h3>18.6 Polyether / Payasotur (Payasotur)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Description:</strong> Represents a form of abduction marriage (apharan karke)within the tribe.[cite: 1]</li>
+                </ul>
+                <h3>18.7 Forced Marriage (Jabran Vivah)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Occurrence:</strong> Occurs when there is parental disagreement.[cite: 1]</li>
+                    <li>Boy brings the girl forcibly OR sprinkles turmeric (haldi) on her in the market.[cite: 1]</li>
+                    <li>The Mandap is set up at night with music.[cite: 1]</li>
+                </ul>
+                <h3>18.8 Priti Marriage (Priti Vivah)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Key Feature:</strong> Compulsory bride price (Vadhu Mulya / Doodh Bandh) must be given to the girl's father.[cite: 1]</li>
+                </ul>
+                <h3>18.9 Family Rights[cite: 1]</h3>
+                <ul>
+                    <li>There is a moral right to marry into both paternal and maternal families.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-19">19. KEY TRIBAL TERM RAPID REVISION[cite: 1]</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tribal Term</th>
+                            <th>Category</th>
+                            <th>Exam Meaning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Pej[cite: 1]</td>
+                            <td>Diet[cite: 1]</td>
+                            <td>Coarse grain beverage[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Devanna[cite: 1]</td>
+                            <td>Diet[cite: 1]</td>
+                            <td>Mahua (local tribal term)[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Doodh Bandh[cite: 1]</td>
+                            <td>Marriage[cite: 1]</td>
+                            <td>Bride Price (Vadhu Mulya)[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Lamanai[cite: 1]</td>
+                            <td>Social[cite: 1]</td>
+                            <td>Groom in Seva/Lamsena marriage[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Doodh Lautawa[cite: 1]</td>
+                            <td>Marriage[cite: 1]</td>
+                            <td>Cross-cousin marriage[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Pathoni[cite: 1]</td>
+                            <td>Marriage[cite: 1]</td>
+                            <td>Reverse procession (bride goes to groom's house)[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Kur[cite: 1]</td>
+                            <td>Social[cite: 1]</td>
+                            <td>Local term for Gotra / clan[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Lingo[cite: 1]</td>
+                            <td>Religion[cite: 1]</td>
+                            <td>Deity who started the Ghotul youth dormitory[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Karma[cite: 1]</td>
+                            <td>Dance[cite: 1]</td>
+                            <td>Main folk dance — in Guinness Book of World Records[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Shyam[cite: 1]</td>
+                            <td>Art[cite: 1]</td>
+                            <td>Key surname for Digna artists[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Priti[cite: 1]</td>
+                            <td>Marriage[cite: 1]</td>
+                            <td>Marriage with compulsory bride price[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Dashmani[cite: 1]</td>
+                            <td>Death Ritual[cite: 1]</td>
+                            <td>Important 10th-day death ritual[cite: 1]</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 data-toc-id="h-20">20. MANDAP TERMINOLOGY (WEDDING PAVILION TERMS)[cite: 1]</h2>
+                <ul>
+                    <li><strong>Mangar Mati (Manger Mati):</strong> Setting up the Mandap — the ritual practice of establishing the wedding pavilion.[cite: 1]</li>
+                    <li><strong>Mandwa-Tarapauni (Mandwa-Tarapauni):</strong> Liquor given to the Mandap builders as a gift/offering.[cite: 1]</li>
+                    <li><strong>Mandwa Tari (Mandwa Tari):</strong> Refers to three specific types of Mandap marriages.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-21">21. GHOTUL (YOUTH DORMITORY SYSTEM)[cite: 1]</h2>
+                <h3>21.1 Key Facts[cite: 1]</h3>
+                <ul>
+                    <li><strong>Origin:</strong> Started by Deity Lingo (Lingo Devta).[cite: 1]</li>
+                    <li><strong>Concept:</strong> Youth Dormitory — a social institution for unmarried boys and girls.[cite: 1]</li>
+                    <li><strong>Purpose:</strong> Pre-marriage sex education (Vivah Purv Yaun Shiksha).[cite: 1]</li>
+                    <li><strong>Social Function:</strong> Freedom to form romantic relationships (Prem Sambandh banane ki Swatantrata).[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-22">22. TRIBAL DANCES[cite: 1]</h2>
+                <h3>22.1 Karma Dance (Karma Nritya) — VERY IMPORTANT[cite: 1]</h3>
+                <ul>
+                    <li><strong>Significance:</strong> World's FIRST folk dance to be included in the Guinness Book of World Records.[cite: 1]</li>
+                    <li><strong>Gender:</strong> Female-dominated dance.[cite: 1]</li>
+                    <li><strong>Primary Instrument:</strong> Mandar (Mandar drum).[cite: 1]</li>
+                    <li><strong>Classification:</strong> Main/primary dance of the Gond tribe.[cite: 1]</li>
+                </ul>
+                <h3>22.2 Bhadauni Dance (Bhadauni)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Type:</strong> Marriage Dance (Vivah Nritya).[cite: 1]</li>
+                    <li>Women playfully tease/abuse the groom's side with sweet songs sung under the Mandap.[cite: 1]</li>
+                </ul>
+                <h3>22.3 Saila Dance (Saila Nritya)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Gender:</strong> Men only — exclusively performed by males.[cite: 1]</li>
+                    <li><strong>Location:</strong> Performed on rocks or mountains.[cite: 1]</li>
+                    <li><strong>Name Origin:</strong> Derived from 'Saila' meaning 'Rock' (Chattan).[cite: 1]</li>
+                </ul>
+                <h3>22.4 Dance Comparison Table — Karma vs. Saila[cite: 1]</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Karma</th>
+                            <th>Saila</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gender[cite: 1]</td>
+                            <td>Female-dominated[cite: 1]</td>
+                            <td>Men only[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Performance Location[cite: 1]</td>
+                            <td>General performance venue[cite: 1]</td>
+                            <td>Rocks or mountains[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Key Feature[cite: 1]</td>
+                            <td>Uses Mandar instrument[cite: 1]</td>
+                            <td>Name derived from 'Saila' (Rock)[cite: 1]</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 data-toc-id="h-23">23. MAJOR TRIBAL ART FORMS[cite: 1]</h2>
+                <h3>23.1 Digna Art (Digna Kala)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Creator:</strong> Women — created on walls and floors.[cite: 1]</li>
+                    <li><strong>Medium:</strong> Cow dung and soil (Gobar aur mitti).[cite: 1]</li>
+                    <li><strong>Occasions:</strong> Marriages, Diwali, Hariyali Amavasya, Holi, and Fairs.[cite: 1]</li>
+                </ul>
+                <h3>23.2 Nohadora Art (Nohadora Kala)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Style:</strong> Raised lines of clay (Mitti ki ubhari hui rekhayen).[cite: 1]</li>
+                    <li><strong>Subject:</strong> Flora and Fauna — depicted on wet walls.[cite: 1]</li>
+                    <li><strong>Occasion:</strong> When building a new house.[cite: 1]</li>
+                </ul>
+                <h3>23.3 Famous Digna Artists (Hall of Fame)[cite: 1]</h3>
+                <ul>
+                    <li>Durgabai Vyam (Durgabai Vyam)[cite: 1]</li>
+                    <li>Bhajju Singh Shyam (Bhajju Singh Shyam)[cite: 1]</li>
+                    <li>Anand Singh Shyam (Anand Singh Shyam)[cite: 1]</li>
+                    <li>Jangarh Singh Shyam (Jangarh Singh Shyam)[cite: 1]</li>
+                    <li>Dhanaiya Bai (Dhanaiya Bai)[cite: 1]</li>
+                    <li>Kalavati Shyam (Kalavati Shyam)[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-24">24. DEATH RITUALS & CUSTOMS[cite: 1]</h2>
+                <h3>24.1 Supreme Deity — Bada Dev[cite: 1]</h3>
+                <ul>
+                    <li><strong>Bada Dev (Bada Dev):</strong> The sole creator and raiser of man (Manushya ko janm dene aur paalne wala ekmatra dev).[cite: 1]</li>
+                </ul>
+                <h3>24.2 Disposal of the Dead[cite: 1]</h3>
+                <ul>
+                    <li><strong>Natural Death:</strong> Cremation (Dah Sanskar).[cite: 1]</li>
+                    <li><strong>Death Caused by Disease:</strong> Burial (Dafnana).[cite: 1]</li>
+                </ul>
+                <h3>24.3 The 10th Day — Dashmani Rituals (IMPORTANT)[cite: 1]</h3>
+                <ul>
+                    <li><strong>Dashmani / Dashagatra:</strong> The main 10-day funeral rite.[cite: 1]</li>
+                    <li><strong>Pato-Pratha (Pato-Pratha):</strong> The widow wears bangles in front of the Panchas (village elders).[cite: 1]</li>
+                    <li><strong>Mordan (Mordan):</strong> Death donation — items such as clothes and goods given at the time of death.[cite: 1]</li>
+                    <li><strong>Negi / Dasaundhi:</strong> The receiver of the Mordan donation.[cite: 1]</li>
+                </ul>
+                <h3>24.4 Ancestor Worship & Sacred Songs[cite: 1]</h3>
+                <ul>
+                    <li><strong>Khaul Pata (Khaul Pata):</strong> A specific death song sung during funeral rites.[cite: 1]</li>
+                    <li><strong>Nawakhani (Nawakhani):</strong> A festival dedicated to the worship of Gond ancestors.[cite: 1]</li>
+                </ul>
+
+                <h2 data-toc-id="h-25">25. HIGH-YIELD EXAM RECAP (MASTER REVISION)[cite: 1]</h2>
+                <h3>25.1 Origins & Scholars Summary[cite: 1]</h3>
+                <ul>
+                    <li>'Konda' (Telugu) = Mountain (Parvat) — origin of the word 'Gond'[cite: 1]</li>
+                    <li>Lineage: Dravidian[cite: 1]</li>
+                    <li>Scholar: Stephen Hislop — wrote about 'Lingo Mithkal'[cite: 1]</li>
+                </ul>
+                <h3>25.2 Key Demographics Summary[cite: 1]</h3>
+                <ul>
+                    <li>Population: 50.93 Lakh (33.25% of MP Tribal Population)[cite: 1]</li>
+                    <li>Core Region: South-East MP — Narmada Valley (Dakshin-Purv)[cite: 1]</li>
+                    <li>Max Population District: Chhindwara (6.2 Lakh)[cite: 1]</li>
+                </ul>
+                <h3>25.3 Key Occupations Summary[cite: 1]</h3>
+                <ul>
+                    <li>Agariya: Iron (Loha)[cite: 1]</li>
+                    <li>Pardhan: Priest (Pujari)[cite: 1]</li>
+                    <li>Ojha: Tantric (Tantrik)[cite: 1]</li>
+                </ul>
+                <h3>25.4 Social Status Summary[cite: 1]</h3>
+                <ul>
+                    <li>Raj Gond: Elite (Kulin)[cite: 1]</li>
+                    <li>Dhur Gond: Ordinary (Samanya)[cite: 1]</li>
+                    <li>Muria Gond: Backward (Pichdi)[cite: 1]</li>
+                </ul>
+                <h3>25.5 Final Key Exam Terms[cite: 1]</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Keyword</th>
+                            <th>Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lingo[cite: 1]</td>
+                            <td>Started the Ghotul youth dormitory[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Karma[cite: 1]</td>
+                            <td>First folk dance in Guinness Book of World Records[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Shyam[cite: 1]</td>
+                            <td>Key surname for Digna artists[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Priti[cite: 1]</td>
+                            <td>Marriage with compulsory bride price[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Dashmani[cite: 1]</td>
+                            <td>Important 10th-day death ritual[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Kur[cite: 1]</td>
+                            <td>Local Gond term for Gotra (clan)[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Devanna[cite: 1]</td>
+                            <td>Local tribal term for Mahua[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Pej[cite: 1]</td>
+                            <td>Traditional coarse grain drink[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Bada Dev[cite: 1]</td>
+                            <td>Supreme God — sole creator and raiser of man[cite: 1]</td>
+                        </tr>
+                        <tr>
+                            <td>Lamanai[cite: 1]</td>
+                            <td>Groom in Seva/Lamsena marriage[cite: 1]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase config & initialization
+        const topicName = "TRIBES: THE KOITOR HERITAGE";
+        const linkedQuizFile = "#";
+        const linkedPYQFile = "#";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxxxxxxxxxxxx",
+            authDomain: "gyaan-portal-xxxxx.firebaseapp.com",
+            databaseURL: "https://gyaan-portal-xxxxx.firebasedatabase.app",
+            projectId: "gyaan-portal-xxxxx",
+            storageBucket: "gyaan-portal-xxxxx.appspot.com",
+            messagingSenderId: "xxxxxxxxxxxxx",
+            appId: "xxxxxxxxxxxxx"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // Get current user
+        let currentUser = localStorage.getItem('portal_current_user') || 'guest';
+        const safeTopicName = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const userPrefix = `u_${currentUser}__`;
+
+        // Firebase keys for annotations
+        const annotationKeys = {
+            highlights: `note_annotations_${userPrefix}${safeTopicName}_highlights`,
+            underlines: `note_annotations_${userPrefix}${safeTopicName}_underlines`,
+            bolds: `note_annotations_${userPrefix}${safeTopicName}_bolds`,
+            italics: `note_annotations_${userPrefix}${safeTopicName}_italics`
+        };
+
+        // ===== BANNER TOGGLE =====
+        document.getElementById('bannerToggleBtn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        document.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 1023) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+        });
+
+        // ===== TEST MENU =====
+        document.getElementById('testBtn').addEventListener('click', () => {
+            document.getElementById('testMenuOverlay').classList.add('open');
+        });
+
+        document.getElementById('testChapterBtn').addEventListener('click', () => {
+            if (linkedQuizFile && linkedQuizFile !== '#') {
+                window.open(linkedQuizFile, '_blank');
+            } else {
+                showToast('Quiz not available');
+            }
+            document.getElementById('testMenuOverlay').classList.remove('open');
+        });
+
+        document.getElementById('testPYQBtn').addEventListener('click', () => {
+            if (linkedPYQFile && linkedPYQFile !== '#') {
+                window.open(linkedPYQFile, '_blank');
+            } else {
+                showToast('PYQ not available');
+            }
+            document.getElementById('testMenuOverlay').classList.remove('open');
+        });
+
+        // ===== SETTINGS =====
+        document.getElementById('bannerSettingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsOverlay').classList.add('open');
+        });
+
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsOverlay').classList.remove('open');
+        });
+
+        document.getElementById('settingsOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'settingsOverlay') {
+                document.getElementById('settingsOverlay').classList.remove('open');
+            }
+        });
+
+        // ===== THEME SELECTOR =====
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.getAttribute('data-theme');
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('quiz_theme', theme);
+                
+                document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+
+        document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('dark');
+                localStorage.setItem('quiz_dark', 'true');
+            } else {
+                document.body.classList.remove('dark');
+                localStorage.setItem('quiz_dark', 'false');
+            }
+        });
+
+        // Load theme
+        const savedTheme = localStorage.getItem('quiz_theme') || 'default';
+        const isDark = localStorage.getItem('quiz_dark') === 'true';
+        document.body.setAttribute('data-theme', savedTheme);
+        document.querySelector(`[data-theme="${savedTheme}"]`).classList.add('active');
+        if (isDark) {
+            document.body.classList.add('dark');
+            document.getElementById('darkModeToggle').checked = true;
+        }
+
+        // ===== FONT SIZE =====
+        let fontScale = parseFloat(localStorage.getItem('note_fontsize') || '100') / 100;
+        document.body.style.setProperty('--font-scale', fontScale);
+        document.getElementById('fontDisplay').textContent = Math.round(fontScale * 100) + '%';
+
+        document.getElementById('fontDecreaseBtn').addEventListener('click', () => {
+            fontScale = Math.max(0.8, fontScale - 0.1);
+            document.body.style.setProperty('--font-scale', fontScale);
+            document.getElementById('fontDisplay').textContent = Math.round(fontScale * 100) + '%';
+            localStorage.setItem('note_fontsize', Math.round(fontScale * 100));
+        });
+
+        document.getElementById('fontIncreaseBtn').addEventListener('click', () => {
+            fontScale = Math.min(1.5, fontScale + 0.1);
+            document.body.style.setProperty('--font-scale', fontScale);
+            document.getElementById('fontDisplay').textContent = Math.round(fontScale * 100) + '%';
+            localStorage.setItem('note_fontsize', Math.round(fontScale * 100));
+        });
+
+        // ===== CLEAR ANNOTATIONS =====
+        document.getElementById('clearAnnotationsBtn').addEventListener('click', () => {
+            document.getElementById('clearConfirmOverlay').classList.add('open');
+        });
+
+        document.getElementById('confirmClearYes').addEventListener('click', async () => {
+            // Remove from DOM
+            document.querySelectorAll('[class*="markup-"]').forEach(el => {
+                el.classList.remove('markup-highlight', 'markup-underline', 'markup-bold', 'markup-italic');
+                while (el.firstChild) {
+                    el.parentNode.insertBefore(el.firstChild, el);
+                }
+                el.parentNode.removeChild(el);
+            });
+
+            // Remove from Firebase
+            for (const key of Object.values(annotationKeys)) {
+                try {
+                    await db.ref(key).remove();
+                } catch (e) {
+                    console.warn('Firebase delete error:', e);
+                }
+            }
+
+            showToast('✓ All annotations cleared');
+            document.getElementById('clearConfirmOverlay').classList.remove('open');
+        });
+
+        document.getElementById('confirmClearNo').addEventListener('click', () => {
+            document.getElementById('clearConfirmOverlay').classList.remove('open');
+        });
+
+        document.getElementById('clearConfirmOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'clearConfirmOverlay') {
+                document.getElementById('clearConfirmOverlay').classList.remove('open');
+            }
+        });
+
+        document.getElementById('testMenuOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'testMenuOverlay') {
+                document.getElementById('testMenuOverlay').classList.remove('open');
+            }
+        });
+
+        // ===== EXIT BUTTON =====
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            const previousPage = sessionStorage.getItem('gyaan_portal_previous_page');
+            if (previousPage) {
+                window.location.href = previousPage;
+            } else {
+                window.history.back();
+            }
+        });
+
+        // ===== TEXT SELECTION & CONTEXT MENU =====
+        let currentSelection = null;
+        let currentHighlightColor = 'yellow';
+        let selectedMarkupType = null;
+        let selectedMarkupElement = null;
+
+        document.addEventListener('mouseup', showContextMenu);
+        document.addEventListener('touchend', showContextMenuTouch);
+
+        function showContextMenu(e) {
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) {
+                displayContextMenu(e.pageX, e.pageY, selection);
+                currentSelection = selection;
+            } else {
+                checkClickedMarkup(e);
+            }
+        }
+
+        function showContextMenuTouch(e) {
+            setTimeout(() => {
+                const selection = window.getSelection();
+                if (selection.toString().length > 0) {
+                    const touch = e.changedTouches[0];
+                    displayContextMenu(touch.pageX, touch.pageY, selection);
+                    currentSelection = selection;
+                }
+            }, 100);
+        }
+
+        function checkClickedMarkup(e) {
+            const markup = e.target.closest('[class*="markup-"]');
+            if (markup) {
+                selectedMarkupElement = markup;
+                selectedMarkupType = null;
+
+                if (markup.classList.contains('markup-highlight')) {
+                    selectedMarkupType = 'highlight';
+                } else if (markup.classList.contains('markup-bold')) {
+                    selectedMarkupType = 'bold';
+                } else if (markup.classList.contains('markup-italic')) {
+                    selectedMarkupType = 'italic';
+                } else if (markup.classList.contains('markup-underline')) {
+                    selectedMarkupType = 'underline';
+                }
+
+                displayMarkupContextMenu(e.pageX, e.pageY);
+            } else {
+                hideContextMenu();
+            }
+        }
+
+        function displayContextMenu(x, y, selection) {
+            const menu = document.getElementById('contextMenu');
+            const content = document.getElementById('contextMenuContent');
+            
+            let html = '<div style="padding: 8px 16px; font-size: 0.85rem; color: var(--text-3); font-weight: 600;">Highlight Color:</div>';
+            html += '<div class="color-picker">';
+            html += '<div class="color-option color-yellow active" data-color="yellow" title="Yellow"></div>';
+            html += '<div class="color-option color-cyan" data-color="cyan" title="Cyan"></div>';
+            html += '<div class="color-option color-green" data-color="green" title="Green"></div>';
+            html += '<div class="color-option color-pink" data-color="pink" title="Pink"></div>';
+            html += '<div class="color-option color-orange" data-color="orange" title="Orange"></div>';
+            html += '</div>';
+            html += '<div class="context-menu-divider"></div>';
+            html += '<button class="context-menu-item" data-action="highlight">🖍️ Highlight</button>';
+            html += '<button class="context-menu-item" data-action="bold">𝐁 Bold</button>';
+            html += '<button class="context-menu-item" data-action="italic">𝘐 Italic</button>';
+            html += '<button class="context-menu-item" data-action="underline">📝 Underline</button>';
+            html += '<div class="context-menu-divider"></div>';
+            html += '<button class="context-menu-item" data-action="clear">❌ Clear</button>';
+
+            content.innerHTML = html;
+            menu.classList.add('visible');
+            menu.style.left = Math.max(10, x - 110) + 'px';
+            menu.style.top = (y + 10) + 'px';
+
+            // Color selection
+            content.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    currentHighlightColor = option.getAttribute('data-color');
+                    content.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+                    option.classList.add('active');
+                });
+            });
+
+            // Actions
+            content.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const action = btn.getAttribute('data-action');
+                    if (currentSelection && currentSelection.toString().length > 0) {
+                        try {
+                            const range = currentSelection.getRangeAt(0);
+                            if (action === 'highlight') {
+                                await applyHighlight(range, currentHighlightColor);
+                            } else if (action === 'bold') {
+                                await applyFormatting(range, 'strong', 'markup-bold', 'bolds');
+                            } else if (action === 'italic') {
+                                await applyFormatting(range, 'em', 'markup-italic', 'italics');
+                            } else if (action === 'underline') {
+                                await applyFormatting(range, 'u', 'markup-underline', 'underlines');
+                            } else if (action === 'clear') {
+                                await clearFormatting(range);
+                            }
+                        } catch (err) {
+                            console.warn('Formatting error:', err);
+                        }
+                    }
+                    hideContextMenu();
+                    currentSelection.removeAllRanges();
+                });
+            });
+        }
+
+        function displayMarkupContextMenu(x, y) {
+            const menu = document.getElementById('contextMenu');
+            const content = document.getElementById('contextMenuContent');
+            let html = '';
+
+            if (selectedMarkupType === 'highlight') {
+                html += '<div style="padding: 8px 16px; font-size: 0.85rem; color: var(--text-3); font-weight: 600;">Change Color:</div>';
+                html += '<div class="color-picker">';
+                html += '<div class="color-option color-yellow" data-color="yellow" title="Yellow"></div>';
+                html += '<div class="color-option color-cyan" data-color="cyan" title="Cyan"></div>';
+                html += '<div class="color-option color-green" data-color="green" title="Green"></div>';
+                html += '<div class="color-option color-pink" data-color="pink" title="Pink"></div>';
+                html += '<div class="color-option color-orange" data-color="orange" title="Orange"></div>';
+                html += '</div>';
+                html += '<div class="context-menu-divider"></div>';
+                html += '<button class="context-menu-item" data-action="unhighlight">❌ Unhighlight</button>';
+            } else if (selectedMarkupType === 'bold') {
+                html += '<button class="context-menu-item" data-action="unbold">❌ Remove Bold</button>';
+            } else if (selectedMarkupType === 'italic') {
+                html += '<button class="context-menu-item" data-action="unitalic">❌ Remove Italic</button>';
+            } else if (selectedMarkupType === 'underline') {
+                html += '<button class="context-menu-item" data-action="ununderline">❌ Remove Underline</button>';
+            }
+
+            content.innerHTML = html;
+            menu.classList.add('visible');
+            menu.style.left = Math.max(10, x - 110) + 'px';
+            menu.style.top = (y + 10) + 'px';
+
+            // Handle color change for highlight
+            if (selectedMarkupType === 'highlight') {
+                content.querySelectorAll('.color-option').forEach(option => {
+                    option.addEventListener('click', async (e) => {
+                        const newColor = option.getAttribute('data-color');
+                        const oldColor = selectedMarkupElement.classList.find(c => c.startsWith('markup-highlight ') || c === 'markup-highlight') ? 'yellow' : selectedMarkupElement.className.match(/(?:color-)?(\w+)(?=\s|$)/)?.[1];
+                        
+                        selectedMarkupElement.className = selectedMarkupElement.className.replace(/color-\w+/, '');
+                        selectedMarkupElement.classList.add(`${newColor}`);
+
+                        // Update Firebase
+                        const highlights = selectedMarkupElement.textContent;
+                        try {
+                            const ref = db.ref(`${annotationKeys.highlights}/${btoa(highlights)}`);
+                            await ref.set({
+                                text: highlights,
+                                color: newColor,
+                                timestamp: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        } catch (e) {
+                            console.warn('Firebase error:', e);
+                        }
+
+                        showToast(`✓ Color changed to ${newColor}`);
+                        hideContextMenu();
+                    });
+                });
+            }
+
+            // Handle removals
+            content.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const action = btn.getAttribute('data-action');
+                    const text = selectedMarkupElement.textContent;
+
+                    if (action === 'unhighlight') {
+                        const parent = selectedMarkupElement.parentNode;
+                        while (selectedMarkupElement.firstChild) {
+                            parent.insertBefore(selectedMarkupElement.firstChild, selectedMarkupElement);
+                        }
+                        parent.removeChild(selectedMarkupElement);
+                        
+                        // Remove from Firebase
+                        try {
+                            await db.ref(`${annotationKeys.highlights}/${btoa(text)}`).remove();
+                        } catch (e) {
+                            console.warn('Firebase error:', e);
+                        }
+                        showToast('✓ Highlight removed');
+                    } else if (action === 'unbold') {
+                        const parent = selectedMarkupElement.parentNode;
+                        while (selectedMarkupElement.firstChild) {
+                            parent.insertBefore(selectedMarkupElement.firstChild, selectedMarkupElement);
+                        }
+                        parent.removeChild(selectedMarkupElement);
+                        
+                        try {
+                            await db.ref(`${annotationKeys.bolds}/${btoa(text)}`).remove();
+                        } catch (e) {
+                            console.warn('Firebase error:', e);
+                        }
+                        showToast('✓ Bold removed');
+                    } else if (action === 'unitalic') {
+                        const parent = selectedMarkupElement.parentNode;
+                        while (selectedMarkupElement.firstChild) {
+                            parent.insertBefore(selectedMarkupElement.firstChild, selectedMarkupElement);
+                        }
+                        parent.removeChild(selectedMarkupElement);
+                        
+                        try {
+                            await db.ref(`${annotationKeys.italics}/${btoa(text)}`).remove();
+                        } catch (e) {
+                            console.warn('Firebase error:', e);
+                        }
+                        showToast('✓ Italic removed');
+                    } else if (action === 'ununderline') {
+                        const parent = selectedMarkupElement.parentNode;
+                        while (selectedMarkupElement.firstChild) {
+                            parent.insertBefore(selectedMarkupElement.firstChild, selectedMarkupElement);
+                        }
+                        parent.removeChild(selectedMarkupElement);
+                        
+                        try {
+                            await db.ref(`${annotationKeys.underlines}/${btoa(text)}`).remove();
+                        } catch (e) {
+                            console.warn('Firebase error:', e);
+                        }
+                        showToast('✓ Underline removed');
+                    }
+
+                    hideContextMenu();
+                });
+            });
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').classList.remove('visible');
+        }
+
+        async function applyHighlight(range, color) {
+            const span = document.createElement('mark');
+            span.className = `markup-highlight ${color}`;
+            span.dataset.markupType = 'highlight';
+            span.dataset.color = color;
+            
+            try {
+                range.surroundContents(span);
+                const text = span.textContent;
+
+                // Save to Firebase
+                await db.ref(`${annotationKeys.highlights}/${btoa(text)}`).set({
+                    text: text,
+                    color: color,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                showToast(`✓ Highlighted in ${color}`);
+            } catch (e) {
+                console.warn('Error:', e);
+            }
+        }
+
+        async function applyFormatting(range, tagName, className, dbKey) {
+            const span = document.createElement(tagName);
+            span.className = className;
+            span.dataset.markupType = tagName;
+            
+            try {
+                range.surroundContents(span);
+                const text = span.textContent;
+
+                // Save to Firebase
+                await db.ref(`${annotationKeys[dbKey]}/${btoa(text)}`).set({
+                    text: text,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                showToast(`✓ Applied ${tagName}`);
+            } catch (e) {
+                console.warn('Error:', e);
+            }
+        }
+
+        async function clearFormatting(range) {
+            try {
+                const contents = range.extractContents();
+                const div = document.createElement('div');
+                div.appendChild(contents);
+                
+                div.querySelectorAll('[class*="markup-"]').forEach(el => {
+                    el.classList.remove('markup-highlight', 'markup-underline', 'markup-bold', 'markup-italic');
+                    while (el.firstChild) {
+                        el.parentNode.insertBefore(el.firstChild, el);
+                    }
+                    el.parentNode.removeChild(el);
+                });
+                
+                range.insertNode(div.firstChild);
+                showToast('✓ Formatting cleared');
+            } catch (e) {
+                console.warn('Error:', e);
+            }
+        }
+
+        // ===== TOAST NOTIFICATIONS =====
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ===== TOC SMOOTH SCROLL =====
+        document.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = link.getAttribute('data-toc-id');
+                const heading = document.querySelector(`[data-toc-id="${id}"]`);
+                if (heading) {
+                    heading.scrollIntoView({ behavior: 'smooth' });
+                    document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ===== INITIALIZATION =====
+        (async () => {
+            try {
+                await auth.signInAnonymously();
+                // Load annotations from Firebase
+                loadAnnotations();
+            } catch (e) {
+                console.warn('Auth error:', e);
+            }
+        })();
+
+        async function loadAnnotations() {
+            try {
+                for (const [key, dbKey] of Object.entries(annotationKeys)) {
+                    const snapshot = await db.ref(dbKey).once('value');
+                    // Annotations would be restored here
+                }
+            } catch (e) {
+                console.warn('Load error:', e);
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#contextMenu')) {
+                hideContextMenu();
+            }
+        });
+
+        // Save previous page for exit button
+        const currentPage = window.location.href;
+        if (!sessionStorage.getItem('gyaan_portal_previous_page')) {
+            const referrer = document.referrer;
+            if (referrer) {
+                sessionStorage.setItem('gyaan_portal_previous_page', referrer);
+            }
+        }
+    </script>
+</body>
+</html>
