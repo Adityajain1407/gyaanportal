@@ -6854,7 +6854,8 @@
     const btnStyle = 'border:1.5px solid var(--border-2);background:var(--surface-2);border-radius:14px;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.1s;pointer-events:auto;';
 
     let pinCheckInFlight = false;
-    let padActivated = !requirePadActivation; // if not required, treat as already activated
+    // Store padActivated on element so keyboard handler can access the CURRENT instance
+    el._padActivated = !requirePadActivation; // if not required (normal login), treat as already activated; if required (lock), start false
     const safeOnDigit = (d) => {
       if (!pinCheckInFlight) {
         pinCheckInFlight = true;
@@ -6868,13 +6869,13 @@
       b.innerHTML = k === 'del' ? '⌫' : k === '' ? '' : k;
       if (k === '') { b.style.visibility = 'hidden'; pad.appendChild(b); return; }
       b.addEventListener('click', () => {
-        padActivated = true;
+        el._padActivated = true;
         b.style.transform = 'scale(0.9)';
         setTimeout(() => b.style.transform = '', 100);
         safeOnDigit(String(k));
       });
       b.addEventListener('touchstart', () => b.style.background = 'var(--surface-3)', { passive: true });
-      b.addEventListener('touchend',   () => { b.style.background = 'var(--surface-2)'; padActivated = true; }, { passive: true });
+      b.addEventListener('touchend',   () => { b.style.background = 'var(--surface-2)'; el._padActivated = true; }, { passive: true });
       pad.appendChild(b);
     });
 
@@ -6885,7 +6886,7 @@
     
     el._pinKeyHandler = (e) => {
       if (!document.getElementById('authOverlay')) return;
-      if (!padActivated) return; // lock screen: must tap pad first
+      if (!el._padActivated) return; // lock screen: must tap pad first before keyboard works
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.key >= '0' && e.key <= '9') { e.preventDefault(); safeOnDigit(e.key); }
