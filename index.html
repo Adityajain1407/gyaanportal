@@ -6878,6 +6878,11 @@
       pad.appendChild(b);
     });
 
+    // Remove old handler if it exists (prevents memory leak from accumulating handlers)
+    if (el._pinKeyHandler) {
+      document.removeEventListener('keydown', el._pinKeyHandler);
+    }
+    
     el._pinKeyHandler = (e) => {
       if (!document.getElementById('authOverlay')) return;
       if (!padActivated) return; // lock screen: must tap pad first
@@ -6886,7 +6891,6 @@
       if (e.key >= '0' && e.key <= '9') { e.preventDefault(); safeOnDigit(e.key); }
       else if (e.key === 'Backspace')    { e.preventDefault(); safeOnDigit('del'); }
     };
-    document.removeEventListener('keydown', el._pinKeyHandler);
     document.addEventListener('keydown', el._pinKeyHandler);
   }
 
